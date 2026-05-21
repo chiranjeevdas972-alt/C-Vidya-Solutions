@@ -1,0 +1,26 @@
+{
+  "entities": {
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "An official callback inquiry submitted by an onsite visitor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique inquiry reference ID." },
+        "name": { "type": "string", "description": "Full name of the contact person." },
+        "email": { "type": "string", "format": "email", "description": "Verified email address of the lead." },
+        "phone": { "type": "string", "description": "Primary voice or messaging phone number." },
+        "service": { "type": "string", "description": "The specific product module or general topic of inquiry." },
+        "message": { "type": "string", "description": "Detailed organizational needs or requests." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 timestamp of first submission." },
+        "status": { "type": "string", "description": "Lifecycle status of the inquiry." }
+      },
+      "required": ["id", "name", "email", "phone", "service", "message", "timestamp", "status"]
+    }
+  },
+  "firestore": {
+    "inquiries/{inquiryId}": {
+      "schema": "Inquiry",
+      "description": "A collection containing all onsite consultation leads and callback submissions."
+    }
+  }
+}
