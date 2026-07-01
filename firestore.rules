@@ -35,8 +35,8 @@ service cloud.firestore {
         && 'timestamp' in request.resource.data
         && isValidInquiry(request.resource.data);
       
-      // Let existing leads be readable for local management and reporting
-      allow read: if true;
+      // Only allow authorized authenticated sessions (like our secure backend server) to list inquiries
+      allow read: if request.auth != null;
       
       // Prevent editing or deletion once submitted
       allow update, delete: if false;

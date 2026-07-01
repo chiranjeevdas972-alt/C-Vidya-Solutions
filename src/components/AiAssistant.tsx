@@ -69,7 +69,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       const assistantMessage: ChatMessage = {
         id: `msg_${Math.random().toString(36).substr(2, 9)}`,
         role: "model",
-        content: data.text || "I was unable to synchronize details. Please ask again or reach us at cvidya32@gmail.com.",
+        content: data.text || "I was unable to synchronize details. Please ask again or reach us at cvidyasolutions@gmail.com.",
         timestamp: new Date().toLocaleTimeString()
       };
 
@@ -96,7 +96,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       {/* Drawer Header Block */}
       <div className="p-4 bg-brand-navy-900 border-b border-brand-gold-500/20 flex justify-between items-center relative">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-brand-gold-500/10 border border-[#f4cf5c] flex items-center justify-center animate-pulse">
+          <div className="w-9 h-9 rounded-full bg-brand-gold-500/10 border border-[#42A5F5] flex items-center justify-center animate-pulse">
             <Bot className="w-5 h-5 text-brand-gold-400" />
           </div>
           <div>
@@ -145,7 +145,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
               {/* Profile Avatar */}
               <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center border text-xs font-mono font-bold ${
                 isModel 
-                  ? "bg-brand-navy-900 border-[#f4cf5c]/20 text-brand-gold-400" 
+                  ? "bg-brand-navy-900 border-[#42A5F5]/20 text-brand-gold-400" 
                   : "bg-slate-700 border-slate-600 text-white"
               }`}>
                 {isModel ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
@@ -176,7 +176,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         {/* AI Typing Loading Pulse Indicator */}
         {isTyping && (
           <div className="flex items-start gap-2.5 max-w-[80%] mr-auto">
-            <div className="w-8 h-8 rounded-full bg-brand-navy-900 border border-[#f4cf5c]/20 text-brand-gold-400 flex items-center justify-center animate-bounce">
+            <div className="w-8 h-8 rounded-full bg-brand-navy-900 border border-[#42A5F5]/20 text-brand-gold-400 flex items-center justify-center animate-bounce">
               <Bot className="w-4 h-4" />
             </div>
             <div className="bg-[#101726]/80 border border-slate-800/60 p-3 rounded-2xl rounded-tl-none text-xs text-slate-400">
@@ -197,7 +197,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       {messages.length === 1 && (
         <div className="px-4 py-2.5 bg-[#0a0f19] border-t border-slate-900">
           <div className="text-[10px] text-slate-400 font-mono font-bold mb-1.5 flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-[#f4cf5c]" />
+            <HelpCircle className="w-3.5 h-3.5 text-[#42A5F5]" />
             <span>SUGGESTED DISCOVERY QUERIES:</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -228,7 +228,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask anything about our product suite..."
-            className="flex-1 text-xs px-4 py-3 bg-[#0d1524] border border-slate-800 rounded-xl focus:border-[#f4cf5c]/60 focus:ring-1 focus:ring-[#f4cf5c]/40 outline-none text-slate-100 placeholder-slate-500"
+            className="flex-1 text-xs px-4 py-3 bg-[#0d1524] border border-slate-800 rounded-xl focus:border-[#42A5F5]/60 focus:ring-1 focus:ring-[#42A5F5]/40 outline-none text-slate-100 placeholder-slate-500"
             disabled={isTyping}
           />
           <button
@@ -243,7 +243,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
 
         <div className="flex justify-between items-center text-[9px] text-slate-500 font-mono mt-1">
           <div className="flex items-center gap-1">
-            <Bot className="w-3 h-3 text-[#f4cf5c]" />
+            <Bot className="w-3 h-3 text-[#42A5F5]" />
             <span>Secure Enterprise consult logs</span>
           </div>
           <a href="#contact" onClick={onClose} className="hover:text-brand-gold-400 underline transition-colors">

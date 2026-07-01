@@ -89,7 +89,7 @@ export default function ProductSuite() {
           <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-brand-navy-900 tracking-tight leading-none">
             C VIDYA INTEGRATED PRODUCT SUITE
           </h2>
-          <p className="mt-4 text-base text-slate-600 leading-relaxed">
+          <p className="mt-4 text-base text-black leading-relaxed font-semibold">
             We offer a wide range of integrated software solutions to manage and simplify your business operations. Select a module below to launch the **Live Dashboard Emulator Sandbox**.
           </p>
         </div>
@@ -133,12 +133,12 @@ export default function ProductSuite() {
                       <span>{service.name}</span>
                       {isActive && <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />}
                     </h3>
-                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    <p className="text-xs text-black leading-relaxed font-bold">
                       {service.description}
                     </p>
                     <div className="flex items-center gap-1.5 pt-1.5">
                       <span className="text-[10px] font-mono text-brand-gold-600 font-bold tracking-wider">
-                        {isActive ? "ACTIVE SIMULATOR" : "CLICK TO TEST ENGINE"}
+                        {isActive ? "Launch Simulator" : "Open Tool"}
                       </span>
                     </div>
                   </div>
@@ -202,7 +202,7 @@ export default function ProductSuite() {
                       className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors text-slate-300"
                       title="Trigger action log"
                     >
-                      <RefreshCw className="w-3.5 h-3.5 text-[#f4cf5c]" />
+                      <RefreshCw className="w-3.5 h-3.5 text-[#42A5F5]" />
                     </button>
                   </div>
 

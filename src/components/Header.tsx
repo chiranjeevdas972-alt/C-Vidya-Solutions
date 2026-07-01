@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Phone, Mail, MapPin, Menu, X, Bot, ArrowRight } from "lucide-react";
+import Logo from "./Logo";
 
 interface HeaderProps {
   onOpenAssistant: () => void;
+  onOpenHub: (tab: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog") => void;
 }
 
-export default function Header({ onOpenAssistant }: HeaderProps) {
+export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const phoneNum = "8987766981";
-  const emailAddr = "cvidya32@gmail.com";
+  const emailAddr = "cvidyasolutions@gmail.com";
   const officerEmail = "chiranjeev0058@gmail.com";
   const locationText = "Dhanbad, Jharkhand";
 
@@ -29,7 +31,7 @@ export default function Header({ onOpenAssistant }: HeaderProps) {
             </a>
             <a href={`mailto:${officerEmail}`} className="flex items-center gap-1.5 hover:text-brand-gold-300 transition-colors">
                 <Mail className="w-3.5 h-3.5 text-brand-gold-400" />
-                <span>{officerEmail} (Officer)</span>
+                <span>{officerEmail} (Director/Founder: Chiranjeev Das)</span>
             </a>
             <div className="flex flex-col xl:flex-row xl:items-center gap-1.5 xl:gap-4 text-brand-gold-200">
               <div className="flex items-center gap-1.5">
@@ -56,59 +58,64 @@ export default function Header({ onOpenAssistant }: HeaderProps) {
           
           {/* Logo Brand Emblem */}
           <a href="#hero" className="flex items-center gap-3 group">
-            <div className="relative w-10 h-10 flex items-center justify-center bg-radial from-brand-gold-100 to-brand-gold-300 rounded-full border border-brand-gold-500 shadow-sm group-hover:scale-105 transition-all">
-              {/* Gold abstract book emblem icon overlay */}
-              <div className="w-5 h-5 border-y-2 border-brand-gold-800 rounded-xs transform rotate-12 flex flex-col justify-between p-[2px]">
-                <div className="h-[2px] bg-brand-gold-800 w-full" />
-                <div className="h-[2px] bg-brand-gold-800 w-2/3" />
-              </div>
-              <div className="absolute inset-0 bg-brand-gold-500/10 rounded-full animate-ping group-hover:block hidden" />
-            </div>
+            <Logo size={54} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
             <div>
-              <div className="font-display font-bold text-lg tracking-wider text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors">
+              <div className="font-display font-bold text-xl md:text-2xl tracking-wider text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors">
                 C VIDYA
               </div>
-              <div className="text-[10px] font-mono tracking-widest text-brand-gold-600 font-bold -mt-0.5">
+              <div className="text-xs font-mono tracking-widest text-brand-gold-600 font-bold -mt-0.5">
                 SOLUTION
               </div>
             </div>
           </a>
 
           {/* Desktop Navigation Link Anchors */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-brand-navy-800">
-            <a href="#about" className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all">
-              About Us
-            </a>
-            <a href="#mission" className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all">
-              Our Mission
-            </a>
-            <a href="#services" className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all">
-              Integrated Suite
-            </a>
-            <a href="#contact" className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all">
-              Inquire Demo
-            </a>
+          <nav className="hidden lg:flex items-center gap-8 text-[15px] font-bold text-brand-navy-900">
+            <button 
+              onClick={() => onOpenHub("home")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold text-brand-navy-900"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => onOpenHub("about")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold text-brand-navy-900"
+            >
+              About
+            </button>
+            <button 
+              onClick={() => onOpenHub("services")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
+            >
+              Services
+            </button>
+            <button 
+              onClick={() => onOpenHub("portfolio")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
+            >
+              Portfolio / Case Studies
+            </button>
+            <button 
+              onClick={() => onOpenHub("contact")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
+            >
+              Contact with Us
+            </button>
+            <button 
+              onClick={() => onOpenHub("careers")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
+            >
+              Careers
+            </button>
+            <button 
+              onClick={() => onOpenHub("blog")}
+              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
+            >
+              Blog
+            </button>
           </nav>
 
-          {/* Action Call to Action */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              id="ai-assistant-shortcut"
-              onClick={onOpenAssistant}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-navy-50 text-brand-navy-700 hover:bg-brand-navy-100 text-xs font-bold rounded-lg border border-brand-navy-200 transition-all active:scale-95"
-            >
-              <Bot className="w-4 h-4 text-brand-gold-600 animate-pulse" />
-              <span>Ask Vidya AI</span>
-            </button>
-            <a
-              id="header-cta-demo"
-              href="#contact"
-              className="group flex items-center gap-1.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-600 text-white text-xs font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
-            >
-              <span>Request Callback</span>
-              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
-            </a>
-          </div>
+
 
           {/* Mobile Menu Toggle */}
           <div className="flex lg:hidden items-center gap-2">
@@ -132,35 +139,49 @@ export default function Header({ onOpenAssistant }: HeaderProps) {
         {/* Mobile Fullscreen Panel */}
         {mobileMenuOpen && (
           <div id="mobile-nav-menu" className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3">
-            <nav className="flex flex-col gap-3 font-semibold text-brand-navy-800">
-              <a 
-                href="#about" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600"
+            <nav className="flex flex-col gap-2 font-semibold text-brand-navy-800">
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("home"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
+              >
+                Home Overview
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("about"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
               >
                 About Us
-              </a>
-              <a 
-                href="#mission" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600"
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("services"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
               >
-                Our Mission
-              </a>
-              <a 
-                href="#services" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600"
+                Services Suite
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("portfolio"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
               >
-                Integrated Suite (01-08)
-              </a>
-              <a 
-                href="#contact" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600"
+                Portfolio / Case Studies
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("contact"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
               >
-                Contact & Demo request
-              </a>
+                Contact with Us
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("careers"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
+              >
+                Careers
+              </button>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); onOpenHub("blog"); }}
+                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
+              >
+                Blog
+              </button>
             </nav>
             <hr className="border-slate-100" />
             <div className="flex flex-col gap-2.5 pt-2">
@@ -189,7 +210,7 @@ export default function Header({ onOpenAssistant }: HeaderProps) {
               <p>📍 Branch: STPI Sindri, BIT Sindri Campus</p>
               <p>📞 Phone: {phoneNum}</p>
               <p>✉️ {emailAddr}</p>
-              <p>✉️ {officerEmail} (Officer)</p>
+              <p>✉️ {officerEmail} (Director/Founder: Chiranjeev Das)</p>
             </div>
           </div>
         )}
