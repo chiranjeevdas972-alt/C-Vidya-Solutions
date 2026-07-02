@@ -164,7 +164,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-brand-gold-200 selection:text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-brand-gold-200 selection:text-slate-900 overflow-x-clip">
       
       {/* Premium Navigation Header */}
       <Header 
@@ -190,7 +190,7 @@ export default function App() {
             {activePage === "home" && (
               <>
                 {/* Hero / Branding Split Section (Primary viewport matching Image 1 layout) */}
-                <main id="hero" className="relative py-12 md:py-20 lg:py-28 bg-white overflow-hidden border-b border-slate-100">
+                <main id="hero" className="relative pt-4 md:pt-8 lg:pt-10 pb-12 md:pb-20 lg:pb-28 bg-white overflow-hidden border-b border-slate-100">
 
 
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
