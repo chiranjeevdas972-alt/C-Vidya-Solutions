@@ -48,10 +48,10 @@ function getGeminiClient(): GoogleGenAI {
 }
 
 // System instructions for C Vidya Solutions Consultant
-const SYSTEM_INSTRUCTION = `You are "Vidya AI", the expert product advisor and smart assistant for "C Vidya Solution", a premium technology company established in 2025.
+const SYSTEM_INSTRUCTION = `You are "Vidya AI", the expert product advisor and smart assistant for "C Vidya Solutions", a premium technology company established in 2025.
 Your goal is to consult visitors, explain the digital product suite, help they choose the appropriate system, and gather client interest.
 
-Here are the key details about C Vidya Solution:
+Here are the key details about C Vidya Solutions:
 - Tagline: "Innovating Software for a Simpler Future"
 - Headquarters: Surunga, Baliapur, Dhanbad, Jharkhand - 828115
 - Branch Office & Director's Desk: STPI Sindri, BIT Sindri Campus, Dhanbad, Jharkhand
@@ -419,7 +419,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`C Vidya Solution Server running on http://0.0.0.0:${PORT}`);
+    console.log(`C Vidya Solutions Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

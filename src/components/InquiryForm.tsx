@@ -377,21 +377,27 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-gold-500/20 bg-slate-50/50 transition-colors">
+              <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-gold-500/20 bg-slate-50/50 transition-colors w-full min-w-0">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0">
                   <Mail className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase text-slate-400 font-mono font-bold tracking-wider">EMAIL CORRESPONDENCE</div>
-                  <div className="flex flex-col gap-1.5 mt-0.5">
-                    <a href="mailto:cvidyasolutions@gmail.com" className="font-display font-bold text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight">
-                      cvidyasolutions@gmail.com <span className="text-xs font-normal text-slate-400 font-sans">(Office Desk)</span>
-                    </a>
-                    <a href="mailto:chiranjeev0058@gmail.com" className="font-display font-bold text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight">
-                      chiranjeev0058@gmail.com <span className="text-xs font-normal text-slate-400 font-sans">(Director/Founder: Chiranjeev Das)</span>
-                    </a>
+                  <div className="flex flex-col gap-1.5 mt-0.5 min-w-0">
+                    <div className="min-w-0">
+                      <a href="mailto:cvidyasolutions@gmail.com" className="font-display font-bold text-[13px] sm:text-sm md:text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                        cvidyasolutions@gmail.com
+                      </a>
+                      <span className="text-[10px] sm:text-xs font-normal text-slate-400 font-sans block mt-0.5 mb-1.5">(Office Desk)</span>
+                    </div>
+                    <div className="min-w-0">
+                      <a href="mailto:chiranjeev0058@gmail.com" className="font-display font-bold text-[13px] sm:text-sm md:text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                        chiranjeev0058@gmail.com
+                      </a>
+                      <span className="text-[10px] sm:text-xs font-normal text-slate-400 font-sans block mt-0.5">(Director/Founder: Chiranjeev Das)</span>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-700 mt-1.5 font-bold">Response guaranteed in 24 hours</p>
+                  <p className="text-[11px] text-slate-700 mt-2 font-bold">Response guaranteed in 24 hours</p>
                 </div>
               </div>
 
@@ -458,7 +464,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                   SCAN TO VISIT WEBSITE
                 </div>
                 <h4 className="font-display font-semibold text-sm leading-tight">
-                  Carry C Vidya Solution in your pocket.
+                  Carry C Vidya Solutions in your pocket.
                 </h4>
                 <p className="text-[11px] text-slate-300 leading-normal">
                   Scans redirect you instantly to our secured domain for detailed systems document references.

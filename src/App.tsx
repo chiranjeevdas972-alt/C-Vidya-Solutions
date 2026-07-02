@@ -7,6 +7,7 @@ import ProductSuite from "./components/ProductSuite";
 import InquiryForm from "./components/InquiryForm";
 import AiAssistant from "./components/AiAssistant";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
+import CompliancePage from "./components/CompliancePage";
 import InfoHubModal from "./components/InfoHubModal";
 import { 
   Building2, 
@@ -32,7 +33,12 @@ import {
   GraduationCap,
   CheckCircle2,
   Send,
-  X
+  X,
+  Youtube,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin
 } from "lucide-react";
 import { rolesData, CATEGORIES, type CareerRole } from "./careersData";
 
@@ -102,7 +108,31 @@ export default function App() {
   const [hubTab, setHubTab] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog">("home");
 
   // Active page routing state
-  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog">("home");
+  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
+
+  // Hash-change router listener for separate pages
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      const validPages = [
+        "home", "about", "services", "portfolio", "contact", "careers", "blog",
+        "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
+      ];
+      if (validPages.includes(hash)) {
+        setActivePage(hash as any);
+        if (["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(hash)) {
+          setComplianceTab(hash);
+        }
+      } else if (!hash) {
+        setActivePage("home");
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    handleHashChange(); // Handle initial load link
+
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Careers Search and Form states
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,7 +170,7 @@ export default function App() {
       <Header 
         onOpenAssistant={() => setAiOpen(true)} 
         onOpenHub={(tab) => { 
-          setActivePage(tab);
+          window.location.hash = tab;
           setHubTab(tab); 
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
@@ -175,7 +205,7 @@ export default function App() {
                           <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-5xl.5 text-brand-navy-900 tracking-tight leading-none">
                             C VIDYA <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold-600 via-brand-gold-500 to-[#d69e2e]">
-                              SOLUTION
+                              SOLUTIONS
                             </span>
                           </h1>
 
@@ -476,7 +506,7 @@ export default function App() {
                 <div className="bg-gradient-to-r from-brand-navy-950 to-brand-navy-900 py-16 text-center text-white relative">
                   <div className="absolute inset-0 bg-radial from-brand-gold-500/5 via-transparent to-transparent opacity-50" />
                   <div className="max-w-5xl mx-auto px-4 space-y-4">
-                    <h2 className="font-mono text-xs font-bold text-brand-gold-400 uppercase tracking-widest">ABOUT C VIDYA SOLUTION</h2>
+                    <h2 className="font-mono text-xs font-bold text-brand-gold-400 uppercase tracking-widest">ABOUT C VIDYA SOLUTIONS</h2>
                     <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-wider text-white">
                       INNOVATING SOFTWARE FOR A <span className="text-[#42A5F5]">SIMPLER FUTURE</span>
                     </h1>
@@ -504,7 +534,7 @@ export default function App() {
                         </div>
                         <div className="text-xs sm:text-sm text-black leading-relaxed font-semibold space-y-3.5">
                           <p>
-                            C Vidya Solution is a technology company established in 2025 with a vision to empower businesses through smart and efficient software solutions.
+                            C Vidya Solutions is a technology company established in 2025 with a vision to empower businesses through smart and efficient software solutions.
                           </p>
                           <p>
                             We provide all types of software solutions designed to simplify operations, improve productivity, and drive growth. We specialize in robust, lightning-fast React interfaces, native mobile wrappers, and solid backend systems.
@@ -1166,6 +1196,20 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* 8. SEPARATE COMPLIANCE PAGES */}
+            {["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(activePage) && (
+              <CompliancePage 
+                initialTab={activePage as any} 
+                onBackToHome={() => {
+                  window.location.hash = "home";
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                onTabChange={(tab) => {
+                  window.location.hash = tab;
+                }}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -1284,11 +1328,11 @@ export default function App() {
           {/* Intellectual property block strip with Legal and Privacy compliance center links */}
           <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-200 font-mono text-[10.5px] leading-relaxed uppercase">
             <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center md:justify-start">
-              <span className="text-slate-300">© 2025 C Vidya Solution. All rights reserved.</span>
+              <span className="text-slate-300">© 2025 C Vidya Solutions. All rights reserved.</span>
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("privacy"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "privacy"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Privacy Policy
@@ -1296,7 +1340,7 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("terms"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "terms"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Terms of Service
@@ -1304,7 +1348,7 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("billing"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "billing"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Trial & Billing
@@ -1312,7 +1356,7 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("refund"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "refund"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Refund & Cancellation Policy
@@ -1320,7 +1364,7 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("cookies"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "cookies"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Cookie Policy
@@ -1328,7 +1372,7 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("disclaimer"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "disclaimer"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Disclaimer
@@ -1336,15 +1380,32 @@ export default function App() {
               <span className="text-slate-400">•</span>
               <button 
                 type="button"
-                onClick={() => { setComplianceTab("portability"); setComplianceOpen(true); }} 
+                onClick={() => { window.location.hash = "portability"; window.scrollTo({ top: 0, behavior: "smooth" }); }} 
                 className="text-white hover:text-brand-gold-400 cursor-pointer transition-colors underline bg-transparent border-none p-0 font-bold"
               >
                 Data Erasure
               </button>
             </div>
-            <div className="flex gap-4 shrink-0 text-slate-300">
-              <span>DESIGNED UNDER THE METALLIC GOLD CONSTRAINTS</span>
-              <span>•</span>
+            <div className="flex flex-col sm:flex-row items-center gap-6 shrink-0">
+              {/* Social Media Links */}
+              <div className="flex items-center gap-4 text-slate-300">
+                <a href="https://www.youtube.com/@cvidyasolutions" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold-400 transition-colors p-2 bg-brand-navy-900 rounded-full border border-slate-800 hover:border-brand-gold-500/50" title="YouTube">
+                  <Youtube className="w-4 h-4" />
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=61591206215743" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold-400 transition-colors p-2 bg-brand-navy-900 rounded-full border border-slate-800 hover:border-brand-gold-500/50" title="Facebook">
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a href="https://www.instagram.com/cvidyasolutions/?hl=en" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold-400 transition-colors p-2 bg-brand-navy-900 rounded-full border border-slate-800 hover:border-brand-gold-500/50" title="Instagram">
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a href="https://twitter.com/CVidyaSolutions" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold-400 transition-colors p-2 bg-brand-navy-900 rounded-full border border-slate-800 hover:border-brand-gold-500/50" title="Twitter / X">
+                  <Twitter className="w-4 h-4" />
+                </a>
+                <a href="https://linkedin.com/company/cvidyasolutions" target="_blank" rel="noopener noreferrer" className="hover:text-brand-gold-400 transition-colors p-2 bg-brand-navy-900 rounded-full border border-slate-800 hover:border-brand-gold-500/50" title="LinkedIn">
+                  <Linkedin className="w-4 h-4" />
+                </a>
+              </div>
+              <span className="hidden sm:inline text-slate-700">•</span>
               <button 
                 type="button" 
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -1360,7 +1421,7 @@ export default function App() {
       </footer>
 
       {/* GDPR / CCPA Cookie Consent Banner */}
-      <CookieConsentBanner onManagePreferences={() => { setComplianceTab("cookies"); setComplianceOpen(true); }} />
+      <CookieConsentBanner onManagePreferences={() => { window.location.hash = "cookies"; window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
       {/* Interactive Compliance Center Modal */}
       <ComplianceModal 

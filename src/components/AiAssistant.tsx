@@ -19,7 +19,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     {
       id: "welcome",
       role: "model",
-      content: "Hello! I am **Vidya AI**, your dedicated product consultant for C Vidya Solution. How may I assist you with our integrated digital systems suite today? Feel free to ask about library automation, parent CRM portals, smart farming metrics, or custom dashboards!",
+      content: "Hello! I am **Vidya AI**, your dedicated product consultant for C Vidya Solutions. How may I assist you with our integrated digital systems suite today? Feel free to ask about library automation, parent CRM portals, smart farming metrics, or custom dashboards!",
       timestamp: new Date().toLocaleTimeString()
     }
   ]);
@@ -79,7 +79,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       const errorMessage: ChatMessage = {
         id: `msg_err_${Math.random().toString(36).substr(2, 9)}`,
         role: "model",
-        content: "I'm having trouble reaching C Vidya Solution servers right now. Please confirm your internet connection or register a callback using the form below! Rest assured, we prioritize your operations.",
+        content: "I'm having trouble reaching C Vidya Solutions servers right now. Please confirm your internet connection or register a callback using the form below! Rest assured, we prioritize your operations.",
         timestamp: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, errorMessage]);

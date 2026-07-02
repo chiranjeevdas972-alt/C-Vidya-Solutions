@@ -58,7 +58,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
     setTimeout(() => {
       // Direct instant download of user data ledger in compliance with GDPR Art 15 / CCPA Data Portability
       const dataLedger = {
-        company: "C Vidya Solution",
+        company: "C Vidya Solutions",
         exportTimestamp: new Date().toISOString(),
         subjectEmail: emailInput.trim(),
         jurisdictionPolicy: "GDPR / CCPA compliant portable account dump",
@@ -209,7 +209,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div className="p-4 bg-slate-100 border border-slate-200 rounded-2xl flex gap-3 items-start">
                 <Info className="w-5 h-5 text-brand-gold-600 shrink-0 mt-0.5" />
                 <p className="text-[12px] text-slate-800 font-medium">
-                  This Privacy Policy is designed to inform you transparently about how C Vidya Solution ("we", "us", "our") collects, processes, encrypts, and secures your credentials, database entities, and analytical usage metrics across our integrated application suites.
+                  This Privacy Policy is designed to inform you transparently about how C Vidya Solutions ("we", "us", "our") collects, processes, encrypts, and secures your credentials, database entities, and analytical usage metrics across our integrated application suites.
                 </p>
               </div>
 
@@ -268,7 +268,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div>
                 <h4 className="font-display font-extrabold text-brand-navy-900 text-sm mb-2 uppercase">1. ACCEPTABLE USE SCHEME</h4>
                 <p className="mb-3">
-                  By accessing C Vidya Solution platforms, you agree to respect our system boundaries. You are strictly forbidden from:
+                  By accessing C Vidya Solutions platforms, you agree to respect our system boundaries. You are strictly forbidden from:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 mb-4">
                   <li>Attempting credential bypass or brute-forcing administrative passcode entries.</li>
@@ -280,7 +280,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div>
                 <h4 className="font-display font-extrabold text-brand-navy-900 text-sm mb-2 uppercase">2. ACCOUNT & ADMIN PASSWORD RESPONSIBILITIES</h4>
                 <p className="mb-4">
-                  Administrators are solely responsible for protecting the confidential owner access passcodes. Passcode exposure due to local credential share is not the liability of C Vidya Solution.
+                  Administrators are solely responsible for protecting the confidential owner access passcodes. Passcode exposure due to local credential share is not the liability of C Vidya Solutions.
                 </p>
               </div>
 
@@ -294,7 +294,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div>
                 <h4 className="font-display font-extrabold text-brand-navy-900 text-sm mb-2 uppercase">4. LIMITATION OF LIABILITY</h4>
                 <p>
-                  To the maximum extent permitted under IT Act 2000, C Vidya Solution shall not be liable for any direct, indirect, incidental, or exemplary damages, including but not limited to loss of data or business continuity, arising from using or failing to connect to our smart servers.
+                  To the maximum extent permitted under IT Act 2000, C Vidya Solutions shall not be liable for any direct, indirect, incidental, or exemplary damages, including but not limited to loss of data or business continuity, arising from using or failing to connect to our smart servers.
                 </p>
               </div>
             </div>
@@ -379,7 +379,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 items-start">
                 <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11.5px] text-amber-800">
-                  C Vidya Solution prioritizes transparent, user-first operations. This policy governs all trial subscriptions, premium upgrades, package cancellations, and credit transaction refunds.
+                  C Vidya Solutions prioritizes transparent, user-first operations. This policy governs all trial subscriptions, premium upgrades, package cancellations, and credit transaction refunds.
                 </p>
               </div>
 
@@ -433,14 +433,14 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
               <div>
                 <h4 className="font-display font-extrabold text-brand-navy-900 text-sm mb-2 uppercase">2. NO LIABILITY FOR OUTAGES</h4>
                 <p className="mb-4">
-                  While we maintain smart server clustering and secure cloud databases (Firestore) to minimize service disruptions, C Vidya Solution is not liable for temporary data retrieval latencies, local client-side memory clears, or Force Majeure network outages.
+                  While we maintain smart server clustering and secure cloud databases (Firestore) to minimize service disruptions, C Vidya Solutions is not liable for temporary data retrieval latencies, local client-side memory clears, or Force Majeure network outages.
                 </p>
               </div>
 
               <div>
                 <h4 className="font-display font-extrabold text-brand-navy-900 text-sm mb-2 uppercase">3. INTELLECTUAL CONSTRAINTS</h4>
                 <p>
-                  The specific UI/UX themes, gold metallic palettes, modular component combinations, and system graphics remain the exclusive intellectual properties of C Vidya Solution, protected in accordance with the IT Act 2000 and Indian Copyright laws.
+                  The specific UI/UX themes, gold metallic palettes, modular component combinations, and system graphics remain the exclusive intellectual properties of C Vidya Solutions, protected in accordance with the IT Act 2000 and Indian Copyright laws.
                 </p>
               </div>
             </div>

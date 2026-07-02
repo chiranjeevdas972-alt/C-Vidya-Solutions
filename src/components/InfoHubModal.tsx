@@ -83,7 +83,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
             </div>
             <div>
               <h3 className="font-display font-black text-sm tracking-wider text-slate-100 uppercase">
-                C Vidya Solution • Feature Hub
+                C Vidya Solutions • Feature Hub
               </h3>
               <p className="text-[10px] font-mono text-brand-gold-400 leading-none mt-0.5 uppercase">
                 Explore our full digital software ecosystem
@@ -130,7 +130,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                     Powering Institutional Excellence & Civic Smart Infrastructure
                   </h4>
                   <p className="text-[12px] text-slate-300 leading-relaxed">
-                    C Vidya Solution is a leading SaaS provider developing robust, secure enterprise and educational web suites. Rooted in Dhanbad, Jharkhand, with our STPI Branch at BIT Sindri Campus, we empower libraries, schools, coaching institutes, municipal bodies, and clubs with state-of-the-art automated systems.
+                    C Vidya Solutions is a leading SaaS provider developing robust, secure enterprise and educational web suites. Rooted in Dhanbad, Jharkhand, with our STPI Branch at BIT Sindri Campus, we empower libraries, schools, coaching institutes, municipal bodies, and clubs with state-of-the-art automated systems.
                   </p>
                 </div>
                 {/* Visual book background effect */}
@@ -775,7 +775,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
 
         {/* Modal Footer */}
         <div className="bg-slate-100 px-6 py-4 border-t border-slate-200 flex justify-between items-center shrink-0 text-slate-800 font-mono text-[10px] font-bold">
-          <span>C VIDYA SOLUTION FEATURE CENTER</span>
+          <span>C VIDYA SOLUTIONS FEATURE CENTER</span>
           <button 
             onClick={onClose}
             className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg transition-colors cursor-pointer border border-slate-300"

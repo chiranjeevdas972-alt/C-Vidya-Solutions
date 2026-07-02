@@ -64,7 +64,7 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
                 C VIDYA
               </div>
               <div className="text-xs font-mono tracking-widest text-brand-gold-600 font-bold -mt-0.5">
-                SOLUTION
+                SOLUTIONS
               </div>
             </div>
           </a>
@@ -119,13 +119,6 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
 
           {/* Mobile Menu Toggle */}
           <div className="flex lg:hidden items-center gap-2">
-            <button
-              onClick={onOpenAssistant}
-              className="p-2 hover:bg-slate-100 rounded-full text-brand-navy-800"
-              title="Ask AI Advisor"
-            >
-              <Bot className="w-5 h-5 text-brand-gold-600" />
-            </button>
             <button
               id="mobile-nav-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -185,16 +178,6 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
             </nav>
             <hr className="border-slate-100" />
             <div className="flex flex-col gap-2.5 pt-2">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenAssistant();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-brand-navy-900 text-white rounded-lg font-bold text-sm tracking-wide"
-              >
-                <Bot className="w-4 h-4 text-brand-gold-400" />
-                <span>Talk with Vidya AI Advisor</span>
-              </button>
               <a
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
