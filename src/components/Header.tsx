@@ -25,29 +25,12 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
               <Phone className="w-3.5 h-3.5 text-brand-gold-400" />
               <span>{phoneNum}</span>
             </a>
+          </div>
+          <div className="flex items-center gap-4">
             <a href={`mailto:${emailAddr}`} className="flex items-center gap-1.5 hover:text-brand-gold-300 transition-colors">
                 <Mail className="w-3.5 h-3.5 text-brand-gold-400" />
                 <span>{emailAddr}</span>
             </a>
-            <a href={`mailto:${officerEmail}`} className="flex items-center gap-1.5 hover:text-brand-gold-300 transition-colors">
-                <Mail className="w-3.5 h-3.5 text-brand-gold-400" />
-                <span>{officerEmail} (Director/Founder: Chiranjeev Das)</span>
-            </a>
-            <div className="flex flex-col xl:flex-row xl:items-center gap-1.5 xl:gap-4 text-brand-gold-200">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-brand-gold-400 shrink-0" />
-                <span>HQ: Surunga, Baliapur, Dhanbad - 828115</span>
-              </div>
-              <div className="flex items-center gap-1.5 border-l border-brand-gold-500/20 xl:pl-4">
-                <MapPin className="w-3.5 h-3.5 text-brand-gold-400 shrink-0" />
-                <span>Branch: STPI Sindri, BIT Sindri Campus</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-400">ESTD: 2025</span>
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-green-400 font-medium">Systems Operational</span>
           </div>
         </div>
       </div>
@@ -189,11 +172,8 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
             
             {/* Quick Contact info */}
             <div className="pt-4 text-center text-xs text-slate-500 space-y-1">
-              <p>📍 HQ: Surunga, Baliapur, Dhanbad, Jharkhand</p>
-              <p>📍 Branch: STPI Sindri, BIT Sindri Campus</p>
               <p>📞 Phone: {phoneNum}</p>
               <p>✉️ {emailAddr}</p>
-              <p>✉️ {officerEmail} (Director/Founder: Chiranjeev Das)</p>
             </div>
           </div>
         )}
