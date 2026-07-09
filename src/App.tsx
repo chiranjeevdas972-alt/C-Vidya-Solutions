@@ -1316,8 +1316,8 @@ export default function App() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-brand-gold-500 shrink-0" />
-                  <a href="tel:8987766981" className="hover:text-brand-gold-400 transition-colors font-medium">
-                    8987766981
+                  <a href="tel:+919288517027" className="hover:text-brand-gold-400 transition-colors font-medium">
+                    +91 9288517027
                   </a>
                 </div>
               </div>

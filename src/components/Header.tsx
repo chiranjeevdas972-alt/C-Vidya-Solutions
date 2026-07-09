@@ -10,7 +10,7 @@ interface HeaderProps {
 export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const phoneNum = "8987766981";
+  const phoneNum = "+91 9288517027";
   const emailAddr = "cvidyasolutions@gmail.com";
   const officerEmail = "chiranjeev0058@gmail.com";
   const locationText = "Dhanbad, Jharkhand";
