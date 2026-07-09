@@ -7,6 +7,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA LIBRARY",
     tagline: "Automated Book Inflow & Student Membership Tracking",
     description: "Complete library management system to manage books, members, issue/return and other library operations.",
+    externalLink: "https://v.cvidyasolutions.workers.dev/",
     features: [
       "ISBN barcode scanner and inventory tracking",
       "Automated WhatsApp & SMS notifications for overdue titles",
@@ -44,6 +45,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA FITNESS ZONE",
     tagline: "Comprehensive Gym Plan & Biometric Turnstile Ledger",
     description: "Gym & fitness management software to handle members, plans, attendance, trainers and daily activities seamlessly.",
+    externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
     features: [
       "Biometric finger scan and facial door access logs",
       "Personalized training diet regimes & goal planners",
@@ -155,6 +157,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA CRM",
     tagline: "Intuitive Sales Funnels & Lead Generation Metrics",
     description: "Customer Relationship Management system to manage leads, sales, customers and improve business relationships.",
+    externalLink: "https://crm.cvidyasolutions.workers.dev/",
     features: [
       "Dynamic pipeline cards with simple drag-drop states",
       "Smart follow-up alerts and automated customer greeting emails",

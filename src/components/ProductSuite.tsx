@@ -104,7 +104,12 @@ export default function ProductSuite() {
               return (
                 <button
                   key={service.id}
-                  onClick={() => setSelectedId(service.id)}
+                  onClick={() => {
+                    setSelectedId(service.id);
+                    if (service.externalLink) {
+                      window.open(service.externalLink, "_blank");
+                    }
+                  }}
                   className={`w-full text-left p-5 rounded-2xl border transition-all flex gap-4 cursor-pointer relative overflow-hidden group ${
                     isActive 
                       ? "bg-white border-brand-gold-500 shadow-md ring-1 ring-brand-gold-400" 
@@ -128,18 +133,23 @@ export default function ProductSuite() {
                   </div>
 
                   {/* Copy content */}
-                  <div className="space-y-1 z-10">
-                    <h3 className="font-display font-bold text-sm tracking-wide text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors flex items-center gap-1.5">
+                  <div className="space-y-1 z-10 flex-1">
+                    <h3 className="font-display font-bold text-sm tracking-wide text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors flex items-center justify-between gap-1.5">
                       <span>{service.name}</span>
                       {isActive && <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />}
                     </h3>
                     <p className="text-xs text-black leading-relaxed font-bold">
                       {service.description}
                     </p>
-                    <div className="flex items-center gap-1.5 pt-1.5">
+                    <div className="flex items-center justify-between pt-1.5 flex-wrap gap-2">
                       <span className="text-[10px] font-mono text-brand-gold-600 font-bold tracking-wider">
                         {isActive ? "Launch Simulator" : "Open Tool"}
                       </span>
+                      {service.externalLink && (
+                        <span className="text-[10px] bg-brand-gold-500/10 text-brand-gold-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-brand-gold-400/20 group-hover:bg-brand-gold-500 group-hover:text-slate-950 transition-all duration-300">
+                          Live App ↗
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -197,13 +207,25 @@ export default function ProductSuite() {
                       </h4>
                     </div>
                     {/* Control Quick Actions */}
-                    <button 
-                      onClick={() => triggerSimulationEvent(selectedId, "refresh")}
-                      className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors text-slate-300"
-                      title="Trigger action log"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5 text-[#42A5F5]" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {selectedService.externalLink && (
+                        <a 
+                          href={selectedService.externalLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2 py-1 bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 font-bold rounded text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                        >
+                          <span>Open Live App ↗</span>
+                        </a>
+                      )}
+                      <button 
+                        onClick={() => triggerSimulationEvent(selectedId, "refresh")}
+                        className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors text-slate-300"
+                        title="Trigger action log"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-[#42A5F5]" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Grid of live values counters inside emulator */}

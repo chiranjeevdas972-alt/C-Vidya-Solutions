@@ -32,6 +32,7 @@ interface SoftwareItem {
   badge: string;
   metrics: { label: string; value: string; isGood?: boolean }[];
   accentColor: string;
+  externalLink?: string;
 }
 
 export default function SoftwareCarousel() {
@@ -48,6 +49,7 @@ export default function SoftwareCarousel() {
       description: "Complete institutional ledger with digital barcode scanners, auto SMS warnings, CBSE score matching, and catalog check-outs.",
       badge: "Institutional Module",
       accentColor: "from-brand-gold-500 to-amber-500",
+      externalLink: "https://v.cvidyasolutions.workers.dev/",
       metrics: [
         { label: "Book Catalog Capacity", value: "50,000+" },
         { label: "WhatsApp Alert Latency", value: "< 2.4s" },
@@ -78,6 +80,7 @@ export default function SoftwareCarousel() {
       description: "Full club management system integrated with physical gate relays, digital QR passes, automated diet planners, and membership logs.",
       badge: "Facility Hardware",
       accentColor: "from-amber-400 to-brand-gold-500",
+      externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
       metrics: [
         { label: "Face Recognition Speed", value: "0.18s" },
         { label: "Member Portal Logins", value: "1,400+" },
@@ -93,6 +96,7 @@ export default function SoftwareCarousel() {
       description: "Intelligent customer pipeline tracker for academic institutions and franchises. Log callbacks, record requirements, and compile billing.",
       badge: "Enterprise SaaS",
       accentColor: "from-brand-gold-400 to-yellow-600",
+      externalLink: "https://crm.cvidyasolutions.workers.dev/",
       metrics: [
         { label: "Lead Pipeline Load", value: "10,000/sec" },
         { label: "Avg Sales Conversion Boost", value: "+42%" },
@@ -215,9 +219,21 @@ export default function SoftwareCarousel() {
                     <div className="w-7 h-7 rounded-lg bg-brand-gold-100 flex items-center justify-center text-brand-gold-800 shrink-0">
                       <IconComponent className="w-4 h-4" />
                     </div>
-                    <h3 className="font-display font-extrabold text-base md:text-[17px] text-[#42A5F5] tracking-tight leading-tight">
-                      {activeSoftware.name}
-                    </h3>
+                    {activeSoftware.externalLink ? (
+                      <a 
+                        href={activeSoftware.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-display font-extrabold text-base md:text-[17px] text-[#42A5F5] hover:text-brand-gold-400 hover:underline tracking-tight leading-tight flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>{activeSoftware.name}</span>
+                        <span className="text-[9px] bg-brand-gold-500/25 text-brand-gold-300 px-2 py-0.5 rounded-full uppercase font-mono font-bold leading-none select-none">Live ↗</span>
+                      </a>
+                    ) : (
+                      <h3 className="font-display font-extrabold text-base md:text-[17px] text-[#42A5F5] tracking-tight leading-tight">
+                        {activeSoftware.name}
+                      </h3>
+                    )}
                   </div>
                   
                   <p className="font-sans font-bold text-[11.5px] text-brand-gold-300 uppercase tracking-wide">
@@ -276,9 +292,20 @@ export default function SoftwareCarousel() {
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500/70" />
                     <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/70" />
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500/70" />
-                    <span className="font-mono text-[9px] text-slate-400 font-semibold ml-1.5 bg-brand-navy-950/80 px-1.5 py-0.5 rounded border border-brand-navy-800">
-                      https://admin.cvidya.in/portal
-                    </span>
+                    {activeSoftware.externalLink ? (
+                      <a 
+                        href={activeSoftware.externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-[9.5px] text-brand-gold-400 hover:text-brand-gold-200 hover:underline font-bold ml-1.5 bg-brand-navy-950 px-2 py-0.5 rounded border border-brand-gold-500/30 flex items-center gap-1 transition-all cursor-pointer"
+                      >
+                        <span>Open Live Platform ↗</span>
+                      </a>
+                    ) : (
+                      <span className="font-mono text-[9px] text-slate-400 font-semibold ml-1.5 bg-brand-navy-950/80 px-1.5 py-0.5 rounded border border-brand-navy-800">
+                        https://admin.cvidya.in/portal
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="w-3 h-3 text-slate-500" />
