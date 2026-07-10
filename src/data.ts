@@ -120,6 +120,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA COACHING MANAGEMENT",
     tagline: "Aspirants Test Analytics & Automated SMS Broadcasts",
     description: "Specially designed for coaching centers to manage batches, students, attendance, fees and performance.",
+    externalLink: "https://coaching.cvidyasolutions.workers.dev/",
     features: [
       "Dynamic batch creation and classroom seating logs",
       "Biometric attendance with real-time SMS status sent to parents",
