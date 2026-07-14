@@ -108,7 +108,7 @@ export default function App() {
   const [hubTab, setHubTab] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog">("home");
 
   // Active page routing state
-  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
+  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("services");
 
   // Hash-change router listener for separate pages
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function App() {
           setComplianceTab(hash);
         }
       } else if (!hash) {
-        setActivePage("home");
+        setActivePage("services");
       }
     };
 

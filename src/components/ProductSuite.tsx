@@ -186,24 +186,24 @@ export default function ProductSuite() {
                     <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
                   </div>
-                  <div className="flex items-center gap-1 bg-slate-950 px-2 py-0.5 rounded-full text-[9px] text-[#2ebd59]">
-                    <span className="w-1.5 h-1.5 bg-[#2ebd59] rounded-full animate-pulse" />
+                  <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full text-[9px] text-[#257a3e]">
+                    <span className="w-1.5 h-1.5 bg-[#257a3e] rounded-full animate-pulse" />
                     <span>simul_host://{selectedId}.cvidya.app</span>
                   </div>
                   <div className="w-12 h-1 bg-slate-800 rounded-full" />
                 </div>
 
                 {/* Dashboard Screen Content */}
-                <div className="bg-slate-950 text-slate-100 p-4 font-sans min-h-[360px] flex flex-col justify-between">
+                <div className="bg-white text-slate-900 p-4 font-sans min-h-[360px] flex flex-col justify-between border border-slate-100">
                   
                   {/* Dashboard Header Bar */}
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                     <div>
-                      <div className="text-[10px] text-brand-gold-400 font-mono font-bold tracking-widest uppercase">
+                      <div className="text-[10px] text-brand-gold-600 font-mono font-bold tracking-widest uppercase">
                         {selectedService.id.toUpperCase()} MODULE CONTROL
                       </div>
-                      <h4 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                        {getServiceIcon(selectedId, "w-4 h-4 text-brand-gold-400")}
+                      <h4 className="text-sm font-bold tracking-tight text-brand-navy-950 flex items-center gap-1.5">
+                        {getServiceIcon(selectedId, "w-4 h-4 text-brand-gold-600")}
                         <span>{selectedService.mockData.title}</span>
                       </h4>
                     </div>
@@ -214,17 +214,17 @@ export default function ProductSuite() {
                           href={selectedService.externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 px-2 py-1 bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 font-bold rounded text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                          className="flex items-center gap-1 px-2.5 py-1 bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 font-extrabold rounded text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                         >
                           <span>Open Live App ↗</span>
                         </a>
                       )}
                       <button 
                         onClick={() => triggerSimulationEvent(selectedId, "refresh")}
-                        className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors text-slate-300"
+                        className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors text-slate-600"
                         title="Trigger action log"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 text-[#42A5F5]" />
+                        <RefreshCw className="w-3.5 h-3.5 text-brand-gold-600" />
                       </button>
                     </div>
                   </div>
@@ -232,15 +232,15 @@ export default function ProductSuite() {
                   {/* Grid of live values counters inside emulator */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4">
                     {selectedService.mockData.metrics.map((met, i) => (
-                      <div key={i} className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-xl flex flex-col justify-between">
-                        <div className="text-[9px] text-slate-400 font-mono truncate leading-none uppercase">
+                      <div key={i} className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl flex flex-col justify-between">
+                        <div className="text-[9px] text-slate-500 font-mono truncate leading-none uppercase">
                           {met.label}
                         </div>
-                        <div className="text-base font-black text-white mt-1.5 font-mono">
+                        <div className="text-base font-black text-brand-navy-950 mt-1.5 font-mono">
                           {met.value}
                         </div>
-                        <div className={`text-[8px] font-medium font-mono mt-1 ${
-                          met.isPositive ? "text-green-400" : "text-yellow-400"
+                        <div className={`text-[8px] font-bold font-mono mt-1 ${
+                          met.isPositive ? "text-emerald-600" : "text-amber-600"
                         }`}>
                           {met.change}
                         </div>
@@ -252,21 +252,21 @@ export default function ProductSuite() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch my-1 flex-1">
                     
                     {/* Tiny Responsive SVG Bar Chart */}
-                    <div className="md:col-span-6 bg-slate-900/60 p-3 rounded-xl border border-slate-800/60 flex flex-col justify-between">
-                      <div className="text-[10px] text-slate-400 font-mono font-bold flex justify-between">
+                    <div className="md:col-span-6 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
+                      <div className="text-[10px] text-slate-500 font-mono font-bold flex justify-between">
                         <span>WEEKLY TRANSACTIONS</span>
-                        <span className="text-emerald-400 font-mono font-semibold">ONLINE</span>
+                        <span className="text-emerald-600 font-mono font-bold">ONLINE</span>
                       </div>
                       
                       {/* Interactive Graph SVG block */}
-                      <div className="h-24 w-full flex items-end justify-between gap-1 pt-3.5 border-b border-slate-800 pb-1.5">
+                      <div className="h-24 w-full flex items-end justify-between gap-1 pt-3.5 border-b border-slate-200 pb-1.5">
                         {selectedService.mockData.chartData?.map((item, i) => {
                           const maxVal = Math.max(...(selectedService.mockData.chartData?.map(d => d.value) || [100]));
                           const heightPer = maxVal ? `${(item.value / maxVal) * 100}%` : "10%";
                           return (
                             <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
                               <div 
-                                className="w-full rounded-t-sm bg-gradient-to-t from-brand-gold-600 to-brand-gold-400 transition-all duration-500 hover:from-white hover:to-brand-gold-200" 
+                                className="w-full rounded-t-sm bg-gradient-to-t from-brand-gold-500 to-brand-gold-400 transition-all duration-500 hover:from-brand-navy-900 hover:to-brand-gold-500" 
                                 style={{ height: heightPer }}
                               />
                               <span className="text-[8px] text-slate-500 font-mono">{item.name}</span>
@@ -275,22 +275,22 @@ export default function ProductSuite() {
                         })}
                       </div>
 
-                      <div className="text-[9px] text-slate-500 font-mono flex justify-between items-center pt-1.5 mt-auto">
+                      <div className="text-[9px] text-slate-400 font-mono flex justify-between items-center pt-1.5 mt-auto">
                         <span>Metrics refreshed</span>
                         <span>1s ago</span>
                       </div>
                     </div>
 
                     {/* Service features overview checklist */}
-                    <div className="md:col-span-6 bg-slate-900/60 p-3 rounded-xl border border-slate-800/60 space-y-1.5">
-                      <div className="text-[10px] text-brand-gold-400 font-mono font-bold">
+                    <div className="md:col-span-6 bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="text-[10px] text-brand-gold-600 font-mono font-bold">
                         SYSTEM ADVANCED FEATURES
                       </div>
-                      <div className="text-[10.5px] text-slate-300 space-y-1.5 overflow-y-auto max-h-[100px] custom-scroll-panel pr-1">
+                      <div className="text-[10.5px] text-slate-700 space-y-1.5 overflow-y-auto max-h-[100px] custom-scroll-panel pr-1">
                         {selectedService.features.map((feat, i) => (
                           <div key={i} className="flex items-start gap-1.5">
-                            <CheckCircle className="w-3 h-3 text-brand-gold-400 shrink-0 mt-0.5" />
-                            <span className="leading-tight text-slate-300">{feat}</span>
+                            <CheckCircle className="w-3 h-3 text-brand-gold-500 shrink-0 mt-0.5" />
+                            <span className="leading-tight text-slate-800 font-semibold">{feat}</span>
                           </div>
                         ))}
                       </div>
@@ -298,17 +298,17 @@ export default function ProductSuite() {
                   </div>
 
                   {/* Simulator logs and action triggers container */}
-                  <div className="border-t border-slate-800 pt-3.5 mt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                  <div className="border-t border-slate-200 pt-3.5 mt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
                     
                     {/* Live simulated activity console output */}
                     <div className="flex-1 space-y-1">
-                      <div className="text-[9px] text-slate-400 font-mono flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-brand-gold-400 rounded-full animate-ping" />
+                      <div className="text-[9px] text-slate-500 font-mono flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-brand-gold-500 rounded-full animate-ping" />
                         <span>LIVE SIM SOFTWARE LOGGER OUTPUT:</span>
                       </div>
-                      <div className="text-[10px] font-mono text-slate-300 bg-black/60 p-2 rounded-md border border-slate-800 max-h-[50px] overflow-y-auto">
+                      <div className="text-[10px] font-mono text-slate-700 bg-slate-50 p-2 rounded-md border border-slate-200 max-h-[50px] overflow-y-auto">
                         {currentLogs.map((log, i) => (
-                          <div key={i} className="truncate text-brand-gold-100/90 py-0.5">
+                          <div key={i} className="truncate text-brand-gold-600 font-bold py-0.5">
                             ⚡ {log}
                           </div>
                         ))}
