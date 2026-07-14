@@ -224,9 +224,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                     <span className="font-mono text-[10px] text-brand-gold-600 font-bold">MODULE 02 & 08</span>
                     <span className="text-[10.5px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold uppercase">Ready</span>
                   </div>
-                  <h5 className="font-bold text-brand-navy-900 text-xs">C Vidya Fitness Zone & Club Management</h5>
+                  <h5 className="font-bold text-brand-navy-900 text-xs">C Vidya Fitness Zone & Jewelry Management</h5>
                   <p className="text-[12px] text-black leading-relaxed font-bold">
-                    Provides biometric turnstile gateways, facial scanner check-ins, custom member dietary cards, membership pass renewals, facility managers, court bookings, and societies registers.
+                    Provides biometric turnstile gateways, facial scanner check-ins, custom training diets, precious metals inventory trackers, real-time gold/silver rate billing, artisan task logs, and custom jewelry order books.
                   </p>
                 </div>
 

@@ -267,37 +267,38 @@ export const servicesData: ProductService[] = [
   {
     id: "members",
     num: "08",
-    name: "C VIDYA MEMBERS MANAGEMENT",
-    tagline: "Premium Club Facilities Booking & Subscriptions",
-    description: "Membership management solution for clubs, organizations and societies to manage members, subscriptions and activities.",
+    name: "C. VIDYA JEWELRY MANAGEMENT",
+    tagline: "Precious Inventory Trackers & Daily Rate Billing Ledger",
+    description: "Complete retail and wholesale jewelry software to track precious metals, cast weights, custom orders, worker tasks, and sales invoices.",
+    externalLink: "https://jewelry.cvidyasolutions.workers.dev/",
     features: [
-      "Club door access gating with membership NFC barcode cards",
-      "Facility booking manager (banquets, tennis courts, conference tables)",
-      "Annual member directory and ledger logs",
-      "Online subscription payment gateways and auto-renewals",
-      "Digital newsletters creator with tracking metrics"
+      "Real-time inventory weight tracking for Gold, Silver and Diamond items",
+      "Automated daily gold and silver bullion price feeds integration",
+      "Karigar (Artisan) task logs, metal allocation, and wastage reports",
+      "Custom customer jewelry order book with design spec catalogs",
+      "In-store barcode label scanning and instant invoicing bills"
     ],
     mockData: {
-      title: "Elite Society & Members Registry Console",
+      title: "C Vidya Custom Jewelry Ledger Panel",
       metrics: [
-        { label: "Subscribed Safe Members", value: "780 Profiles", change: "99% active status", isPositive: true },
-        { label: "Facility Bookings Today", value: "24 Slots", change: "Community Hall Peak", isPositive: true },
-        { label: "Membership Fees Received", value: "₹3.8L", change: "This collection cycle", isPositive: true },
-        { label: "Outstanding Dues Reminders", value: "x3 Members", change: "Follow-up initiated", isPositive: false }
+        { label: "Precious Gold Stock", value: "4.25 kg", change: "+85g casted today", isPositive: true },
+        { label: "Active Orders Booked", value: "42 Customs", change: "15 in crafting queue", isPositive: true },
+        { label: "Total Sales Billing", value: "₹18.6L", change: "This festive cycle", isPositive: true },
+        { label: "Pending Karigar Tasks", value: "x6 Artisans", change: "Due for delivery", isPositive: false }
       ],
       recentActivity: [
-        "Residential block booked community badminton slot for tomorrow 06:00 AM",
-        "Member Amrit Raj cleared outstanding tournament registration dues (₹1,200)",
-        "Gated pass card #NFC-194 activated for newly added executive resident",
-        "Banquets hall lease rules updated for Summer Poolside events"
+        "Artisan Ramesh logged 24g pure gold weight casting completion for necklace #J-492",
+        "Custom order booked: 18K Rose Gold wedding ring set for Client Shreya Paul",
+        "In-store billing logged: Sold 10g Gold Coin (99.9% Purity) (invoice #S-829)",
+        "Daily gold rate updated: 24K pure bullion locked at ₹72,500/10g"
       ],
       chartData: [
-        { name: "Mon", value: 650 },
-        { name: "Tue", value: 680 },
-        { name: "Wed", value: 710 },
-        { name: "Thu", value: 750 },
-        { name: "Fri", value: 780 },
-        { name: "Sat", value: 720 }
+        { name: "Mon", value: 420 },
+        { name: "Tue", value: 480 },
+        { name: "Wed", value: 510 },
+        { name: "Thu", value: 550 },
+        { name: "Fri", value: 620 },
+        { name: "Sat", value: 590 }
       ]
     }
   }

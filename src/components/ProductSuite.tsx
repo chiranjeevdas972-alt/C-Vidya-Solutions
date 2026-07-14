@@ -15,7 +15,8 @@ import {
   Activity,
   Plus,
   RefreshCw,
-  Bell
+  Bell,
+  Gem
 } from "lucide-react";
 
 export default function ProductSuite() {
@@ -34,7 +35,7 @@ export default function ProductSuite() {
       case "crm": return <Briefcase className={css} />;
       case "municipal": return <ShieldAlert className={css} />;
       case "farming": return <Sprout className={css} />;
-      case "members": return <Users className={css} />;
+      case "members": return <Gem className={css} />;
       default: return <Laptop className={css} />;
     }
   };
@@ -63,7 +64,7 @@ export default function ProductSuite() {
     } else if (serviceId === "farming") {
       logText = `[${timestamp}] Drone scan complete. Soil nutrients (N:P:K) detected at premium rates`;
     } else if (serviceId === "members") {
-      logText = `[${timestamp}] Smart NFC member ID cards auto-renewed. Batch receipts issued`;
+      logText = `[${timestamp}] Daily gold bullion rates updated. 24K Pure Gold locked at ₹72,500/10g`;
     }
 
     setInteractiveLogs(prev => ({

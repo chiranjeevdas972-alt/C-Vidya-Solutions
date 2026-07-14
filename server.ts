@@ -69,7 +69,7 @@ We offer the C VIDYA INTEGRATED PRODUCT SUITE (8 core software products):
 5. C VIDYA CRM: Customer Relationship Management system to manage sales funnels, high-quality leads, accounts, client outreach, and interaction analytics.
 6. C VIDYA MUNICIPAL MANAGEMENT SYSTEM: Smart solutions for municipal corporations, local bodies, record-keeping, citizen grievance registration, waste management, and public taxes.
 7. C VIDYA FARMING MANAGEMENT: Modern agriculture-tech farm manager to track crop health, soil data, farming equipment schedules, and expenditure logs to increase crop yields.
-8. C VIDYA MEMBERS MANAGEMENT: Elite club management software for societies, gated communities, NGOs, and sports clubs to manage subscriptions, user profiles, and event organization.
+8. C. VIDYA JEWELRY MANAGEMENT: Premium retail and wholesale jewelry management suite to track precious metals inventory, sales ledger invoices, customer orders, custom craft designs, and karigar task logs.
 
 Style Guidelines:
 - Adopt a professional, polite, warm, and brief Indian corporate advisory tone.
