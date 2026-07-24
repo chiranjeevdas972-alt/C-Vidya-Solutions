@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import libraryImg from "../assets/images/library_software_dashboard_1784909434916.jpg";
+import coachingImg from "../assets/images/coaching_software_dashboard_1784909470078.jpg";
+import fitnessImg from "../assets/images/fitness_software_dashboard_1784909454777.jpg";
+import crmImg from "../assets/images/crm_software_dashboard_1784909507564.jpg";
+import institutesImg from "../assets/images/institutes_software_dashboard_1784909550776.jpg";
+import agrifusionImg from "../assets/images/agrifusion_software_dashboard_1784909491641.jpg";
+import municipalImg from "../assets/images/municipal_software_dashboard_1784909536257.jpg";
 import { 
   BookOpen, 
   GraduationCap, 
@@ -51,7 +58,7 @@ export default function SoftwareCarousel() {
       badge: "Institutional Module",
       accentColor: "from-brand-gold-500 to-amber-500",
       externalLink: "https://v.cvidyasolutions.workers.dev/",
-      imageUrl: "/src/assets/images/library_software_dashboard_1784909434916.jpg",
+      imageUrl: libraryImg,
       metrics: [
         { label: "Book Catalog Capacity", value: "50,000+" },
         { label: "WhatsApp Alert Latency", value: "< 2.4s" },
@@ -68,7 +75,7 @@ export default function SoftwareCarousel() {
       badge: "Academic Operations",
       accentColor: "from-brand-gold-500 to-yellow-500",
       externalLink: "https://coaching.cvidyasolutions.workers.dev/",
-      imageUrl: "/src/assets/images/coaching_software_dashboard_1784909470078.jpg",
+      imageUrl: coachingImg,
       metrics: [
         { label: "OMR Scan Speed", value: "120 sheets/min" },
         { label: "Parent Notification Rate", value: "100%" },
@@ -85,7 +92,7 @@ export default function SoftwareCarousel() {
       badge: "Facility Hardware",
       accentColor: "from-amber-400 to-brand-gold-500",
       externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
-      imageUrl: "/src/assets/images/fitness_software_dashboard_1784909454777.jpg",
+      imageUrl: fitnessImg,
       metrics: [
         { label: "Face Recognition Speed", value: "0.18s" },
         { label: "Member Portal Logins", value: "1,400+" },
@@ -102,7 +109,7 @@ export default function SoftwareCarousel() {
       badge: "Enterprise SaaS",
       accentColor: "from-brand-gold-400 to-yellow-600",
       externalLink: "https://crm.cvidyasolutions.workers.dev/",
-      imageUrl: "/src/assets/images/crm_software_dashboard_1784909507564.jpg",
+      imageUrl: crmImg,
       metrics: [
         { label: "Lead Pipeline Load", value: "10,000/sec" },
         { label: "Avg Sales Conversion Boost", value: "+42%" },
@@ -118,7 +125,7 @@ export default function SoftwareCarousel() {
       description: "Unified enterprise platform matching board grades, tracking payroll ledgers, scheduling buses via GPS, and consolidating CBSE compliance.",
       badge: "Unified Campus ERP",
       accentColor: "from-amber-500 to-brand-gold-600",
-      imageUrl: "/src/assets/images/institutes_software_dashboard_1784909550776.jpg",
+      imageUrl: institutesImg,
       metrics: [
         { label: "Affiliated Campus Blocks", value: "12+ Blocks" },
         { label: "Unified Database Ledger", value: "PostgreSQL Secure" },
@@ -135,7 +142,7 @@ export default function SoftwareCarousel() {
       badge: "Agribusiness & Farming Platform",
       accentColor: "from-brand-gold-500 to-emerald-500",
       externalLink: "https://fresh.cvidyasolutions.workers.dev/",
-      imageUrl: "/src/assets/images/agrifusion_software_dashboard_1784909491641.jpg",
+      imageUrl: agrifusionImg,
       metrics: [
         { label: "Poultry, Livestock & Ponds", value: "Unified" },
         { label: "POS Billing & Accounting", value: "Integrated" },
@@ -151,7 +158,7 @@ export default function SoftwareCarousel() {
       description: "Custom server-side AI engines processing parent reports, auto-assigning student counseling pathways, and drafting smart municipal briefs.",
       badge: "Deep AI Integration",
       accentColor: "from-brand-gold-400 via-yellow-500 to-amber-500",
-      imageUrl: "/src/assets/images/municipal_software_dashboard_1784909536257.jpg",
+      imageUrl: municipalImg,
       metrics: [
         { label: "AI Engine Latency", value: "150ms Response" },
         { label: "Auto Report Compilers", value: "Fully Generative" },

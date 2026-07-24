@@ -1,4 +1,12 @@
 import { ProductService } from "./types";
+import libraryImg from "./assets/images/library_software_dashboard_1784909434916.jpg";
+import fitnessImg from "./assets/images/fitness_software_dashboard_1784909454777.jpg";
+import institutesImg from "./assets/images/institutes_software_dashboard_1784909550776.jpg";
+import coachingImg from "./assets/images/coaching_software_dashboard_1784909470078.jpg";
+import crmImg from "./assets/images/crm_software_dashboard_1784909507564.jpg";
+import municipalImg from "./assets/images/municipal_software_dashboard_1784909536257.jpg";
+import agrifusionImg from "./assets/images/agrifusion_software_dashboard_1784909491641.jpg";
+import jewelryImg from "./assets/images/jewelry_software_dashboard_1784909522921.jpg";
 
 export const servicesData: ProductService[] = [
   {
@@ -8,7 +16,7 @@ export const servicesData: ProductService[] = [
     tagline: "Automated Book Inflow & Student Membership Tracking",
     description: "Complete library management system to manage books, members, issue/return and other library operations.",
     externalLink: "https://v.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/library_software_dashboard_1784909434916.jpg",
+    imageUrl: libraryImg,
     features: [
       "ISBN barcode scanner and inventory tracking",
       "Automated WhatsApp & SMS notifications for overdue titles",
@@ -47,7 +55,7 @@ export const servicesData: ProductService[] = [
     tagline: "Comprehensive Gym Plan & Biometric Turnstile Ledger",
     description: "Gym & fitness management software to handle members, plans, attendance, trainers and daily activities seamlessly.",
     externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/fitness_software_dashboard_1784909454777.jpg",
+    imageUrl: fitnessImg,
     features: [
       "Biometric finger scan and facial door access logs",
       "Personalized training diet regimes & goal planners",
@@ -85,7 +93,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA INSTITUTES MANAGEMENT",
     tagline: "Multi-branch Campus Admissions & Smart Fees Portal",
     description: "All-in-one solution for schools and institutes to manage students, fees, attendance, exams and results.",
-    imageUrl: "/src/assets/images/institutes_software_dashboard_1784909550776.jpg",
+    imageUrl: institutesImg,
     features: [
       "End-to-end admission counseling CRM pipeline",
       "Automated academic report cards generator",
@@ -124,7 +132,7 @@ export const servicesData: ProductService[] = [
     tagline: "Aspirants Test Analytics & Automated SMS Broadcasts",
     description: "Specially designed for coaching centers to manage batches, students, attendance, fees and performance.",
     externalLink: "https://coaching.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/coaching_software_dashboard_1784909470078.jpg",
+    imageUrl: coachingImg,
     features: [
       "Dynamic batch creation and classroom seating logs",
       "Biometric attendance with real-time SMS status sent to parents",
@@ -163,7 +171,7 @@ export const servicesData: ProductService[] = [
     tagline: "Intuitive Sales Funnels & Lead Generation Metrics",
     description: "Customer Relationship Management system to manage leads, sales, customers and improve business relationships.",
     externalLink: "https://crm.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/crm_software_dashboard_1784909507564.jpg",
+    imageUrl: crmImg,
     features: [
       "Dynamic pipeline cards with simple drag-drop states",
       "Smart follow-up alerts and automated customer greeting emails",
@@ -201,7 +209,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA MUNICIPAL SYSTEM",
     tagline: "E-Governance Portal & Digital Civic Grievance Desks",
     description: "Smart solution for municipal corporations and local bodies to manage records, citizens, complaints and daily operations.",
-    imageUrl: "/src/assets/images/municipal_software_dashboard_1784909536257.jpg",
+    imageUrl: municipalImg,
     features: [
       "Online citizen portal to register complaints (potholes, garbage, leakages)",
       "Digital Registrar for Birth, Marriage & Death certificates",
@@ -241,7 +249,7 @@ export const servicesData: ProductService[] = [
     subhead: "One Platform. Every Farm. Unlimited Growth.",
     description: "Powered by C Vidya Solutions, AgriFusion unifies poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics into one intelligent platform—empowering farmers and agribusinesses to simplify operations, increase productivity, and maximize profitability.",
     externalLink: "https://fresh.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/agrifusion_software_dashboard_1784909491641.jpg",
+    imageUrl: agrifusionImg,
     features: [
       "Poultry, fishery, goat farming & livestock management",
       "Unified inventory, POS billing & accounting ledger",
@@ -280,7 +288,7 @@ export const servicesData: ProductService[] = [
     tagline: "Precious Inventory Trackers & Daily Rate Billing Ledger",
     description: "Complete retail and wholesale jewelry software to track precious metals, cast weights, custom orders, worker tasks, and sales invoices.",
     externalLink: "https://jewelry.cvidyasolutions.workers.dev/",
-    imageUrl: "/src/assets/images/jewelry_software_dashboard_1784909522921.jpg",
+    imageUrl: jewelryImg,
     features: [
       "Real-time inventory weight tracking for Gold, Silver and Diamond items",
       "Automated daily gold and silver bullion price feeds integration",
