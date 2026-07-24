@@ -246,9 +246,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                     <span className="font-mono text-[10px] text-brand-gold-600 font-bold">MODULE 06 & 07</span>
                     <span className="text-[10.5px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-bold uppercase">In Production</span>
                   </div>
-                  <h5 className="font-bold text-brand-navy-900 text-xs">Municipal System & Smart Farming</h5>
+                  <h5 className="font-bold text-brand-navy-900 text-xs">Municipal System & AgriFusion Farming</h5>
                   <p className="text-[12px] text-black leading-relaxed font-bold">
-                    Handles online grievance registers (roads, waste management), citizen certificate issuing (birth, death, marriage), property tax registers, IoT soil telemetry registers, and storage log allocators.
+                    Handles online grievance registers, citizen certificate issuing, property tax registers, poultry/fishery/livestock tracking, POS billing, and AgriFusion agribusiness analytics.
                   </p>
                 </div>
               </div>

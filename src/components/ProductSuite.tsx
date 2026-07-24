@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { servicesData } from "../data";
 import { ProductService } from "../types";
+import SoftwareDetailModal from "./SoftwareDetailModal";
 import { 
   Laptop, 
   BookOpen, 
@@ -16,11 +17,15 @@ import {
   Plus,
   RefreshCw,
   Bell,
-  Gem
+  Gem,
+  Sparkles,
+  ExternalLink,
+  Info
 } from "lucide-react";
 
 export default function ProductSuite() {
   const [selectedId, setSelectedId] = useState<string>("library");
+  const [modalSoftware, setModalSoftware] = useState<ProductService | null>(null);
   const [interactiveLogs, setInteractiveLogs] = useState<Record<string, string[]>>({});
   const [simulateValueAddition, setSimulateValueAddition] = useState<number>(0);
 
@@ -62,7 +67,7 @@ export default function ProductSuite() {
     } else if (serviceId === "municipal") {
       logText = `[${timestamp}] Citizen complaint ticket delegated to inspector squad (SLA: 24 hrs)`;
     } else if (serviceId === "farming") {
-      logText = `[${timestamp}] Drone scan complete. Soil nutrients (N:P:K) detected at premium rates`;
+      logText = `[${timestamp}] AgriFusion POS & Livestock telemetry synced: Poultry & Fishery records verified`;
     } else if (serviceId === "members") {
       logText = `[${timestamp}] Daily gold bullion rates updated. 24K Pure Gold locked at ₹72,500/10g`;
     }
@@ -98,62 +103,94 @@ export default function ProductSuite() {
         {/* Major Grid layout - 8 Service selectors */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column: Interactive Product Selection List */}
-          <div className="lg:col-span-5 space-y-3.5 max-h-[700px] overflow-y-auto pr-2 custom-scroll-panel">
+          {/* Left Column: Interactive Product Selection List - All software visible without internal scroll */}
+          <div className="lg:col-span-5 space-y-3.5 pr-2">
             {servicesData.map((service) => {
               const isActive = selectedId === service.id;
               return (
-                <button
+                <div
                   key={service.id}
                   onClick={() => {
                     setSelectedId(service.id);
-                    if (service.externalLink) {
-                      window.open(service.externalLink, "_blank");
-                    }
+                    setModalSoftware(service);
                   }}
-                  className={`w-full text-left p-5 rounded-2xl border transition-all flex gap-4 cursor-pointer relative overflow-hidden group ${
+                  className={`w-full text-left p-4 sm:p-4.5 rounded-2xl border transition-all flex flex-col sm:flex-row gap-3.5 cursor-pointer relative overflow-hidden group ${
                     isActive 
                       ? "bg-white border-brand-gold-500 shadow-md ring-1 ring-brand-gold-400" 
                       : "bg-white/80 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-xs"
                   }`}
                 >
-                  {/* Decorative numeric floating badge */}
-                  <div className={`absolute top-2.5 right-3.5 font-mono font-black text-3xl opacity-10 select-none ${
-                    isActive ? "text-brand-gold-500 scale-110" : "text-slate-400"
+                  {/* Software number badge - high contrast black highlight */}
+                  <div className={`absolute top-2.5 right-3.5 font-mono font-black text-xs px-2.5 py-1 rounded-md shadow-sm border select-none z-10 ${
+                    isActive 
+                      ? "bg-slate-950 text-brand-gold-400 border-brand-gold-500" 
+                      : "bg-slate-950 text-white border-slate-900"
                   }`}>
                     {service.num}
                   </div>
 
-                  {/* Icon housing */}
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                    isActive 
-                      ? "bg-brand-navy-900 text-brand-gold-400" 
-                      : "bg-slate-100 text-slate-600 group-hover:text-brand-navy-800"
-                  }`}>
-                    {getServiceIcon(service.id, "w-5 h-5")}
+                  {/* Software Image & Icon Badge */}
+                  <div className="relative shrink-0 w-full sm:w-28 h-24 rounded-xl overflow-hidden bg-slate-900 border border-slate-200/80 group-hover:border-brand-gold-400/50 transition-colors">
+                    {service.imageUrl ? (
+                      <img 
+                        src={service.imageUrl} 
+                        alt={service.name} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-400 font-mono text-xs">
+                        {service.num}
+                      </div>
+                    )}
+                    {/* Icon housing badge overlay */}
+                    <div className={`absolute top-1.5 left-1.5 w-7 h-7 rounded-lg flex items-center justify-center shadow-md backdrop-blur-md ${
+                      isActive 
+                        ? "bg-brand-navy-900 text-brand-gold-400 border border-brand-gold-500/40" 
+                        : "bg-slate-900/80 text-brand-gold-300 border border-slate-700/60"
+                    }`}>
+                      {getServiceIcon(service.id, "w-3.5 h-3.5")}
+                    </div>
                   </div>
 
                   {/* Copy content */}
-                  <div className="space-y-1 z-10 flex-1">
+                  <div className="space-y-1 z-10 flex-1 min-w-0">
                     <h3 className="font-display font-bold text-sm tracking-wide text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors flex items-center justify-between gap-1.5">
-                      <span>{service.name}</span>
-                      {isActive && <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />}
+                      <span className="truncate">{service.name}</span>
+                      {isActive && <span className="w-2 h-2 bg-green-500 rounded-full animate-ping shrink-0" />}
                     </h3>
-                    <p className="text-xs text-black leading-relaxed font-bold">
+                    {service.tagline && (
+                      <p className="text-[11px] font-extrabold text-brand-gold-600 leading-snug line-clamp-1">
+                        {service.tagline}
+                      </p>
+                    )}
+                    {service.subhead && (
+                      <p className="text-[10px] font-bold text-emerald-700 italic line-clamp-1">
+                        {service.subhead}
+                      </p>
+                    )}
+                    <p className="text-xs text-black leading-relaxed font-bold line-clamp-2">
                       {service.description}
                     </p>
-                    <div className="flex items-center justify-between pt-1.5 flex-wrap gap-2">
-                      <span className="text-[10px] font-mono text-brand-gold-600 font-bold tracking-wider">
-                        {isActive ? "Launch Simulator" : "Open Tool"}
+                    <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                      <span className="text-[10px] font-mono text-brand-gold-600 font-bold tracking-wider flex items-center gap-1">
+                        <Info className="w-3 h-3 text-brand-gold-500" />
+                        <span>View Software Details</span>
                       </span>
                       {service.externalLink && (
-                        <span className="text-[10px] bg-brand-gold-500/10 text-brand-gold-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-brand-gold-400/20 group-hover:bg-brand-gold-500 group-hover:text-slate-950 transition-all duration-300">
-                          Live App ↗
-                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(service.externalLink, "_blank");
+                          }}
+                          className="text-[10px] bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 px-2.5 py-1 rounded-full font-extrabold flex items-center gap-1 border border-brand-gold-400 shadow-sm transition-all cursor-pointer"
+                        >
+                          Click Here ↗
+                        </button>
                       )}
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -209,6 +246,13 @@ export default function ProductSuite() {
                     </div>
                     {/* Control Quick Actions */}
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setModalSoftware(selectedService)}
+                        className="flex items-center gap-1 px-2 py-1 bg-slate-900 hover:bg-slate-800 text-brand-gold-400 font-bold rounded text-[10px] uppercase tracking-wider transition-colors cursor-pointer border border-brand-gold-500/30"
+                      >
+                        <Info className="w-3 h-3 text-brand-gold-400" />
+                        <span>Full Details</span>
+                      </button>
                       {selectedService.externalLink && (
                         <a 
                           href={selectedService.externalLink}
@@ -216,7 +260,7 @@ export default function ProductSuite() {
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 px-2.5 py-1 bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 font-extrabold rounded text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
                         >
-                          <span>Open Live App ↗</span>
+                          <span>Click Here ↗</span>
                         </a>
                       )}
                       <button 
@@ -228,6 +272,26 @@ export default function ProductSuite() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Active Software Screenshot Visual Banner */}
+                  {selectedService.imageUrl && (
+                    <div className="relative w-full h-32 sm:h-36 rounded-xl overflow-hidden border border-slate-200/80 my-2 shadow-inner group">
+                      <img 
+                        src={selectedService.imageUrl} 
+                        alt={selectedService.name} 
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2.5">
+                        <div className="flex items-center justify-between w-full text-white text-[10px] font-mono font-bold">
+                          <span className="flex items-center gap-1 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-700">
+                            {getServiceIcon(selectedService.id, "w-3 h-3 text-brand-gold-400")} {selectedService.name}
+                          </span>
+                          <span className="text-brand-gold-300">Software View Live</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Grid of live values counters inside emulator */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4">
@@ -345,6 +409,12 @@ export default function ProductSuite() {
         </div>
 
       </div>
+
+      {/* Software Landing Detail Modal */}
+      <SoftwareDetailModal 
+        software={modalSoftware} 
+        onClose={() => setModalSoftware(null)} 
+      />
     </section>
   );
 }

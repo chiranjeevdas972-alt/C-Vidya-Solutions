@@ -34,9 +34,11 @@ export interface ProductService {
   num: string;
   name: string;
   tagline: string;
+  subhead?: string;
   description: string;
   features: string[];
   externalLink?: string;
+  imageUrl?: string;
   mockData: {
     title: string;
     metrics: MetricCard[];

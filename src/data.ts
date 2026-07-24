@@ -8,6 +8,7 @@ export const servicesData: ProductService[] = [
     tagline: "Automated Book Inflow & Student Membership Tracking",
     description: "Complete library management system to manage books, members, issue/return and other library operations.",
     externalLink: "https://v.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/library_software_dashboard_1784909434916.jpg",
     features: [
       "ISBN barcode scanner and inventory tracking",
       "Automated WhatsApp & SMS notifications for overdue titles",
@@ -46,6 +47,7 @@ export const servicesData: ProductService[] = [
     tagline: "Comprehensive Gym Plan & Biometric Turnstile Ledger",
     description: "Gym & fitness management software to handle members, plans, attendance, trainers and daily activities seamlessly.",
     externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/fitness_software_dashboard_1784909454777.jpg",
     features: [
       "Biometric finger scan and facial door access logs",
       "Personalized training diet regimes & goal planners",
@@ -83,6 +85,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA INSTITUTES MANAGEMENT",
     tagline: "Multi-branch Campus Admissions & Smart Fees Portal",
     description: "All-in-one solution for schools and institutes to manage students, fees, attendance, exams and results.",
+    imageUrl: "/src/assets/images/institutes_software_dashboard_1784909550776.jpg",
     features: [
       "End-to-end admission counseling CRM pipeline",
       "Automated academic report cards generator",
@@ -121,6 +124,7 @@ export const servicesData: ProductService[] = [
     tagline: "Aspirants Test Analytics & Automated SMS Broadcasts",
     description: "Specially designed for coaching centers to manage batches, students, attendance, fees and performance.",
     externalLink: "https://coaching.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/coaching_software_dashboard_1784909470078.jpg",
     features: [
       "Dynamic batch creation and classroom seating logs",
       "Biometric attendance with real-time SMS status sent to parents",
@@ -159,6 +163,7 @@ export const servicesData: ProductService[] = [
     tagline: "Intuitive Sales Funnels & Lead Generation Metrics",
     description: "Customer Relationship Management system to manage leads, sales, customers and improve business relationships.",
     externalLink: "https://crm.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/crm_software_dashboard_1784909507564.jpg",
     features: [
       "Dynamic pipeline cards with simple drag-drop states",
       "Smart follow-up alerts and automated customer greeting emails",
@@ -196,6 +201,7 @@ export const servicesData: ProductService[] = [
     name: "C VIDYA MUNICIPAL SYSTEM",
     tagline: "E-Governance Portal & Digital Civic Grievance Desks",
     description: "Smart solution for municipal corporations and local bodies to manage records, citizens, complaints and daily operations.",
+    imageUrl: "/src/assets/images/municipal_software_dashboard_1784909536257.jpg",
     features: [
       "Online citizen portal to register complaints (potholes, garbage, leakages)",
       "Digital Registrar for Birth, Marriage & Death certificates",
@@ -230,29 +236,32 @@ export const servicesData: ProductService[] = [
   {
     id: "farming",
     num: "07",
-    name: "C VIDYA FARMING MANAGEMENT",
-    tagline: "Smart Agriculture Harvesting & Storage Allocator",
-    description: "Modern farming management software to track crops, resources, expenses and improve agriculture productivity.",
+    name: "AGRIFUSION",
+    tagline: "All-in-One Farming, Livestock & Agribusiness Management Software",
+    subhead: "One Platform. Every Farm. Unlimited Growth.",
+    description: "Powered by C Vidya Solutions, AgriFusion unifies poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics into one intelligent platform—empowering farmers and agribusinesses to simplify operations, increase productivity, and maximize profitability.",
+    externalLink: "https://fresh.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/agrifusion_software_dashboard_1784909491641.jpg",
     features: [
-      "IoT soil telemetry compatibility (humidity & mineral indicators)",
-      "Automated crop-cycle timetable and seed scheduling",
-      "Fertilizer consumption trackers & supplier expense loggers",
-      "Direct-to-wholesale market pricing spreadsheets and logistics",
-      "Livestock feeding schedules and vaccine compliance alerts"
+      "Poultry, fishery, goat farming & livestock management",
+      "Unified inventory, POS billing & accounting ledger",
+      "Customer management & CRM engagement workflows",
+      "Business analytics & profitability forecasting",
+      "IoT soil telemetry & crop-cycle timetable automation"
     ],
     mockData: {
-      title: "Smart Farms Agronomy Dashboard",
+      title: "AgriFusion Agribusiness Control Console",
       metrics: [
-        { label: "Paddy Field Acres Tracked", value: "420 sqm", change: "Continuous telemetry", isPositive: true },
-        { label: "Crop Health Index Score", value: "94/100", change: "Optimal wet condition", isPositive: true },
-        { label: "Estimated Harvest Date", value: "June 12", change: "In 23 days approx", isPositive: true },
-        { label: "Expended Fertilizer Cost", value: "₹12,400", change: "Within safety budget", isPositive: true }
+        { label: "Poultry & Livestock Stock", value: "12,400 Units", change: "Healthy feed cycles", isPositive: true },
+        { label: "Fishery & Ponds Tracked", value: "8 Active Ponds", change: "Optimal pH water levels", isPositive: true },
+        { label: "POS Sales & Invoicing", value: "₹2.8L Today", change: "+18% wholesale orders", isPositive: true },
+        { label: "Inventory Feed Stock", value: "4.2 Tons", change: "Re-order in 5 days", isPositive: true }
       ],
       recentActivity: [
-        "Crop water requirements: Irrigation valve on Zone B switched on automatically",
-        "Sona-Masoori organic nursery fertilizer rotation timeline declared",
-        "Livestock record: Vet scheduled vaccination booster for Section A herds",
-        "Supplier payment registered: Purchase order #AG-12 for winter seed batches"
+        "Poultry flock #B-14 feed dispatch & automated temperature regulation logged",
+        "Fishery Pond #3 water quality test completed (pH 7.2, Dissolved Oxygen 6.8 mg/L)",
+        "POS Billing invoice #AG-882 issued for 1.2 Tons organic fertilizer & fish feed",
+        "Goat farming breeding registry updated for Section C livestock herds"
       ],
       chartData: [
         { name: "Mon", value: 85 },
@@ -260,7 +269,7 @@ export const servicesData: ProductService[] = [
         { name: "Wed", value: 92 },
         { name: "Thu", value: 91 },
         { name: "Fri", value: 94 },
-        { name: "Sat", value: 94 }
+        { name: "Sat", value: 98 }
       ]
     }
   },
@@ -271,6 +280,7 @@ export const servicesData: ProductService[] = [
     tagline: "Precious Inventory Trackers & Daily Rate Billing Ledger",
     description: "Complete retail and wholesale jewelry software to track precious metals, cast weights, custom orders, worker tasks, and sales invoices.",
     externalLink: "https://jewelry.cvidyasolutions.workers.dev/",
+    imageUrl: "/src/assets/images/jewelry_software_dashboard_1784909522921.jpg",
     features: [
       "Real-time inventory weight tracking for Gold, Silver and Diamond items",
       "Automated daily gold and silver bullion price feeds integration",

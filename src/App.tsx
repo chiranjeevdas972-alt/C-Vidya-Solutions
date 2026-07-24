@@ -404,8 +404,8 @@ export default function App() {
                           <div className="w-8 h-8 rounded-lg bg-brand-navy-50 text-brand-gold-600 flex items-center justify-center">
                             <Wheat className="w-4 h-4" />
                           </div>
-                          <h4 className="font-display font-extrabold text-[#111827] text-sm uppercase">03. Farming Tech</h4>
-                          <p className="text-xs text-slate-950 leading-relaxed font-semibold">Soil indicators reports logs, direct purchase orders matrix, and tractor expense ledgers.</p>
+                          <h4 className="font-display font-extrabold text-[#111827] text-sm uppercase">03. AgriFusion Agribusiness</h4>
+                          <p className="text-xs text-slate-950 leading-relaxed font-semibold">Poultry, fishery, goat farming, livestock, POS billing, accounting, and business analytics platform.</p>
                         </div>
 
                         <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/50 hover:bg-slate-100/50 hover:border-[#42A5F5]/25 transition-all space-y-2">

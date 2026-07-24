@@ -191,7 +191,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                 <option value="C Vidya Coaching">04 - C Vidya Coaching Management</option>
                 <option value="C Vidya CRM">05 - C Vidya CRM Portal</option>
                 <option value="C Vidya Municipal">06 - C Vidya Municipal System</option>
-                <option value="C Vidya Farming">07 - C Vidya Farming Tech</option>
+                <option value="AgriFusion">07 - AgriFusion (Farming & Agribusiness)</option>
                 <option value="C Vidya Members">08 - C Vidya Members Management</option>
               </select>
             </div>
@@ -549,7 +549,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                     <option value="C Vidya Coaching">04 - C Vidya Coaching Management</option>
                     <option value="C Vidya CRM">05 - C Vidya CRM Portal</option>
                     <option value="C Vidya Municipal">06 - C Vidya Municipal System</option>
-                    <option value="C Vidya Farming">07 - C Vidya Farming Tech</option>
+                    <option value="AgriFusion">07 - AgriFusion (Farming & Agribusiness)</option>
                     <option value="C Vidya Members">08 - C Vidya Members Management</option>
                   </select>
                 </div>

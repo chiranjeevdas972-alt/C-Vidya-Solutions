@@ -68,7 +68,7 @@ We offer the C VIDYA INTEGRATED PRODUCT SUITE (8 core software products):
 4. C VIDYA COACHING MANAGEMENT: Specially tailored for coaching centers, tuition batches, managing students, schedules, and mock test performance reports.
 5. C VIDYA CRM: Customer Relationship Management system to manage sales funnels, high-quality leads, accounts, client outreach, and interaction analytics.
 6. C VIDYA MUNICIPAL MANAGEMENT SYSTEM: Smart solutions for municipal corporations, local bodies, record-keeping, citizen grievance registration, waste management, and public taxes.
-7. C VIDYA FARMING MANAGEMENT: Modern agriculture-tech farm manager to track crop health, soil data, farming equipment schedules, and expenditure logs to increase crop yields.
+7. AGRIFUSION: All-in-One Farming, Livestock & Agribusiness Management Software powered by C Vidya Solutions, unifying poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics.
 8. C. VIDYA JEWELRY MANAGEMENT: Premium retail and wholesale jewelry management suite to track precious metals inventory, sales ledger invoices, customer orders, custom craft designs, and karigar task logs.
 
 Style Guidelines:
@@ -310,8 +310,8 @@ function getFallbackReply(messages: any[]): string {
     reply = "With **C Vidya CRM**, you get top-tier sales lead tracking, deal pipelines, customer interactions timeline, and sales performance charts. Fill out our callback request form to receive customized pricing details!";
   } else if (userText.includes("municipal") || userText.includes("local") || userText.includes("government") || userText.includes("city") || userText.includes("town")) {
     reply = "The **C Vidya Municipal Management System** streamlines citizen services, records birth/death registers, schedules public works, and aggregates land tax records.";
-  } else if (userText.includes("farm") || userText.includes("agriculture") || userText.includes("crop") || userText.includes("sensor") || userText.includes("soil")) {
-    reply = "The **C Vidya Farming Management** platform uses sensors, schedules crop rotations, monitors fertilizer expenses, and manages automated harvest storage catalogs.";
+  } else if (userText.includes("farm") || userText.includes("agri") || userText.includes("crop") || userText.includes("livestock") || userText.includes("poultry") || userText.includes("fishery")) {
+    reply = "Our **AgriFusion** platform (Powered by C Vidya Solutions) unifies poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics into one intelligent system.";
   } else if (userText.includes("club") || userText.includes("society") || userText.includes("member") || userText.includes("sub")) {
     reply = "Our **C Vidya Members Management** portal tracks recurring club subscriptions, logs custom gate access permissions, and publishes secure community notices.";
   } else if (userText.includes("phone") || userText.includes("contact") || userText.includes("number") || userText.includes("call") || userText.includes("location") || userText.includes("branch") || userText.includes("office") || userText.includes("address") || userText.includes("sindri") || userText.includes("surunga") || userText.includes("founder") || userText.includes("director") || userText.includes("chiranjeev")) {
