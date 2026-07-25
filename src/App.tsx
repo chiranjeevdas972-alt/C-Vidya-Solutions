@@ -108,23 +108,25 @@ export default function App() {
   const [hubTab, setHubTab] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog">("home");
 
   // Active page routing state
-  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("services");
+  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
 
   // Hash-change router listener for separate pages
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const validPages = [
-        "home", "about", "services", "portfolio", "contact", "careers", "blog",
+        "home", "hero", "about", "services", "portfolio", "contact", "careers", "blog",
         "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
       ];
-      if (validPages.includes(hash)) {
+      if (hash === "home" || hash === "hero" || !hash) {
+        setActivePage("home");
+      } else if (validPages.includes(hash)) {
         setActivePage(hash as any);
         if (["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(hash)) {
           setComplianceTab(hash);
         }
-      } else if (!hash) {
-        setActivePage("services");
+      } else {
+        setActivePage("home");
       }
     };
 

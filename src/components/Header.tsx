@@ -40,7 +40,14 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           
           {/* Logo Brand Emblem */}
-          <a href="#hero" className="flex items-center gap-3 group">
+          <a 
+            href="#home" 
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenHub("home");
+            }}
+            className="flex items-center gap-3 group"
+          >
             <Logo size={54} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
             <div>
               <div className="font-display font-bold text-xl md:text-2xl tracking-wider text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors">
