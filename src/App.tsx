@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Header from "./components/Header";
 import Logo from "./components/Logo";
 import SoftwareCarousel from "./components/SoftwareCarousel";
+import SoftwareHeroBanner from "./components/SoftwareHeroBanner";
 import ProductSuite from "./components/ProductSuite";
 import InquiryForm from "./components/InquiryForm";
 import AiAssistant from "./components/AiAssistant";
@@ -34,6 +35,7 @@ import {
   CheckCircle2,
   Send,
   X,
+  Users,
   Youtube,
   Facebook,
   Instagram,
@@ -196,13 +198,16 @@ export default function App() {
 
 
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                       
-                      {/* Left Column: Branding Content, Quick Actions */}
-                      <div className="lg:col-span-7 space-y-9">
+                      {/* Full-Width Software Hero Banner & Branding Content */}
+                      <div className="lg:col-span-12 space-y-7">
                         
+                        {/* Software Icons & Logos Showcase Banner (Auto-adjusts full page width) */}
+                        <SoftwareHeroBanner />
+
                         {/* Main Branding Tag */}
-                        <div className="space-y-4">
+                        <div className="space-y-3 pt-2">
                           
                           <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-5xl.5 text-brand-navy-900 tracking-tight leading-none">
                             C VIDYA <br />
@@ -260,11 +265,6 @@ export default function App() {
                           </button>
                         </div>
 
-                      </div>
-
-                      {/* Right Column: Interactive Software Showcase Carousel */}
-                      <div className="lg:col-span-5 relative">
-                        <SoftwareCarousel />
                       </div>
 
                     </div>
@@ -740,57 +740,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-                  {/* Left Column: Direct inquiry Form */}
-                  <div className="lg:col-span-7">
-                    <InquiryForm />
-                  </div>
-
-                  {/* Right Column: Direct details & Map placeholders */}
-                  <div className="lg:col-span-5 space-y-8 bg-slate-50 p-6 sm:p-8 rounded-2xl border border-slate-200/60 shadow-xs">
-                    <h3 className="font-display font-black text-lg text-brand-navy-950 uppercase tracking-wider pb-3 border-b border-slate-200">
-                      REGIONAL OFFICE DETAILS
-                    </h3>
-
-                    <div className="space-y-6 text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
-                      <div className="flex gap-3">
-                        <MapPin className="w-5 h-5 text-brand-gold-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-slate-900 uppercase">Headquarters</p>
-                          <p>Surunga, Baliapur, Dhanbad, Jharkhand - 828115</p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <GraduationCap className="w-5 h-5 text-brand-gold-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-slate-900 uppercase">STPI R&D Desk</p>
-                          <p>STPI Desk, BIT Sindri Campus, Dhanbad, Jharkhand</p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Mail className="w-5 h-5 text-brand-gold-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-slate-900 uppercase">Emails</p>
-                          <p>Office: <a href="mailto:cvidyasolutions@gmail.com" className="hover:text-brand-gold-600 underline">cvidyasolutions@gmail.com</a></p>
-                          <p>Director: <a href="mailto:chiranjeev0058@gmail.com" className="hover:text-brand-gold-600 underline">chiranjeev0058@gmail.com</a></p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Phone className="w-5 h-5 text-brand-gold-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-bold text-slate-900 uppercase">Phone & Hotlines</p>
-                          <p><a href="tel:8987766981" className="hover:text-brand-gold-600 underline text-base font-bold text-brand-navy-900">8987766981</a> (Technical Advisory Line)</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-200/50 p-4 rounded-xl border border-slate-300/30 text-center text-xs text-slate-500 font-serif italic">
-                      "Proudly serving Jharkhand and Bihar regions with indigenous software. Built to perform."
-                    </div>
-                  </div>
+                <div className="py-12 sm:py-16">
+                  <InquiryForm />
                 </div>
               </div>
             )}
@@ -813,7 +764,7 @@ export default function App() {
                   </div>
 
                   {/* Search and Category Filter Panels */}
-                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 shadow-xs space-y-5">
+                  <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200/60 shadow-xs space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                       
                       {/* Search Bar Input */}
@@ -833,7 +784,7 @@ export default function App() {
                         <select
                           value={selectedCategory}
                           onChange={(e) => setSelectedCategory(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-xl focus:outline-none focus:border-brand-gold-500 transition-all text-slate-800 font-medium"
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-xl focus:outline-none focus:border-brand-gold-500 transition-all text-slate-800 font-bold cursor-pointer"
                         >
                           {CATEGORIES.map((cat) => (
                             <option key={cat} value={cat}>
@@ -845,13 +796,31 @@ export default function App() {
 
                     </div>
 
+                    {/* Quick Category Buttons / Pills */}
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setSelectedCategory(cat)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                            selectedCategory === cat 
+                              ? "bg-brand-navy-900 border-brand-navy-900 text-white shadow-xs font-black" 
+                              : "bg-white border-slate-300 text-slate-700 hover:border-brand-gold-500/50 hover:bg-slate-100 font-bold"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Filter tags summary */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 pt-1 border-t border-slate-200/60">
                       <div>
                         Showing <strong className="text-brand-navy-900">
                           {rolesData.filter((r) => {
-                            const matchCat = selectedCategory === "All" || r.category === selectedCategory;
-                            const matchQuery = r.title.toLowerCase().includes(searchQuery.toLowerCase()) || r.description.toLowerCase().includes(searchQuery.toLowerCase());
+                            const matchCat = !selectedCategory || selectedCategory === "All" || r.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase();
+                            const matchQuery = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase()) || r.description.toLowerCase().includes(searchQuery.toLowerCase()) || r.category.toLowerCase().includes(searchQuery.toLowerCase());
                             return matchCat && matchQuery;
                           }).length}
                         </strong> jobs matching your criteria.
@@ -863,7 +832,7 @@ export default function App() {
                             onClick={() => setSelectedCategory("All")} 
                             className="px-2.5 py-1 bg-brand-gold-100 hover:bg-brand-gold-200 text-brand-gold-800 rounded-lg text-[10px] font-bold transition-all border-none cursor-pointer"
                           >
-                            Reset Category
+                            Show All Categories
                           </button>
                         )}
                         {searchQuery !== "" && (
@@ -879,148 +848,150 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Apply Form Dialog Container */}
+                  {/* Apply Form Instant Modal Dialog Overlay */}
                   <AnimatePresence>
                     {showApplyForm && applyingForRole && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-[#fcf8ec] border border-brand-gold-500/30 p-6 rounded-2xl space-y-5"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-[10px] font-mono font-bold text-brand-gold-700 bg-brand-gold-100 px-2 py-0.5 rounded uppercase">
-                              APPLICATION FORM
-                            </span>
-                            <h3 className="font-display font-black text-lg text-brand-navy-950 uppercase mt-1">
-                              Applying for: {applyingForRole.title}
-                            </h3>
-                            <p className="text-xs text-slate-500">
-                              {applyingForRole.category} • {applyingForRole.location}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                            className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200/50 border-none bg-transparent cursor-pointer"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-
-                        {applicationSubmittedSuccess ? (
-                          <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
-                            <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                            <h4 className="font-display font-extrabold text-slate-900 text-base">Application Submitted Successfully!</h4>
-                            <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
-                              Thank you, <strong>{applicantName}</strong>! Your resume and application details for <strong>{applyingForRole.title}</strong> have been logged inside the C Vidya HR registry. We will reach out to you within 3 business days.
-                            </p>
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                          className="bg-white border border-brand-gold-500/40 p-6 sm:p-8 rounded-2xl shadow-2xl max-w-2xl w-full my-auto space-y-5 relative text-left"
+                        >
+                          <div className="flex justify-between items-start pb-3 border-b border-slate-100">
+                            <div>
+                              <span className="text-[10px] font-mono font-bold text-brand-gold-700 bg-brand-gold-100 px-2 py-0.5 rounded uppercase">
+                                JOB APPLICATION FORM
+                              </span>
+                              <h3 className="font-display font-black text-xl text-brand-navy-950 uppercase mt-1">
+                                Applying for: {applyingForRole.title}
+                              </h3>
+                              <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                                Category: {applyingForRole.category} • Location: {applyingForRole.location}
+                              </p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                              className="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 border-none bg-transparent cursor-pointer transition-colors"
                             >
-                              Browse other jobs
+                              <X className="w-5 h-5" />
                             </button>
                           </div>
-                        ) : (
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              if (!applicantName || !applicantEmail || !applicantPhone) {
-                                return;
-                              }
-                              setApplicationSubmittedSuccess(true);
-                            }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                          >
-                            {/* Full Name */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-mono font-bold text-slate-600 uppercase block">Full Name *</label>
-                              <input
-                                type="text"
-                                required
-                                value={applicantName}
-                                onChange={(e) => setApplicantName(e.target.value)}
-                                placeholder="Your Name"
-                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500"
-                              />
-                            </div>
 
-                            {/* Email Address */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-mono font-bold text-slate-600 uppercase block">Email *</label>
-                              <input
-                                type="email"
-                                required
-                                value={applicantEmail}
-                                onChange={(e) => setApplicantEmail(e.target.value)}
-                                placeholder="name@domain.com"
-                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500"
-                              />
-                            </div>
-
-                            {/* Mobile Number */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-mono font-bold text-slate-600 uppercase block">Mobile Phone *</label>
-                              <input
-                                type="tel"
-                                required
-                                value={applicantPhone}
-                                onChange={(e) => setApplicantPhone(e.target.value)}
-                                placeholder="89877XXXXX"
-                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500"
-                              />
-                            </div>
-
-                            {/* Experience Level */}
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-mono font-bold text-slate-600 uppercase block">Experience *</label>
-                              <select
-                                value={applicantExperience}
-                                onChange={(e) => setApplicantExperience(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 font-medium"
-                              >
-                                <option value="Student / Intern">Student / Intern</option>
-                                <option value="Fresher Graduate">Fresher Graduate</option>
-                                <option value="Junior (1-2 years)">Junior (1-2 years)</option>
-                                <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
-                                <option value="Senior (5+ years)">Senior (5+ years)</option>
-                              </select>
-                            </div>
-
-                            {/* Statement / Message */}
-                            <div className="md:col-span-2 space-y-1.5">
-                              <label className="text-xs font-mono font-bold text-slate-600 uppercase block">Motivation Message & Resume Link</label>
-                              <textarea
-                                value={applicantMessage}
-                                onChange={(e) => setApplicantMessage(e.target.value)}
-                                placeholder="Paste your Google Drive resume link and write why you want to join our team..."
-                                rows={3}
-                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500"
-                              />
-                            </div>
-
-                            <div className="md:col-span-2 flex justify-end gap-3.5 pt-2">
+                          {applicationSubmittedSuccess ? (
+                            <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
+                              <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+                              <h4 className="font-display font-extrabold text-slate-900 text-base">Application Submitted Successfully!</h4>
+                              <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
+                                Thank you, <strong>{applicantName}</strong>! Your resume and application details for <strong>{applyingForRole.title}</strong> have been logged inside the C Vidya HR registry. We will reach out to you within 3 business days.
+                              </p>
                               <button
                                 type="button"
                                 onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                                className="px-5 py-2.5 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
                               >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                className="flex items-center gap-1.5 px-5 py-2 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-sm border-none cursor-pointer"
-                              >
-                                <Send className="w-3.5 h-3.5 text-brand-gold-400" />
-                                <span>Submit Resume Application</span>
+                                Close & Browse Openings
                               </button>
                             </div>
-                          </form>
-                        )}
-                      </motion.div>
+                          ) : (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!applicantName || !applicantEmail || !applicantPhone) {
+                                  return;
+                                }
+                                setApplicationSubmittedSuccess(true);
+                              }}
+                              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                            >
+                              {/* Full Name */}
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Full Name *</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={applicantName}
+                                  onChange={(e) => setApplicantName(e.target.value)}
+                                  placeholder="Your Name"
+                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                />
+                              </div>
+
+                              {/* Email Address */}
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Email *</label>
+                                <input
+                                  type="email"
+                                  required
+                                  value={applicantEmail}
+                                  onChange={(e) => setApplicantEmail(e.target.value)}
+                                  placeholder="name@domain.com"
+                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                />
+                              </div>
+
+                              {/* Mobile Number */}
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Mobile Phone *</label>
+                                <input
+                                  type="tel"
+                                  required
+                                  value={applicantPhone}
+                                  onChange={(e) => setApplicantPhone(e.target.value)}
+                                  placeholder="89877XXXXX"
+                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                />
+                              </div>
+
+                              {/* Experience Level */}
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Experience *</label>
+                                <select
+                                  value={applicantExperience}
+                                  onChange={(e) => setApplicantExperience(e.target.value)}
+                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 font-bold text-slate-900"
+                                >
+                                  <option value="Student / Intern">Student / Intern</option>
+                                  <option value="Fresher Graduate">Fresher Graduate</option>
+                                  <option value="Junior (1-2 years)">Junior (1-2 years)</option>
+                                  <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
+                                  <option value="Senior (5+ years)">Senior (5+ years)</option>
+                                </select>
+                              </div>
+
+                              {/* Statement / Message */}
+                              <div className="md:col-span-2 space-y-1.5">
+                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Motivation Message & Resume Link</label>
+                                <textarea
+                                  value={applicantMessage}
+                                  onChange={(e) => setApplicantMessage(e.target.value)}
+                                  placeholder="Paste your Google Drive resume link and write why you want to join our team..."
+                                  rows={3}
+                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                />
+                              </div>
+
+                              <div className="md:col-span-2 flex justify-end gap-3.5 pt-2 border-t border-slate-100">
+                                <button
+                                  type="button"
+                                  onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
+                                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  className="flex items-center gap-1.5 px-5 py-2 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-sm border-none cursor-pointer"
+                                >
+                                  <Send className="w-3.5 h-3.5 text-brand-gold-400" />
+                                  <span>Submit Resume Application</span>
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                        </motion.div>
+                      </div>
                     )}
                   </AnimatePresence>
 
@@ -1028,56 +999,77 @@ export default function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {rolesData
                       .filter((role) => {
-                        const matchCat = selectedCategory === "All" || role.category === selectedCategory;
-                        const matchQuery = role.title.toLowerCase().includes(searchQuery.toLowerCase()) || role.description.toLowerCase().includes(searchQuery.toLowerCase());
+                        const matchCat = !selectedCategory || selectedCategory === "All" || role.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase();
+                        const matchQuery = !searchQuery || role.title.toLowerCase().includes(searchQuery.toLowerCase()) || role.description.toLowerCase().includes(searchQuery.toLowerCase()) || role.category.toLowerCase().includes(searchQuery.toLowerCase());
                         return matchCat && matchQuery;
-                      })
-                      .map((role, rIdx) => (
-                        <div
-                          key={rIdx}
-                          className="p-5 rounded-2xl bg-white border border-slate-200/70 hover:border-brand-gold-500/30 hover:shadow-md transition-all flex flex-col justify-between"
-                        >
-                          <div className="space-y-3.5">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[9px] font-mono font-bold text-[#b7791f] bg-amber-500/10 px-2 py-0.5 rounded uppercase">
-                                {role.category}
-                              </span>
-                              <span className="text-[9px] font-mono text-slate-400 whitespace-nowrap">
-                                {role.type}
-                              </span>
-                            </div>
-                            <h3 className="font-display font-extrabold text-base text-slate-900">
-                              {role.title}
-                            </h3>
-                            <p className="text-xs text-black leading-relaxed font-bold">
-                              {role.description}
-                            </p>
-                          </div>
-
-                          <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
-                            <div className="flex items-center gap-1 text-slate-400 font-mono">
-                              <MapPin className="w-3.5 h-3.5 text-brand-gold-600" />
-                              <span className="truncate max-w-[120px]">{role.location}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setApplyingForRole(role);
-                                setApplicantName("");
-                                setApplicantEmail("");
-                                setApplicantPhone("");
-                                setApplicantMessage("");
-                                setApplicationSubmittedSuccess(false);
-                                setShowApplyForm(true);
-                                window.scrollTo({ top: 320, behavior: "smooth" });
-                              }}
-                              className="px-3 py-1.5 bg-slate-900 hover:bg-brand-gold-500 hover:text-slate-950 text-white text-[10px] font-bold rounded-lg transition-all border-none cursor-pointer"
-                            >
-                              Apply Now
-                            </button>
-                          </div>
+                      }).length === 0 ? (
+                        <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 bg-slate-50 border border-dashed border-slate-300 rounded-2xl space-y-3">
+                          <Users className="w-10 h-10 text-slate-300 mx-auto" />
+                          <h4 className="font-display font-bold text-slate-800 text-base">No Openings Found</h4>
+                          <p className="text-xs text-slate-500 max-w-md mx-auto">
+                            There are currently no active roles listed under <strong>"{selectedCategory}"</strong> matching your search.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedCategory("All"); setSearchQuery(""); }}
+                            className="px-4 py-2 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                          >
+                            View All Open Positions
+                          </button>
                         </div>
-                      ))}
+                      ) : (
+                        rolesData
+                          .filter((role) => {
+                            const matchCat = !selectedCategory || selectedCategory === "All" || role.category.trim().toLowerCase() === selectedCategory.trim().toLowerCase();
+                            const matchQuery = !searchQuery || role.title.toLowerCase().includes(searchQuery.toLowerCase()) || role.description.toLowerCase().includes(searchQuery.toLowerCase()) || role.category.toLowerCase().includes(searchQuery.toLowerCase());
+                            return matchCat && matchQuery;
+                          })
+                          .map((role, rIdx) => (
+                            <div
+                              key={rIdx}
+                              className="h-full p-5 rounded-2xl bg-white border border-slate-200/70 hover:border-brand-gold-500/30 hover:shadow-md transition-all flex flex-col justify-between"
+                            >
+                              <div className="space-y-3 flex-1 flex flex-col">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[9px] font-mono font-bold text-[#b7791f] bg-amber-500/10 px-2 py-0.5 rounded uppercase">
+                                    {role.category}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-slate-400 whitespace-nowrap">
+                                    {role.type}
+                                  </span>
+                                </div>
+                                <h3 className="font-display font-extrabold text-base text-slate-900 leading-snug">
+                                  {role.title}
+                                </h3>
+                                <p className="text-xs text-slate-600 leading-relaxed font-normal mb-2 flex-1">
+                                  {role.description}
+                                </p>
+                              </div>
+
+                              <div className="pt-4 mt-auto border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+                                <div className="flex items-center gap-1 text-slate-400 font-mono">
+                                  <MapPin className="w-3.5 h-3.5 text-brand-gold-600" />
+                                  <span className="truncate max-w-[120px]">{role.location}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setApplyingForRole(role);
+                                    setApplicantName("");
+                                    setApplicantEmail("");
+                                    setApplicantPhone("");
+                                    setApplicantMessage("");
+                                    setApplicationSubmittedSuccess(false);
+                                    setShowApplyForm(true);
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-900 hover:bg-brand-gold-500 hover:text-slate-950 text-white text-[10px] font-bold rounded-lg transition-all border-none cursor-pointer"
+                                >
+                                  Apply Now
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                      )}
                   </div>
 
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Mail, MapPin, Send, CheckCircle, Database, ShieldCheck, MailOpen, Trash2 } from "lucide-react";
+import { Phone, Mail, MapPin, Send, CheckCircle, Database, ShieldCheck, MailOpen, Trash2, Building, GraduationCap } from "lucide-react";
 
 interface InquiryFormProps {
   onInquirySubmitted?: () => void;
@@ -336,159 +336,140 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
   }
 
   return (
-    <section id="contact" className="py-20 lg:py-28 bg-white relative">
-      
-      {/* Decorative vectors: Wave & gold elements matching Image 2 style */}
-      <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-r from-brand-gold-400 via-[#d69e2e] to-brand-gold-500 opacity-20 pointer-events-none" />
+    <section id="contact" className="bg-white relative">
+      {/* Decorative top border vector */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-gold-400 via-[#d69e2e] to-brand-gold-500 opacity-30 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        
+        {/* 3-Column Equal Height Responsive Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
           
-          {/* Left Column: Traditional Address info, Golden emblem & custom SVG QR Code */}
-          <div className="lg:col-span-5 space-y-10">
-            <div>
-              <div className="flex items-center gap-2 mb-3.5">
-                <span className="h-[2.5px] w-6 bg-brand-gold-500" />
-                <span className="text-xs font-mono font-black text-brand-gold-600 tracking-widest uppercase">CONTACT US</span>
-              </div>
-              <h2 className="font-display font-extrabold text-3.5xl text-brand-navy-900 tracking-tight leading-none">
-                CONNECT WITH OUR DIRECTOR & FOUNDER
-              </h2>
-              <p className="mt-4 text-slate-700 text-sm leading-relaxed font-medium">
-                Schedule a customized live demo, discuss technical parameters, and discover how our integrated system platforms can streamline your workspace workflow instantly.
-              </p>
-            </div>
-
-            {/* Quick cards info block */}
-            <div className="space-y-4">
-              
-              <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-gold-500/20 bg-slate-50/50 transition-colors">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0">
-                  <Phone className="w-5 h-5" />
+          {/* COLUMN 1: Director & Leadership Desk */}
+          <div className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-xs hover:shadow-md transition-all h-full flex flex-col justify-between space-y-6">
+            <div className="space-y-5">
+              <div>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="h-[2px] w-5 bg-brand-gold-500" />
+                  <span className="text-[11px] font-mono font-bold text-brand-gold-700 uppercase tracking-widest">
+                    DIRECTOR DESK
+                  </span>
                 </div>
-                <div>
-                  <div className="text-[10px] uppercase text-slate-400 font-mono font-bold tracking-wider">OFFICIAL PHONE DIRECT</div>
-                  <div className="flex flex-col gap-1.5 mt-0.5">
-                    <a href="tel:8987766981" className="font-display font-bold text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight">
-                      8987766981
-                    </a>
-                  </div>
-                  <p className="text-[11px] text-slate-700 mt-1.5 font-bold">Available Mon-Sat (10:00 AM - 07:00 PM)</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-gold-500/20 bg-slate-50/50 transition-colors w-full min-w-0">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase text-slate-400 font-mono font-bold tracking-wider">EMAIL CORRESPONDENCE</div>
-                  <div className="flex flex-col gap-1.5 mt-0.5 min-w-0">
-                    <div className="min-w-0">
-                      <a href="mailto:cvidyasolutions@gmail.com" className="font-display font-bold text-[13px] sm:text-sm md:text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
-                        cvidyasolutions@gmail.com
-                      </a>
-                      <span className="text-[10px] sm:text-xs font-normal text-slate-400 font-sans block mt-0.5 mb-1.5">(Office Desk)</span>
-                    </div>
-                    <div className="min-w-0">
-                      <a href="mailto:chiranjeev0058@gmail.com" className="font-display font-bold text-[13px] sm:text-sm md:text-base text-brand-navy-900 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
-                        chiranjeev0058@gmail.com
-                      </a>
-                      <span className="text-[10px] sm:text-xs font-normal text-slate-400 font-sans block mt-0.5">(Director/Founder: Chiranjeev Das)</span>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-700 mt-2 font-bold">Response guaranteed in 24 hours</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-gold-500/20 bg-slate-50/50 transition-colors">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div className="space-y-4 w-full">
-                  <div>
-                    <div className="text-[10px] uppercase text-slate-400 font-mono font-bold tracking-wider">HEADQUARTERS ADDRESS</div>
-                    <div className="font-display font-bold text-[14px] text-brand-navy-900 mt-0.5 leading-tight">
-                      Surunga, Baliapur, Dhanbad, Jharkhand - 828115
-                    </div>
-                  </div>
-                  <div className="border-t border-slate-200/60 pt-3">
-                    <div className="text-[10px] uppercase text-slate-400 font-mono font-bold tracking-wider">BRANCH OFFICE & DIRECTOR'S DESK</div>
-                    <div className="font-display font-bold text-[14px] text-brand-navy-900 mt-0.5 leading-tight">
-                      STPI Sindri, BIT Sindri Campus, Dhanbad, Jharkhand
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-700 font-bold">Region: Jharkhand, India</p>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Custom stylized QR Code and branding medallion directly corresponding to the QR from second image */}
-            <div className="p-6 rounded-2xl bg-brand-navy-900 border border-brand-gold-500/10 text-white flex gap-5 items-center">
-              
-              {/* Pristine CSS Grid representation of a high fidelity QR code with embedded logo */}
-              <div className="relative bg-white p-2.5 rounded-xl shrink-0 border border-brand-gold-500/30">
-                <div className="w-24 h-24 grid grid-cols-6 grid-rows-6 gap-[1.5px] p-[1.5px] bg-white relative">
-                  {/* Position detection markers */}
-                  <div className="col-span-2 row-span-2 bg-brand-navy-900 border border-white" />
-                  <div className="col-span-2 row-span-2 col-start-5 bg-brand-navy-900 border border-white" />
-                  <div className="col-span-2 row-span-2 row-start-5 bg-brand-navy-900 border border-white" />
-                  
-                  {/* Random QR bits patterns */}
-                  <div className="col-start-3 row-start-1 bg-brand-navy-900" />
-                  <div className="col-start-3 row-start-2 bg-brand-navy-900" />
-                  <div className="col-start-4 row-start-2 bg-brand-navy-900" />
-                  <div className="col-start-1 row-start-3 bg-brand-navy-900" />
-                  <div className="col-start-4 row-start-3 bg-brand-navy-900" />
-                  <div className="col-start-2 row-start-4 bg-brand-navy-900" />
-                  <div className="col-start-3 row-start-4 bg-brand-navy-900" />
-                  <div className="col-start-5 row-start-4 bg-brand-navy-900" />
-                  <div className="col-start-3 row-start-5 bg-brand-navy-900" />
-                  <div className="col-start-4 row-start-5 bg-brand-navy-900" />
-                  <div className="col-start-3 row-start-6 bg-brand-navy-900" />
-                  <div className="col-start-4 row-start-6 bg-brand-navy-900" />
-
-                  {/* Absolute Center Micro logo */}
-                  <div className="absolute inset-8 bg-brand-gold-500 border border-brand-navy-900 rounded-sm flex items-center justify-center font-mono font-black text-[7px] text-brand-navy-900 select-none">
-                    V
-                  </div>
-                </div>
-                <div className="text-[8px] font-mono font-bold tracking-wider text-brand-navy-900 text-center uppercase mt-1">
-                  C VIDYA OFFICIAL
-                </div>
-              </div>
-
-              <div className="space-y-1.5 font-sans">
-                <div className="text-[10px] font-mono tracking-widest text-[#f5d77f] font-bold uppercase">
-                  SCAN TO VISIT WEBSITE
-                </div>
-                <h4 className="font-display font-semibold text-sm leading-tight">
-                  Carry C Vidya Solutions in your pocket.
-                </h4>
-                <p className="text-[11px] text-slate-300 leading-normal">
-                  Scans redirect you instantly to our secured domain for detailed systems document references.
+                <h3 className="font-display font-extrabold text-xl text-brand-navy-950 uppercase tracking-tight leading-snug">
+                  CONNECT WITH OUR DIRECTOR & FOUNDER
+                </h3>
+                <p className="mt-2 text-slate-600 text-xs sm:text-sm leading-relaxed font-normal">
+                  Schedule a customized live demo, discuss technical parameters, and discover how our integrated system platforms can streamline your workspace workflow instantly.
                 </p>
               </div>
 
+              {/* Direct Info Cards */}
+              <div className="space-y-3.5">
+                
+                {/* Official Phone */}
+                <div className="p-4 rounded-xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-colors flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0 mt-0.5">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase text-slate-500 font-mono font-bold tracking-wider">
+                      OFFICIAL PHONE DIRECT
+                    </div>
+                    <a href="tel:8987766981" className="font-display font-bold text-base text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight mt-0.5">
+                      +91 8987766981
+                    </a>
+                    <p className="text-[11px] text-slate-500 mt-1 font-semibold">
+                      Mon - Sat (10:00 AM - 07:00 PM)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Email Correspondence */}
+                <div className="p-4 rounded-xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-colors flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0 mt-0.5">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase text-slate-500 font-mono font-bold tracking-wider">
+                      EMAIL CORRESPONDENCE
+                    </div>
+                    <div className="mt-1 space-y-1.5">
+                      <div>
+                        <a href="mailto:cvidyasolutions@gmail.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                          cvidyasolutions@gmail.com
+                        </a>
+                        <span className="text-[10px] text-slate-500 font-medium block">Office Support Desk</span>
+                      </div>
+                      <div className="pt-1.5 border-t border-slate-200/50">
+                        <a href="mailto:chiranjeev0058@gmail.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                          chiranjeev0058@gmail.com
+                        </a>
+                        <span className="text-[10px] text-slate-500 font-medium block">Director: Chiranjeev Das</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Digital QR Passport */}
+                <div className="p-4 rounded-xl bg-brand-navy-950 text-white border border-brand-gold-500/20 flex gap-3.5 items-center">
+                  <div className="bg-white p-2 rounded-lg shrink-0 border border-brand-gold-500/30">
+                    <div className="w-16 h-16 grid grid-cols-6 grid-rows-6 gap-[1px] p-[1px] bg-white relative">
+                      <div className="col-span-2 row-span-2 bg-brand-navy-900" />
+                      <div className="col-span-2 row-span-2 col-start-5 bg-brand-navy-900" />
+                      <div className="col-span-2 row-span-2 row-start-5 bg-brand-navy-900" />
+                      <div className="col-start-3 row-start-2 bg-brand-navy-900" />
+                      <div className="col-start-4 row-start-3 bg-brand-navy-900" />
+                      <div className="col-start-3 row-start-4 bg-brand-navy-900" />
+                      <div className="col-start-5 row-start-4 bg-brand-navy-900" />
+                      <div className="col-start-4 row-start-5 bg-brand-navy-900" />
+                      <div className="absolute inset-5 bg-brand-gold-500 border border-brand-navy-900 rounded-xs flex items-center justify-center font-mono font-black text-[6px] text-brand-navy-950">
+                        V
+                      </div>
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[9px] font-mono tracking-widest text-brand-gold-400 font-bold uppercase">
+                      SCAN TO VISIT WEBSITE
+                    </div>
+                    <h4 className="font-display font-semibold text-xs text-white mt-0.5 leading-snug">
+                      Official C Vidya Portal
+                    </h4>
+                    <p className="text-[10.5px] text-slate-300 leading-tight mt-1">
+                      Instant mobile access to solution documents.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span className="font-semibold text-slate-700">Director SLA</span>
+              <span className="font-mono font-bold text-emerald-600">Response &lt; 24h</span>
+            </div>
           </div>
 
-          {/* Right Column: Callback Request dynamic form */}
-          <div className="lg:col-span-7 bg-slate-50 border border-slate-200/65 p-6 sm:p-9 rounded-3xl shadow-sm relative">
-            <h3 className="font-display font-extrabold text-xl text-brand-navy-900 mb-1 leading-none">
-              SUBMIT AN OFFICIAL CALLBACK INQUIRY
-            </h3>
-            <p className="text-black text-xs mb-6 font-extrabold">
-              We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
-            </p>
+          {/* COLUMN 2: Submit Callback Inquiry Form */}
+          <div className="bg-slate-50/90 border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-xs hover:shadow-md transition-all h-full flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="h-[2px] w-5 bg-brand-navy-900" />
+                  <span className="text-[11px] font-mono font-bold text-brand-navy-900 uppercase tracking-widest">
+                    ONLINE REQUISITION
+                  </span>
+                </div>
+                <h3 className="font-display font-extrabold text-xl text-brand-navy-950 uppercase tracking-tight leading-snug">
+                  SUBMIT A CALLBACK INQUIRY
+                </h3>
+                <p className="mt-1 text-slate-600 text-xs sm:text-sm font-normal">
+                  We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
+                </p>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono font-black uppercase tracking-wider text-black mb-1">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="space-y-1">
+                  <label className="block text-[10.5px] font-mono font-bold uppercase tracking-wider text-slate-700">
                     Your Full Name *
                   </label>
                   <input
@@ -497,50 +478,51 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your name"
-                    className="w-full text-sm px-4 py-3 bg-white text-black font-semibold border border-slate-200 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors placeholder:text-slate-400"
+                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-white text-slate-900 font-medium border border-slate-300 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-mono font-black uppercase tracking-wider text-black mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="name@company.com"
-                    className="w-full text-sm px-4 py-3 bg-white text-black font-semibold border border-slate-200 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors placeholder:text-slate-400"
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-mono font-black uppercase tracking-wider text-black mb-1">
-                    Phone Number (Contact Support) *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="e.g. +91 9999999999"
-                    className="w-full text-sm px-4 py-3 bg-white text-black font-semibold border border-slate-200 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors placeholder:text-slate-400"
-                    required
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10.5px] font-mono font-bold uppercase tracking-wider text-slate-700">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="name@company.com"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-white text-slate-900 font-medium border border-slate-300 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10.5px] font-mono font-bold uppercase tracking-wider text-slate-700">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+91 8987766981"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-white text-slate-900 font-medium border border-slate-300 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-mono font-black uppercase tracking-wider text-black mb-1">
+
+                <div className="space-y-1">
+                  <label className="block text-[10.5px] font-mono font-bold uppercase tracking-wider text-slate-700">
                     Specific Product Framework
                   </label>
                   <select
                     name="service"
                     value={formData.service}
                     onChange={handleChange}
-                    className="w-full text-sm px-4 py-3 bg-white text-black font-semibold border border-slate-200 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-500 rounded-xl outline-none transition-colors appearance-none cursor-pointer"
+                    className="w-full text-xs sm:text-sm px-3.5 py-2.5 bg-white text-slate-900 font-bold border border-slate-300 focus:border-brand-gold-500 rounded-xl outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="General Inquiry">General Company Inquiry</option>
                     <option value="C Vidya Library">01 - C Vidya Library Suite</option>
@@ -553,108 +535,101 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                     <option value="C Vidya Members">08 - C Vidya Members Management</option>
                   </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-mono font-black uppercase tracking-wider text-black mb-1">
-                  Custom Enterprise Requirements / Instructions
-                </label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="Tell us about your organization's workflow needs..."
-                  className="w-full text-sm px-4 py-3 bg-white text-black font-semibold border border-slate-200 focus:border-brand-gold-500 focus:ring-1 focus:ring-brand-gold-400 rounded-xl outline-none transition-colors resize-none placeholder:text-slate-400"
-                />
-              </div>
-
-              {/* Data Disclosure & Legal Compliance Acknowledgment */}
-              <div className="flex items-start gap-2.5 p-3.5 bg-white rounded-xl border border-slate-200/50">
-                <input
-                  type="checkbox"
-                  id="legal-compliance-checkbox"
-                  required
-                  className="mt-0.5 rounded border-slate-300 text-brand-gold-600 focus:ring-brand-gold-500 h-4 w-4 cursor-pointer"
-                />
-                <label htmlFor="legal-compliance-checkbox" className="text-[11px] text-slate-800 leading-relaxed font-bold cursor-pointer select-none">
-                  I explicitly consent to the collection, secure database storage, and transmission of my inquiry credentials under standard CCPA/GDPR encryption pipelines. I accept the <span className="font-bold text-slate-900 underline">Terms of Service</span> and <span className="font-bold text-slate-900 underline">Privacy Policy</span>.
-                </label>
-              </div>
-
-              {/* Submit panel notification response */}
-              {submitResult && (
-                <div className={`p-4 rounded-xl text-xs font-medium flex gap-2.5 items-start ${
-                  submitResult.success ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
-                }`}>
-                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{submitResult.message}</span>
+                <div className="space-y-1">
+                  <label className="block text-[10.5px] font-mono font-bold uppercase tracking-wider text-slate-700">
+                    Requirements / Instructions
+                  </label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder="Tell us about your organization's workflow needs..."
+                    className="w-full text-xs sm:text-sm px-3.5 py-2 bg-white text-slate-900 font-medium border border-slate-300 focus:border-brand-gold-500 rounded-xl outline-none transition-colors resize-none"
+                  />
                 </div>
-              )}
 
-              {/* Form submit trig button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2.5 bg-brand-navy-900 hover:bg-brand-navy-950 text-white font-bold py-3.5 px-6 rounded-xl hover:shadow-md transition-all active:scale-[0.99] disabled:opacity-50 font-sans tracking-wide text-sm cursor-pointer"
-              >
-                {isSubmitting ? (
-                  <span>TRANSMITTING DETAILS...</span>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 text-brand-gold-400" />
-                    <span>TRANSMIT REQUISITION RECEIVED</span>
-                  </>
+                <div className="flex items-start gap-2.5 p-3 bg-white rounded-xl border border-slate-200">
+                  <input
+                    type="checkbox"
+                    id="legal-compliance-checkbox"
+                    required
+                    className="mt-0.5 rounded border-slate-300 text-brand-gold-600 focus:ring-brand-gold-500 h-3.5 w-3.5 cursor-pointer"
+                  />
+                  <label htmlFor="legal-compliance-checkbox" className="text-[10.5px] text-slate-700 leading-normal font-semibold cursor-pointer select-none">
+                    I consent to secure database storage & transmission of my details under standard encryption guidelines.
+                  </label>
+                </div>
+
+                {submitResult && (
+                  <div className={`p-3 rounded-xl text-xs font-semibold flex gap-2 items-start ${
+                    submitResult.success ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"
+                  }`}>
+                    <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{submitResult.message}</span>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-200/70 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-navy-900 hover:bg-black text-white font-bold py-3 px-5 rounded-xl hover:shadow-md transition-all active:scale-[0.99] disabled:opacity-50 text-xs sm:text-sm cursor-pointer border-none"
+                >
+                  {isSubmitting ? (
+                    <span>TRANSMITTING DETAILS...</span>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 text-brand-gold-400" />
+                      <span>TRANSMIT REQUISITION RECEIVED</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-1.5 text-slate-600 font-bold">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>SSL Encrypted Transmission active</span>
+                <span>SSL Encrypted</span>
               </div>
-
-              {/* Server logged inquiries panel review trigger */}
               <button
+                type="button"
                 onClick={() => {
                   setShowInquiriesPanel(!showInquiriesPanel);
                   if (!showInquiriesPanel && ownerPassword) {
                     fetchInquiries();
                   }
                 }}
-                className="text-xs font-mono font-semibold text-brand-gold-600 hover:text-brand-gold-700 flex items-center gap-1.5 px-2.5 py-1.5 bg-brand-gold-100/50 rounded-lg border border-brand-gold-200/50 transition-all cursor-pointer"
+                className="text-[10.5px] font-mono font-bold text-brand-gold-700 hover:text-brand-gold-800 flex items-center gap-1.5 px-2.5 py-1 bg-brand-gold-100/60 rounded-lg border border-brand-gold-300/50 transition-all cursor-pointer"
               >
                 <Database className="w-3.5 h-3.5" />
-                <span>{showInquiriesPanel ? "Hide Logged Leads" : "Show Onsite Leads Ledger"}</span>
+                <span>{showInquiriesPanel ? "Hide Leads" : "Onsite Leads"}</span>
               </button>
             </div>
 
             {/* Leads Sandbox Visual Panel representing live sever logged state */}
             {showInquiriesPanel && (
               !isAuthorized ? (
-                <div id="credentials-verif-panel" className="mt-5 p-5 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3.5">
-                  <div className="flex items-center gap-2 pb-2.5 border-b border-slate-800/60">
-                    <span className="p-1 px-2 rounded-md bg-amber-500/10 text-amber-500 font-mono text-[9px] font-bold border border-amber-500/20">SECURED PORTAL</span>
-                    <span className="text-xs font-mono font-bold text-white tracking-widest uppercase">
-                      OWNER ACCESS VERIFICATION
+                <div id="credentials-verif-panel" className="mt-4 p-4 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-800/60">
+                    <span className="p-0.5 px-1.5 rounded bg-amber-500/10 text-amber-500 font-mono text-[9px] font-bold border border-amber-500/20">SECURED PORTAL</span>
+                    <span className="text-[11px] font-mono font-bold text-white tracking-wider uppercase">
+                      OWNER VERIFICATION
                     </span>
                   </div>
                   
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                    The leads ledger database is protected. Please enter the company owner password to securely view captured inquiries.
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                    Please enter the owner password to view captured leads.
                   </p>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div>
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 mb-1.5">
-                        OWNER PASSWORD
-                      </label>
                       <div className="flex gap-2">
                         <input
                           id="owner-password-input"
                           type="password"
-                          placeholder="••••••••"
+                          placeholder="Password"
                           value={passwordInput}
                           onChange={(e) => {
                             setPasswordInput(e.target.value);
@@ -665,44 +640,39 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                               handleAuthenticate();
                             }
                           }}
-                          className="flex-1 text-sm font-mono px-4 py-2 bg-slate-950 border border-slate-800 focus:border-brand-gold-500 rounded-lg outline-none text-white transition-all"
+                          className="flex-1 text-xs font-mono px-3 py-1.5 bg-slate-950 border border-slate-800 focus:border-brand-gold-500 rounded-lg outline-none text-white transition-all"
                         />
                         <button
                           id="owner-authenticate-btn"
                           type="button"
                           onClick={handleAuthenticate}
                           disabled={isAuthenticating}
-                          className="px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-600 active:scale-95 text-brand-navy-900 font-bold text-xs rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 shrink-0"
+                          className="px-3 py-1.5 bg-brand-gold-500 hover:bg-brand-gold-600 active:scale-95 text-brand-navy-900 font-bold text-xs rounded-lg transition-all cursor-pointer inline-flex items-center gap-1 shrink-0"
                         >
-                          {isAuthenticating ? "VERIFYING..." : "UNLOCK"}
+                          {isAuthenticating ? "..." : "UNLOCK"}
                         </button>
                       </div>
                     </div>
 
                     {authError && (
-                      <p className="text-[11px] text-red-400 font-medium font-sans flex items-center gap-1.5 pt-1">
+                      <p className="text-[10px] text-red-400 font-medium font-sans flex items-center gap-1">
                         ⚠️ {authError}
                       </p>
                     )}
-                    
-                    <div className="text-[9px] font-mono text-slate-500 pt-2 border-t border-slate-800/40 flex justify-between">
-                      <span>ENCRYPTION: AES-256</span>
-                      <span>SECURED PORTAL</span>
-                    </div>
                   </div>
                 </div>
               ) : (
-                <div id="leads-logs-panel" className="mt-5 p-4 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3.5 max-h-[300px] overflow-y-auto">
+                <div id="leads-logs-panel" className="mt-4 p-3 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3 max-h-[260px] overflow-y-auto">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4 text-brand-gold-400" />
-                      <span className="text-xs font-mono font-bold text-white tracking-widest uppercase">
-                        ONSITE LEADS LOGS DATABASE
+                    <div className="flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5 text-brand-gold-400" />
+                      <span className="text-[11px] font-mono font-bold text-white tracking-wider uppercase">
+                        CAPTURED LEADS
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                        {submittedInquiries.length} Active Records
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                        {submittedInquiries.length} Logs
                       </span>
                       <button
                         type="button"
@@ -713,8 +683,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                           setPasswordInput("");
                           setSubmittedInquiries([]);
                         }}
-                        className="text-[9px] font-mono text-slate-400 hover:text-red-400 px-1.5 py-0.5 bg-slate-800 hover:bg-red-500/15 rounded border border-slate-700 hover:border-red-500/30 transition-all cursor-pointer"
-                        title="Lock Ledger"
+                        className="text-[9px] font-mono text-slate-400 hover:text-red-400 px-1 py-0.5 bg-slate-800 hover:bg-red-500/15 rounded transition-all cursor-pointer"
                       >
                         🔒 LOCK
                       </button>
@@ -722,32 +691,26 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                   </div>
 
                   {submittedInquiries.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-slate-500 font-mono">
-                      No lead records logged yet this session. Submit the form above to capture indices!
+                    <div className="text-center py-4 text-[10.5px] text-slate-500 font-mono">
+                      No lead records logged yet.
                     </div>
                   ) : (
-                    <div className="space-y-3 font-mono text-[11px] leading-relaxed">
+                    <div className="space-y-2 font-mono text-[10px] leading-relaxed">
                       {submittedInquiries.map((inq, i) => (
-                        <div key={inq.id || i} className="p-3 bg-slate-950 rounded-lg text-slate-300 border border-slate-800 hover:border-brand-gold-500/10 transition-colors">
-                          <div className="flex justify-between items-start mb-1.5">
+                        <div key={inq.id || i} className="p-2 bg-slate-950 rounded text-slate-300 border border-slate-800">
+                          <div className="flex justify-between items-start mb-1">
                             <div>
                               <span className="text-brand-gold-400 font-bold">{inq.name}</span>
                               <span className="text-slate-500"> ({inq.email})</span>
                             </div>
-                            <span className="text-[9px] text-[#ef8354] bg-[#ef8354]/10 px-1.5 py-0.5 rounded-sm">
+                            <span className="text-[8px] text-[#ef8354] bg-[#ef8354]/10 px-1 py-0.5 rounded-xs">
                               {inq.status}
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-slate-400 text-[10px] pb-1.5 border-b border-slate-900">
-                            <div>📞 Phone: {inq.phone}</div>
-                            <div>⚙️ Suite: {inq.service}</div>
-                          </div>
-                          <p className="text-slate-300 text-[10.5px] mt-1.5 break-all italic">
+                          <div className="text-slate-400 text-[9.5px]">📞 Phone: {inq.phone} | ⚙️ Suite: {inq.service}</div>
+                          <p className="text-slate-300 text-[9.5px] mt-1 break-all italic">
                             "{inq.message}"
                           </p>
-                          <div className="text-right text-[8px] text-slate-500 mt-1">
-                            Captured: {new Date(inq.timestamp).toLocaleString()}
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -755,7 +718,87 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                 </div>
               )
             )}
+          </div>
 
+          {/* COLUMN 3: Regional Office & Headquarters Details */}
+          <div className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-xs hover:shadow-md transition-all h-full flex flex-col justify-between space-y-6">
+            <div className="space-y-5">
+              <div>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="h-[2px] w-5 bg-brand-gold-500" />
+                  <span className="text-[11px] font-mono font-bold text-brand-gold-700 uppercase tracking-widest">
+                    REGIONAL LOCATIONS
+                  </span>
+                </div>
+                <h3 className="font-display font-extrabold text-xl text-brand-navy-950 uppercase tracking-tight leading-snug">
+                  REGIONAL OFFICE DETAILS
+                </h3>
+                <p className="mt-2 text-slate-600 text-xs sm:text-sm leading-relaxed font-normal">
+                  Operating across Jharkhand and Bihar with indigenous enterprise software built for speed, performance, and durability.
+                </p>
+              </div>
+
+              <div className="space-y-3.5">
+                
+                {/* Headquarters */}
+                <div className="p-4 rounded-xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-colors flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0 mt-0.5">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase text-slate-500 font-mono font-bold tracking-wider">
+                      HEADQUARTERS
+                    </div>
+                    <p className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 mt-0.5 leading-snug">
+                      Surunga, Baliapur, Dhanbad, Jharkhand - 828115
+                    </p>
+                    <span className="text-[10px] text-slate-500 font-medium block mt-1">Main Corporate Center</span>
+                  </div>
+                </div>
+
+                {/* STPI Desk */}
+                <div className="p-4 rounded-xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-colors flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0 mt-0.5">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase text-slate-500 font-mono font-bold tracking-wider">
+                      STPI R&D DESK
+                    </div>
+                    <p className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 mt-0.5 leading-snug">
+                      STPI Desk, BIT Sindri Campus, Dhanbad, Jharkhand
+                    </p>
+                    <span className="text-[10px] text-slate-500 font-medium block mt-1">Academic R&D Incubation</span>
+                  </div>
+                </div>
+
+                {/* Technical Hotline */}
+                <div className="p-4 rounded-xl border border-slate-200/70 bg-slate-50/60 hover:bg-slate-50 transition-colors flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-navy-900 text-brand-gold-400 shrink-0 mt-0.5">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase text-slate-500 font-mono font-bold tracking-wider">
+                      PHONE & HOTLINES
+                    </div>
+                    <a href="tel:8987766981" className="font-display font-bold text-sm sm:text-base text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight mt-0.5">
+                      +91 8987766981
+                    </a>
+                    <p className="text-[10.5px] text-slate-500 mt-0.5 font-medium">Technical Advisory Line</p>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-100/80 border border-slate-200/70 text-center text-xs text-slate-600 font-serif italic leading-relaxed">
+                "Proudly serving Jharkhand and Bihar regions with indigenous software. Built to perform."
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span className="font-semibold text-slate-700">Service Area</span>
+              <span className="font-mono font-bold text-brand-navy-900">Jharkhand & Bihar</span>
+            </div>
           </div>
 
         </div>

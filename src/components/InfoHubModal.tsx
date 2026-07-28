@@ -628,9 +628,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                       }).map((role, idx) => (
                         <div 
                           key={idx} 
-                          className="p-4 border border-slate-100 hover:border-brand-gold-500/30 bg-white rounded-xl shadow-sm hover:shadow transition-all flex flex-col justify-between space-y-3.5 group"
+                          className="h-full p-4 border border-slate-100 hover:border-brand-gold-500/30 bg-white rounded-xl shadow-sm hover:shadow transition-all flex flex-col justify-between space-y-3.5 group"
                         >
-                          <div className="space-y-1.5">
+                          <div className="space-y-1.5 flex-1 flex flex-col">
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-[9.5px] font-mono font-bold text-brand-gold-600 bg-brand-gold-50 px-2 py-0.5 rounded-md uppercase">
                                 {role.category}
@@ -648,7 +648,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                             <h5 className="font-bold text-brand-navy-900 text-[12.5px] group-hover:text-brand-gold-600 transition-colors">
                               {role.title}
                             </h5>
-                            <p className="text-[12px] text-black leading-snug font-bold">
+                            <p className="text-[12px] text-slate-600 leading-snug font-normal flex-1">
                               {role.description}
                             </p>
                           </div>
