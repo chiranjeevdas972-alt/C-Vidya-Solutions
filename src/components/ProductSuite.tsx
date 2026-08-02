@@ -38,7 +38,7 @@ export default function ProductSuite() {
       case "institutes": return <GraduationCap className={css} />;
       case "coaching": return <Award className={css} />;
       case "crm": return <Briefcase className={css} />;
-      case "municipal": return <ShieldAlert className={css} />;
+      case "ai-support": case "municipal": return <Sparkles className={css} />;
       case "farming": return <Sprout className={css} />;
       case "members": return <Gem className={css} />;
       default: return <Laptop className={css} />;
@@ -64,8 +64,8 @@ export default function ProductSuite() {
       logText = `[${timestamp}] Broadcasted instant progress SMS alert to 48 active batch parents`;
     } else if (serviceId === "crm") {
       logText = `[${timestamp}] Dynamic Lead Qualification score calculated and updated to HIGH priority`;
-    } else if (serviceId === "municipal") {
-      logText = `[${timestamp}] Citizen complaint ticket delegated to inspector squad (SLA: 24 hrs)`;
+    } else if (serviceId === "ai-support" || serviceId === "municipal") {
+      logText = `[${timestamp}] AI Support Agent resolved inquiry #CS-9102 in 0.9s via Knowledge Base RAG`;
     } else if (serviceId === "farming") {
       logText = `[${timestamp}] AgriFusion POS & Livestock telemetry synced: Poultry & Fishery records verified`;
     } else if (serviceId === "members") {

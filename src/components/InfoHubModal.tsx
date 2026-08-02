@@ -246,9 +246,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                     <span className="font-mono text-[10px] text-brand-gold-600 font-bold">MODULE 06 & 07</span>
                     <span className="text-[10.5px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-bold uppercase">In Production</span>
                   </div>
-                  <h5 className="font-bold text-brand-navy-900 text-xs">Municipal System & AgriFusion Farming</h5>
+                  <h5 className="font-bold text-brand-navy-900 text-xs">C Vidya AI Customer Support SaaS & AgriFusion Farming</h5>
                   <p className="text-[12px] text-black leading-relaxed font-bold">
-                    Handles online grievance registers, citizen certificate issuing, property tax registers, poultry/fishery/livestock tracking, POS billing, and AgriFusion agribusiness analytics.
+                    Handles 24/7 AI automated ticket resolution, Knowledge Base RAG integration, omnichannel support, poultry/fishery/livestock tracking, POS billing, and AgriFusion agribusiness analytics.
                   </p>
                 </div>
               </div>

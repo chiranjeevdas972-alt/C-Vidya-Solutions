@@ -54,7 +54,7 @@ export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }
       case "institutes": return <GraduationCap className="w-8 h-8 text-brand-gold-400" />;
       case "coaching": return <Award className="w-8 h-8 text-brand-gold-400" />;
       case "crm": return <Briefcase className="w-8 h-8 text-brand-gold-400" />;
-      case "municipal": return <ShieldAlert className="w-8 h-8 text-brand-gold-400" />;
+      case "ai-support": case "municipal": return <Sparkles className="w-8 h-8 text-brand-gold-400" />;
       case "farming": return <Sprout className="w-8 h-8 text-brand-gold-400" />;
       case "members": return <Gem className="w-8 h-8 text-brand-gold-400" />;
       default: return <Laptop className="w-8 h-8 text-brand-gold-400" />;

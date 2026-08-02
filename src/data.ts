@@ -204,40 +204,41 @@ export const servicesData: ProductService[] = [
     }
   },
   {
-    id: "municipal",
+    id: "ai-support",
     num: "06",
-    name: "C VIDYA MUNICIPAL SYSTEM",
-    tagline: "E-Governance Portal & Digital Civic Grievance Desks",
-    description: "Smart solution for municipal corporations and local bodies to manage records, citizens, complaints and daily operations.",
-    imageUrl: municipalImg,
+    name: "C VIDYA AI CUSTOMER SUPPORT SAAS",
+    tagline: "Automated AI Ticket Resolution & 24/7 Intelligent Support Engine",
+    description: "Next-generation AI-powered customer support SaaS platform for automated query handling, smart ticket routing, knowledge base RAG, and instant multi-channel customer resolution.",
+    externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
     features: [
-      "Online citizen portal to register complaints (potholes, garbage, leakages)",
-      "Digital Registrar for Birth, Marriage & Death certificates",
-      "Water tax and building layout validation fee portal",
-      "Sanitation workforce inspector dispatch queues",
-      "Public notice board broadcasts to specific wards"
+      "AI-driven instant 24/7 inquiry resolution & automated ticketing",
+      "Custom Knowledge Base RAG integration for instant accurate answers",
+      "Omnichannel chat support (Web, WhatsApp, Email & Mobile)",
+      "SLA monitoring, escalation queues, and seamless human agent handover",
+      "Customer satisfaction (CSAT) analytics and sentiment intelligence"
     ],
     mockData: {
-      title: "Smart Municipal Corp Central Console",
+      title: "C Vidya AI Customer Support SaaS Central Console",
       metrics: [
-        { label: "Total Complaints Received", value: "254", change: "Last 30 days", isPositive: true },
-        { label: "Grievances Resolved (%)", value: "85.8%", change: "+4% SLA adherence", isPositive: true },
-        { label: "Tax Revenue Gathered", value: "₹45.2L", change: "Surpassed year targets", isPositive: true },
-        { label: "Active Field Sanitation Crew", value: "14 Teams", change: "Fully deployed today", isPositive: true }
+        { label: "Total Inquiries Resolved", value: "1,840", change: "92% Auto-resolved by AI", isPositive: true },
+        { label: "Avg Resolution Time", value: "1.2s", change: "Instant response", isPositive: true },
+        { label: "Customer CSAT Score", value: "4.9/5", change: "+0.3% this month", isPositive: true },
+        { label: "Live Agent Escalations", value: "x12", change: "Human handover queue", isPositive: true }
       ],
       recentActivity: [
-        "Complaint ticket #M-102 'Water main leakage at Sector 4' resolved in 4 hours",
-        "Birth certificate #B-4089 issued for ward 7 resident",
-        "Public health notice: Larva eradication schedules rolled for South Ward",
-        "Online payment logged: Property tax clearing for survey area #812-A"
+        "AI Agent resolved inquiry #CS-9021 'API webhook setup guide' in 0.8s",
+        "Knowledge base updated with 15 new troubleshooting articles",
+        "Escalation #CS-8904 handed over smoothly to Support Specialist Rahul",
+        "CSAT 5-Star rating received for instant resolution of billing query"
       ],
       chartData: [
-        { name: "Mon", value: 12 },
-        { name: "Tue", value: 18 },
-        { name: "Wed", value: 15 },
-        { name: "Thu", value: 25 },
-        { name: "Fri", value: 22 },
-        { name: "Sat", value: 8 }
+        { name: "Mon", value: 120 },
+        { name: "Tue", value: 180 },
+        { name: "Wed", value: 210 },
+        { name: "Thu", value: 280 },
+        { name: "Fri", value: 310 },
+        { name: "Sat", value: 190 }
       ]
     }
   },

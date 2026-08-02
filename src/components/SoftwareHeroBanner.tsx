@@ -30,7 +30,8 @@ import {
   Receipt,
   QrCode,
   Sparkles,
-  PhoneCall
+  PhoneCall,
+  Bot
 } from "lucide-react";
 
 export interface SoftwareProduct {
@@ -251,34 +252,35 @@ export const SOFTWARE_PRODUCTS: SoftwareProduct[] = [
     ]
   },
   {
-    id: "municipal",
-    name: "Municipal Governance Portal",
-    category: "Civic & Public Tech",
+    id: "ai-support",
+    name: "C Vidya AI Customer Support SaaS",
+    category: "AI & Customer Tech",
     badge: "Cloud-Based Software",
-    icon: Landmark,
-    image: municipalImg,
-    description: "E-governance, public grievance redressal, and citizen check-in ledger.",
+    icon: Bot,
+    image: crmImg,
+    link: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+    description: "24/7 AI automated customer support SaaS, smart inquiry resolution, and knowledge base RAG.",
     modules: [
       {
-        title: "01. E-Governance Dashboard",
-        badge: "Public Portal",
+        title: "01. AI Support Desk & Chat Bot",
+        badge: "24/7 Instant AI",
         icon: LayoutDashboard,
-        image: municipalImg,
-        description: "Civic project status, department metrics, and public service overview."
+        image: crmImg,
+        description: "Automated inquiry resolution, intent recognition, and multi-channel chat."
       },
       {
-        title: "02. Citizen Grievance Registration",
-        badge: "Complaint Tracking",
+        title: "02. Knowledge Base & RAG Sync",
+        badge: "Smart Indexing",
         icon: UserPlus,
-        image: municipalImg,
-        description: "Online complaint filing, ward allocation, and officer dispatch logs."
+        image: crmImg,
+        description: "Sync documentation, FAQs, and product manuals for instant accurate AI answers."
       },
       {
-        title: "03. Property Tax & Revenue Analytics",
-        badge: "Assessment Receipts",
+        title: "03. Ticket Escalation & CSAT",
+        badge: "Analytics Console",
         icon: Receipt,
-        image: municipalImg,
-        description: "Tax collection receipts, trade license logs, and municipal audit reports."
+        image: crmImg,
+        description: "SLA monitoring, human agent handover queue, and real-time satisfaction metrics."
       }
     ]
   },

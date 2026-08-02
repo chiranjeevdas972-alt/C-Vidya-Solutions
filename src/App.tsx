@@ -1281,7 +1281,7 @@ export default function App() {
                   onClick={() => { setActivePage("services"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   className="hover:text-brand-gold-400 transition-colors text-left bg-transparent border-none p-0 cursor-pointer text-slate-300"
                 >
-                  E-Governance Municipal Portal
+                  C Vidya AI Customer Support SaaS
                 </button>
               </div>
             </div>

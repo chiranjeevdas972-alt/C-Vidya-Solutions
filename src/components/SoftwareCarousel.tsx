@@ -151,18 +151,19 @@ export default function SoftwareCarousel() {
     },
     {
       id: 6,
-      name: "C VIDYA AI AUTOMATION",
-      shortName: "AI Automation",
+      name: "C VIDYA AI CUSTOMER SUPPORT SAAS",
+      shortName: "AI Customer Support",
       icon: Bot,
-      tagline: "Cognitive AI Agents & Report Auto-Compilers",
-      description: "Custom server-side AI engines processing parent reports, auto-assigning student counseling pathways, and drafting smart municipal briefs.",
-      badge: "Deep AI Integration",
+      tagline: "Automated 24/7 AI Resolution & Knowledge Base RAG Engine",
+      description: "Next-generation AI-powered customer support SaaS platform for automated query handling, smart ticket routing, knowledge base RAG, and instant multi-channel customer resolution.",
+      badge: "AI Support SaaS",
       accentColor: "from-brand-gold-400 via-yellow-500 to-amber-500",
-      imageUrl: municipalImg,
+      externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+      imageUrl: crmImg,
       metrics: [
-        { label: "AI Engine Latency", value: "150ms Response" },
-        { label: "Auto Report Compilers", value: "Fully Generative" },
-        { label: "Workflow Pipelines", value: "14 Live Systems" }
+        { label: "AI Resolution Rate", value: "92% Automated" },
+        { label: "Avg Response Time", value: "1.2s Instant" },
+        { label: "CSAT Score", value: "4.9/5 Rating" }
       ]
     }
   ];
