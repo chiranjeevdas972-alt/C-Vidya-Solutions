@@ -1216,11 +1216,11 @@ export default function App() {
           className="group flex items-center gap-2.5 px-4.5 py-3.5 bg-brand-navy-900 text-white rounded-full shadow-2xl hover:shadow-brand-gold-500/20 hover:bg-[#070e1b] border border-[#42A5F5] transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer z-50 font-sans"
         >
           <div className="relative">
-            <Bot className="w-5 h-5 text-brand-gold-400 animate-bounce" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+            <Logo size={32} showText={false} className="shrink-0 animate-bounce" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
           </div>
-          <span className="text-xs font-bold font-mono tracking-wider">
-            TALK TO VIDYA AI
+          <span className="text-xs font-bold font-mono tracking-wider uppercase">
+            C Vidya AI Customer Support
           </span>
         </button>
       </div>

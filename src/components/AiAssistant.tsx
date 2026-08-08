@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bot, X, Send, Sparkles, MessageSquare, PhoneCall, HelpCircle, User } from "lucide-react";
+import Logo from "./Logo";
 import { ChatMessage } from "../types";
 
 interface AiAssistantProps {
@@ -8,10 +9,10 @@ interface AiAssistantProps {
 }
 
 const PRESET_QUESTIONS = [
-  "What is the C Vidya Library software?",
-  "How does the Coaching SMS alerts look?",
-  "What features are in the Fitness zone?",
-  "Do you have a system for Schools?"
+  "What software do you provide?",
+  "Which software is best for my business?",
+  "How can I request a software demo?",
+  "What is C Vidya Library Management System?"
 ];
 
 export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
@@ -19,7 +20,11 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     {
       id: "welcome",
       role: "model",
-      content: "Hello! I am **Vidya AI**, your dedicated product consultant for C Vidya Solutions. How may I assist you with our integrated digital systems suite today? Feel free to ask about library automation, parent CRM portals, smart farming metrics, or custom dashboards!",
+      content: `Hello! 👋 Welcome to C Vidya Solutions.
+
+I am your AI Customer Support Assistant. I can help you learn about our software solutions, features, demos, support, and business services.
+
+How can I help you today?`,
       timestamp: new Date().toLocaleTimeString()
     }
   ]);
@@ -96,16 +101,16 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       {/* Drawer Header Block */}
       <div className="p-4 bg-brand-navy-900 border-b border-brand-gold-500/20 flex justify-between items-center relative">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-brand-gold-500/10 border border-[#42A5F5] flex items-center justify-center animate-pulse">
-            <Bot className="w-5 h-5 text-brand-gold-400" />
+          <div className="w-10 h-10 rounded-full bg-brand-gold-500/10 border border-[#42A5F5] flex items-center justify-center animate-pulse shrink-0">
+            <Logo size={26} showText={false} className="shrink-0" />
           </div>
           <div>
             <div className="font-display font-extrabold text-sm tracking-wider text-brand-gold-400">
-              VIDYA AI ADVISER
+              C VIDYA AI CUSTOMER SUPPORT
             </div>
             <div className="text-[9.5px] font-mono text-emerald-400 flex items-center gap-1.5 leading-none mt-0.5">
               <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-ping" />
-              <span>ONLINE | GEMINI SECURED PORTAL</span>
+              <span>ONLINE | OFFICIAL AI ASSISTANT</span>
             </div>
           </div>
         </div>
@@ -148,7 +153,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
                   ? "bg-brand-navy-900 border-[#42A5F5]/20 text-brand-gold-400" 
                   : "bg-slate-700 border-slate-600 text-white"
               }`}>
-                {isModel ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                {isModel ? <Logo size={18} showText={false} className="shrink-0" /> : <User className="w-4 h-4" />}
               </div>
 
               {/* Message Dialog Bubble */}
@@ -177,14 +182,14 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         {isTyping && (
           <div className="flex items-start gap-2.5 max-w-[80%] mr-auto">
             <div className="w-8 h-8 rounded-full bg-brand-navy-900 border border-[#42A5F5]/20 text-brand-gold-400 flex items-center justify-center animate-bounce">
-              <Bot className="w-4 h-4" />
+              <Logo size={18} showText={false} className="shrink-0" />
             </div>
             <div className="bg-[#101726]/80 border border-slate-800/60 p-3 rounded-2xl rounded-tl-none text-xs text-slate-400">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-brand-gold-400 rounded-full animate-pulse" />
                 <span className="w-1.5 h-1.5 bg-brand-gold-400 rounded-full animate-pulse [animation-delay:200ms]" />
                 <span className="w-1.5 h-1.5 bg-brand-gold-400 rounded-full animate-pulse [animation-delay:400ms]" />
-                <span>Vidya Advisor formulating response...</span>
+                <span>AI Support Assistant formulating response...</span>
               </div>
             </div>
           </div>
@@ -227,7 +232,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything about our product suite..."
+            placeholder="Ask about our software, demos, pricing, or support..."
             className="flex-1 text-xs px-4 py-3 bg-[#0d1524] border border-slate-800 rounded-xl focus:border-[#42A5F5]/60 focus:ring-1 focus:ring-[#42A5F5]/40 outline-none text-slate-100 placeholder-slate-500"
             disabled={isTyping}
           />

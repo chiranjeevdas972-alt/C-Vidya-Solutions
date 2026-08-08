@@ -199,20 +199,6 @@ export default function ProductSuite() {
           <div className="lg:col-span-7">
             <div className="relative">
               
-              {/* Heading for Simulator */}
-              <div className="flex justify-between items-center mb-3.5">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#d69e2e] animate-pulse" />
-                  <span className="text-xs font-mono font-bold tracking-wider text-slate-500">
-                    INTERACTIVE HARDWARE LIVE EMULATOR
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-gold-600 font-mono">
-                  <span>Engine v2026.13</span>
-                  <span className="h-2 w-2 bg-green-500 rounded-full" />
-                </div>
-              </div>
-
               {/* Laptop Physical Chassis Housing */}
               <div className="bg-slate-900 border-4 border-slate-700/80 rounded-2xl shadow-2xl p-2.5 overflow-hidden ring-1 ring-slate-800">
                 
@@ -222,10 +208,6 @@ export default function ProductSuite() {
                     <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
-                  </div>
-                  <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full text-[9px] text-[#257a3e]">
-                    <span className="w-1.5 h-1.5 bg-[#257a3e] rounded-full animate-pulse" />
-                    <span>simul_host://{selectedId}.cvidya.app</span>
                   </div>
                   <div className="w-12 h-1 bg-slate-800 rounded-full" />
                 </div>
