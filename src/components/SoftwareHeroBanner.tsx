@@ -385,7 +385,7 @@ export default function SoftwareHeroBanner() {
           </span>
           <span className="text-[11px] font-mono font-bold text-brand-gold-400 truncate uppercase tracking-wider">
             {activeTab === "auto"
-              ? "ALL CLOUD SOFTWARE PRODUCTS (3s AUTO-ROTATE)"
+              ? ""
               : selectedProduct?.name}
           </span>
         </div>

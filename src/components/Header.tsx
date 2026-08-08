@@ -89,7 +89,7 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
               onClick={() => onOpenHub("contact")}
               className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
             >
-              Contact with Us
+              Contact Us
             </button>
             <button 
               onClick={() => onOpenHub("careers")}
@@ -151,7 +151,7 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
                 onClick={() => { setMobileMenuOpen(false); onOpenHub("contact"); }}
                 className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
               >
-                Contact with Us
+                Contact Us
               </button>
               <button 
                 onClick={() => { setMobileMenuOpen(false); onOpenHub("careers"); }}

@@ -53,8 +53,8 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
   const tabs = [
     { id: "home", label: "Home Overview" },
     { id: "services", label: "Services Suite" },
-    { id: "portfolio", label: "Portfolio & Case Studies" },
-    { id: "contact", label: "Contact with Us" },
+    { id: "portfolio", label: "Portfolio / Case Studies" },
+    { id: "contact", label: "Contact Us" },
     { id: "careers", label: "Careers & Internships" },
     { id: "blog", label: "C Vidya Blog" },
   ] as const;

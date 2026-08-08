@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Bot, X, Send, Sparkles, MessageSquare, PhoneCall, HelpCircle, User } from "lucide-react";
 import Logo from "./Logo";
 import { ChatMessage } from "../types";
+import { getSmartAssistantResponse } from "../utils/aiResponder";
 
 interface AiAssistantProps {
   isOpen: boolean;
@@ -59,32 +60,45 @@ How can I help you today?`,
         content: m.content
       }));
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: formattedHistory })
-      });
+      let assistantText = "";
 
-      if (!response.ok) {
-        throw new Error("Advisory assistant offline.");
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: formattedHistory })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.text) {
+            assistantText = data.text;
+          }
+        }
+      } catch (e) {
+        console.warn("Backend chat endpoint unreachable or static deployment, using local AI responder:", e);
       }
 
-      const data = await response.json();
+      // If network call failed or API returned empty/offline error, use local smart responder
+      if (!assistantText) {
+        assistantText = getSmartAssistantResponse(formattedHistory);
+      }
       
       const assistantMessage: ChatMessage = {
         id: `msg_${Math.random().toString(36).substr(2, 9)}`,
         role: "model",
-        content: data.text || "I was unable to synchronize details. Please ask again or reach us at cvidyasolutions@gmail.com.",
+        content: assistantText,
         timestamp: new Date().toLocaleTimeString()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
 
     } catch (error: any) {
+      const fallbackText = getSmartAssistantResponse([...messages, userMessage]);
       const errorMessage: ChatMessage = {
         id: `msg_err_${Math.random().toString(36).substr(2, 9)}`,
         role: "model",
-        content: "I'm having trouble reaching C Vidya Solutions servers right now. Please confirm your internet connection or register a callback using the form below! Rest assured, we prioritize your operations.",
+        content: fallbackText,
         timestamp: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, errorMessage]);
