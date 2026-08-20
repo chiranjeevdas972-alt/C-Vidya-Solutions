@@ -30,7 +30,8 @@ import {
   MessageSquare,
   ChevronRight,
   RotateCw,
-  X
+  X,
+  Megaphone
 } from "lucide-react";
 
 interface ServicesSectionProps {
@@ -77,6 +78,8 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
       // AI Agent products
       case "ai-social": return <Sparkles className={cssClass} />;
       case "ai-support": return <Bot className={cssClass} />;
+      case "ai-salesflow": case "ai-sales": return <TrendingUp className={cssClass} />;
+      case "ai-marketing": return <Megaphone className={cssClass} />;
       default: return <Cpu className={cssClass} />;
     }
   };
@@ -114,14 +117,16 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
       logMessage = `[${timestamp}] AI Social Agent: Viral campaign published to LinkedIn & X. Ingested 340 engagement signals`;
     } else if (serviceId === "ai-support") {
       logMessage = `[${timestamp}] AI Neural Agent: Query #CS-9102 resolved in 0.6s via Knowledge Base RAG`;
+    } else if (serviceId === "ai-salesflow" || serviceId === "ai-sales") {
+      logMessage = `[${timestamp}] SalesFlow AI: Qualified Enterprise lead. Booked demo on calendar & synced CRM`;
+    } else if (serviceId === "ai-marketing") {
+      logMessage = `[${timestamp}] AI Marketing: SEO cluster published & automated LinkedIn campaign dispatched`;
     } else if (serviceId === "ai-admissions") {
       logMessage = `[${timestamp}] AI Admissions Agent: Candidate matched with B.Tech CSE (Campus tour booked for Sat)`;
     } else if (serviceId === "ai-library") {
       logMessage = `[${timestamp}] AI Library Agent: Semantic search retrieved 4 Discrete Math references & generated summary`;
     } else if (serviceId === "ai-farm") {
       logMessage = `[${timestamp}] AI Agro Agent: Leaf scan diagnosed early blight. Organic bio-fungicide recipe dispatched`;
-    } else if (serviceId === "ai-sales") {
-      logMessage = `[${timestamp}] AI Sales SDR: BANT qualification complete for Enterprise lead (Budget verified)`;
     } else if (serviceId === "ai-fitness") {
       logMessage = `[${timestamp}] AI Fitness Coach: 4-week Hypertrophy & Protein macro card compiled for Member #419`;
     } else if (serviceId === "ai-omr") {
@@ -213,7 +218,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
               <div className="text-left">
                 <div className="uppercase">C Vidya AI Agents (AI SaaS)</div>
                 <div className={`text-[10px] font-mono font-normal tracking-normal ${activeCategory === "ai-agent" ? "text-[#42A5F5]" : "text-slate-500"}`}>
-                  2 Autonomous AI Agents
+                  {aiAgentsData.length} Autonomous AI Agents
                 </div>
               </div>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ml-auto ${

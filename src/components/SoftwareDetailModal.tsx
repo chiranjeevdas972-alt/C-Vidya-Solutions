@@ -59,7 +59,7 @@ export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }
       case "ai-admissions": return <GraduationCap className="w-8 h-8 text-[#42A5F5]" />;
       case "ai-library": return <BookOpen className="w-8 h-8 text-[#42A5F5]" />;
       case "ai-farm": return <Sprout className="w-8 h-8 text-[#42A5F5]" />;
-      case "ai-sales": return <Zap className="w-8 h-8 text-[#42A5F5]" />;
+      case "ai-salesflow": case "ai-sales": case "ai-marketing": return <Zap className="w-8 h-8 text-[#42A5F5]" />;
       case "ai-fitness": return <Activity className="w-8 h-8 text-[#42A5F5]" />;
       case "ai-omr": return <ShieldCheck className="w-8 h-8 text-[#42A5F5]" />;
       case "farming": return <Sprout className="w-8 h-8 text-brand-gold-400" />;

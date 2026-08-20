@@ -388,6 +388,90 @@ export const aiAgentsData: ProductService[] = [
         { name: "Sat", value: 190 }
       ]
     }
+  },
+  {
+    id: "ai-salesflow",
+    num: "03",
+    name: "C VIDYA SOLUTIONS SALESFLOW AI AGENT",
+    tagline: "Autonomous B2B Lead Scraping, Hyper-Personalized Outreach & Deal Closing",
+    badge: "Autonomous AI Agent",
+    aiModel: "Autonomous Sales SDR & Pipeline AI",
+    categoryType: "ai-agent",
+    description: "Autonomous AI sales intelligence & outreach agent to discover verified B2B leads, generate tailored multi-touch email/WhatsApp sequences, qualify prospect intent, and automate meeting bookings.",
+    externalLink: "https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
+    features: [
+      "Autonomous B2B prospect discovery & real-time contact validation",
+      "Hyper-personalized multi-channel sales sequences (Email, WhatsApp, LinkedIn)",
+      "Dynamic value proposition & custom sales pitch generator",
+      "Lead intent scoring, automated follow-up cadences & reply sentiment triage",
+      "Seamless CRM syncing and instant sales demo appointment booking"
+    ],
+    mockData: {
+      title: "C Vidya Solutions SalesFlow AI Agent Pipeline Engine",
+      metrics: [
+        { label: "Leads Qualified by AI", value: "1,260", change: "+38% conversion rate", isPositive: true },
+        { label: "Outreach Emails Sent", value: "6,420", change: "68.4% open rate", isPositive: true },
+        { label: "Sales Demos Booked", value: "94", change: "+28 this week", isPositive: true },
+        { label: "Pipeline Value Generated", value: "₹42.5L", change: "High intent deals", isPositive: true }
+      ],
+      recentActivity: [
+        "SalesFlow AI qualified Enterprise prospect 'Apex Logistics' (100+ seats, High Budget)",
+        "Dispatched personalized multi-touch drip sequence to 45 verified CFO contacts",
+        "Booked product demo on executive calendar for Thursday 02:30 PM",
+        "CRM synced 18 warm responses with positive buying intent triggers"
+      ],
+      chartData: [
+        { name: "Mon", value: 210 },
+        { name: "Tue", value: 290 },
+        { name: "Wed", value: 340 },
+        { name: "Thu", value: 410 },
+        { name: "Fri", value: 480 },
+        { name: "Sat", value: 320 }
+      ]
+    }
+  },
+  {
+    id: "ai-marketing",
+    num: "04",
+    name: "C VIDYA AI MARKETING FOR B2B SAAS COMPANIES",
+    tagline: "Autonomous B2B SaaS Inbound Demand Gen, SEO Growth & Campaign AI",
+    badge: "Autonomous AI Agent",
+    aiModel: "B2B SaaS Growth & Marketing AI Engine",
+    categoryType: "ai-agent",
+    description: "Autonomous AI marketing specialist engineered for B2B SaaS companies to generate high-ranking SEO content, run targeted multi-channel distribution, optimize conversion funnels, and drive qualified pipeline.",
+    externalLink: "https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/",
+    imageUrl: institutesImg,
+    features: [
+      "AI keyword research, competitor gap analysis & automated SEO content creation",
+      "Omnichannel B2B campaign creation for LinkedIn, Twitter/X, and Email newsletters",
+      "High-converting landing page copy & value proposition A/B testing",
+      "Autonomous lead magnet generation & interactive demo walkthrough scripting",
+      "Real-time CAC, MQL-to-SQL velocity & marketing attribution analytics"
+    ],
+    mockData: {
+      title: "C Vidya AI Marketing for B2B SaaS Command Center",
+      metrics: [
+        { label: "Organic Inbound Traffic", value: "+148%", change: "SEO cluster growth", isPositive: true },
+        { label: "B2B Articles Published", value: "32", change: "Top 3 Google SERP", isPositive: true },
+        { label: "MQLs Generated", value: "480", change: "+42% this month", isPositive: true },
+        { label: "Avg Customer Acquisition Cost", value: "-34%", change: "Via AI automation", isPositive: true }
+      ],
+      recentActivity: [
+        "AI Agent published 4 pillar SEO comparison guides targeting 'Enterprise Cloud ERP'",
+        "Dispatched automated B2B nurturing newsletter to 3,200 SaaS founders & CTOs",
+        "Generated 12 high-converting LinkedIn carousel graphics and technical thought-leadership copy",
+        "Optimized Pricing Page CTA copy, lifting demo booking conversion rate by 24.6%"
+      ],
+      chartData: [
+        { name: "Mon", value: 310 },
+        { name: "Tue", value: 420 },
+        { name: "Wed", value: 490 },
+        { name: "Thu", value: 580 },
+        { name: "Fri", value: 650 },
+        { name: "Sat", value: 410 }
+      ]
+    }
   }
 ];
 
