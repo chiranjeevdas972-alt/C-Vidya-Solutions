@@ -39,6 +39,9 @@ export interface ProductService {
   features: string[];
   externalLink?: string;
   imageUrl?: string;
+  categoryType?: "saas" | "ai-agent";
+  badge?: string;
+  aiModel?: string;
   mockData: {
     title: string;
     metrics: MetricCard[];

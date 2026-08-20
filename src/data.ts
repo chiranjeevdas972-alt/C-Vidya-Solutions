@@ -8,21 +8,26 @@ import municipalImg from "./assets/images/municipal_software_dashboard_178490953
 import agrifusionImg from "./assets/images/agrifusion_software_dashboard_1784909491641.jpg";
 import jewelryImg from "./assets/images/jewelry_software_dashboard_1784909522921.jpg";
 
-export const servicesData: ProductService[] = [
+// ==========================================
+// 1. C VIDYA SOLUTIONS SAAS PRODUCTS
+// ==========================================
+export const saasProductsData: ProductService[] = [
   {
     id: "library",
     num: "01",
-    name: "C VIDYA LIBRARY",
+    name: "C VIDYA LIBRARY MANAGEMENT",
     tagline: "Automated Book Inflow & Student Membership Tracking",
-    description: "Complete library management system to manage books, members, issue/return and other library operations.",
+    badge: "Cloud-Based SaaS",
+    categoryType: "saas",
+    description: "Complete library management system to manage books, student memberships, QR code checkout passes, overdue penalties, and automated inventory reconciliation.",
     externalLink: "https://v.cvidyasolutions.workers.dev/",
     imageUrl: libraryImg,
     features: [
-      "ISBN barcode scanner and inventory tracking",
+      "ISBN barcode scanner & digital catalog repository",
       "Automated WhatsApp & SMS notifications for overdue titles",
-      "Membership levels and circulation policy configuration",
-      "Digital student reading room check-in ledger",
-      "Detailed reports on reader habits and popular authors"
+      "Membership levels, circulation policy & fine calculations",
+      "Digital student reading room check-in ledger & seat allocator",
+      "Detailed reports on reader habits and high-demand books"
     ],
     mockData: {
       title: "C Vidya Library System Admin Dashboard",
@@ -53,15 +58,17 @@ export const servicesData: ProductService[] = [
     num: "02",
     name: "C VIDYA FITNESS ZONE",
     tagline: "Comprehensive Gym Plan & Biometric Turnstile Ledger",
-    description: "Gym & fitness management software to handle members, plans, attendance, trainers and daily activities seamlessly.",
+    badge: "Cloud-Based SaaS",
+    categoryType: "saas",
+    description: "Gym & fitness management software to handle members, plans, attendance, biometric turnstile gates, trainers, and daily workout activities seamlessly.",
     externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
     imageUrl: fitnessImg,
     features: [
-      "Biometric finger scan and facial door access logs",
-      "Personalized training diet regimes & goal planners",
-      "Flexible active subscription cards (Daily/Monthly/Yearly)",
+      "Biometric finger scan and facial door access turnstile logs",
+      "Personalized training diet regimes & fitness goal planners",
+      "Flexible active subscription cards (Daily / Monthly / Yearly)",
       "Trainer assignment and private roster timetables",
-      "Peak attendance and gym floor traffic visualization"
+      "Peak attendance and gym floor traffic heatmaps"
     ],
     mockData: {
       title: "C Vidya Fitness Zone Core Console",
@@ -92,14 +99,16 @@ export const servicesData: ProductService[] = [
     num: "03",
     name: "C VIDYA INSTITUTES MANAGEMENT",
     tagline: "Multi-branch Campus Admissions & Smart Fees Portal",
-    description: "All-in-one solution for schools and institutes to manage students, fees, attendance, exams and results.",
+    badge: "Cloud-Based SaaS",
+    categoryType: "saas",
+    description: "All-in-one ERP solution for schools, colleges, and academic institutes to manage student admissions, fees collection, attendance, exams, and results.",
     imageUrl: institutesImg,
     features: [
       "End-to-end admission counseling CRM pipeline",
-      "Automated academic report cards generator",
+      "Automated academic report cards & gradebook generator",
       "Instantly downloadable PDF school ledger & cashbooks",
       "School bus route tracking, geo-alerts & dormitory slots",
-      "Dedicated portal for Parents to check homework & attendances"
+      "Dedicated portal for Parents to check homework & attendance"
     ],
     mockData: {
       title: "C Vidya Central Institutes Console",
@@ -130,14 +139,16 @@ export const servicesData: ProductService[] = [
     num: "04",
     name: "C VIDYA COACHING MANAGEMENT",
     tagline: "Aspirants Test Analytics & Automated SMS Broadcasts",
-    description: "Specially designed for coaching centers to manage batches, students, attendance, fees and performance.",
+    badge: "Cloud-Based SaaS",
+    categoryType: "saas",
+    description: "Specially engineered for coaching centers & competitive academies to manage batches, student attendance, fees, OMR mock tests, and performance analytics.",
     externalLink: "https://coaching.cvidyasolutions.workers.dev/",
     imageUrl: coachingImg,
     features: [
       "Dynamic batch creation and classroom seating logs",
       "Biometric attendance with real-time SMS status sent to parents",
       "OMR offline mock test grading sheets scanner & rank generator",
-      "Interactive course completion calendars",
+      "Interactive course completion calendars and test schedules",
       "Mentor assignments and student doubt-clearing trackers"
     ],
     mockData: {
@@ -165,97 +176,21 @@ export const servicesData: ProductService[] = [
     }
   },
   {
-    id: "crm",
-    num: "05",
-    name: "C VIDYA CRM",
-    tagline: "Intuitive Sales Funnels & Lead Generation Metrics",
-    description: "Customer Relationship Management system to manage leads, sales, customers and improve business relationships.",
-    externalLink: "https://crm.cvidyasolutions.workers.dev/",
-    imageUrl: crmImg,
-    features: [
-      "Dynamic pipeline cards with simple drag-drop states",
-      "Smart follow-up alerts and automated customer greeting emails",
-      "VoIP telephone integration with automated conversation logs",
-      "Custom proposal generator with pre-formatted quote panels",
-      "Sales staff conversion analytics and transaction logs"
-    ],
-    mockData: {
-      title: "C Vidya Custom Enterprise CRM Panel",
-      metrics: [
-        { label: "Qualified Sales Leads", value: "340", change: "+12 imported today", isPositive: true },
-        { label: "Client Inquiries Closed", value: "48", change: "+15% from last month", isPositive: true },
-        { label: "Pipeline Gross Estimate", value: "₹6.4L", change: "Active deals in focus", isPositive: true },
-        { label: "Average Sales Cycle Time", value: "11 Days", change: "Fast response index", isPositive: true }
-      ],
-      recentActivity: [
-        "Lead 'Sharma Commercial Complex Steel' entered contract review",
-        "Enterprise suite proposal compiled for GreenField Digital Services",
-        "Call registry logged: Discussed upgrade with Dr. Sinha (coaching partner)",
-        "Staff member Suresh closed subscription deal worth ₹45,000"
-      ],
-      chartData: [
-        { name: "Mon", value: 32 },
-        { name: "Tue", value: 45 },
-        { name: "Wed", value: 50 },
-        { name: "Thu", value: 72 },
-        { name: "Fri", value: 89 },
-        { name: "Sat", value: 64 }
-      ]
-    }
-  },
-  {
-    id: "ai-support",
-    num: "06",
-    name: "C VIDYA AI CUSTOMER SUPPORT SAAS",
-    tagline: "Automated AI Ticket Resolution & 24/7 Intelligent Support Engine",
-    description: "Next-generation AI-powered customer support SaaS platform for automated query handling, smart ticket routing, knowledge base RAG, and instant multi-channel customer resolution.",
-    externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
-    imageUrl: crmImg,
-    features: [
-      "AI-driven instant 24/7 inquiry resolution & automated ticketing",
-      "Custom Knowledge Base RAG integration for instant accurate answers",
-      "Omnichannel chat support (Web, WhatsApp, Email & Mobile)",
-      "SLA monitoring, escalation queues, and seamless human agent handover",
-      "Customer satisfaction (CSAT) analytics and sentiment intelligence"
-    ],
-    mockData: {
-      title: "C Vidya AI Customer Support SaaS Central Console",
-      metrics: [
-        { label: "Total Inquiries Resolved", value: "1,840", change: "92% Auto-resolved by AI", isPositive: true },
-        { label: "Avg Resolution Time", value: "1.2s", change: "Instant response", isPositive: true },
-        { label: "Customer CSAT Score", value: "4.9/5", change: "+0.3% this month", isPositive: true },
-        { label: "Live Agent Escalations", value: "x12", change: "Human handover queue", isPositive: true }
-      ],
-      recentActivity: [
-        "AI Agent resolved inquiry #CS-9021 'API webhook setup guide' in 0.8s",
-        "Knowledge base updated with 15 new troubleshooting articles",
-        "Escalation #CS-8904 handed over smoothly to Support Specialist Rahul",
-        "CSAT 5-Star rating received for instant resolution of billing query"
-      ],
-      chartData: [
-        { name: "Mon", value: 120 },
-        { name: "Tue", value: 180 },
-        { name: "Wed", value: 210 },
-        { name: "Thu", value: 280 },
-        { name: "Fri", value: 310 },
-        { name: "Sat", value: 190 }
-      ]
-    }
-  },
-  {
     id: "farming",
-    num: "07",
+    num: "05",
     name: "AGRIFUSION",
     tagline: "All-in-One Farming, Livestock & Agribusiness Management Software",
     subhead: "One Platform. Every Farm. Unlimited Growth.",
-    description: "Powered by C Vidya Solutions, AgriFusion unifies poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics into one intelligent platform—empowering farmers and agribusinesses to simplify operations, increase productivity, and maximize profitability.",
+    badge: "Agribusiness SaaS",
+    categoryType: "saas",
+    description: "Powered by C Vidya Solutions, AgriFusion unifies poultry, fishery, goat farming, livestock, crop inventory, POS billing, accounting, and agribusiness analytics into one intelligent platform.",
     externalLink: "https://fresh.cvidyasolutions.workers.dev/",
     imageUrl: agrifusionImg,
     features: [
-      "Poultry, fishery, goat farming & livestock management",
-      "Unified inventory, POS billing & accounting ledger",
-      "Customer management & CRM engagement workflows",
-      "Business analytics & profitability forecasting",
+      "Poultry, fishery, goat farming & livestock herd management",
+      "Unified inventory, POS retail/wholesale billing & accounting ledger",
+      "Customer management, distributor orders & CRM workflows",
+      "Business analytics, yield tracking & profitability forecasting",
       "IoT soil telemetry & crop-cycle timetable automation"
     ],
     mockData: {
@@ -284,10 +219,12 @@ export const servicesData: ProductService[] = [
   },
   {
     id: "members",
-    num: "08",
-    name: "C. VIDYA JEWELRY MANAGEMENT",
+    num: "06",
+    name: "C VIDYA JEWELRY MANAGEMENT",
     tagline: "Precious Inventory Trackers & Daily Rate Billing Ledger",
-    description: "Complete retail and wholesale jewelry software to track precious metals, cast weights, custom orders, worker tasks, and sales invoices.",
+    badge: "Bullion & Retail SaaS",
+    categoryType: "saas",
+    description: "Complete retail and wholesale jewelry management software to track precious metals (Gold, Silver, Diamond), cast weights, Karigar artisan jobs, and daily rate billing invoices.",
     externalLink: "https://jewelry.cvidyasolutions.workers.dev/",
     imageUrl: jewelryImg,
     features: [
@@ -295,7 +232,7 @@ export const servicesData: ProductService[] = [
       "Automated daily gold and silver bullion price feeds integration",
       "Karigar (Artisan) task logs, metal allocation, and wastage reports",
       "Custom customer jewelry order book with design spec catalogs",
-      "In-store barcode label scanning and instant invoicing bills"
+      "In-store barcode label scanning and instant GST invoicing bills"
     ],
     mockData: {
       title: "C Vidya Custom Jewelry Ledger Panel",
@@ -320,5 +257,142 @@ export const servicesData: ProductService[] = [
         { name: "Sat", value: 590 }
       ]
     }
+  },
+  {
+    id: "crm",
+    num: "07",
+    name: "C VIDYA ENTERPRISE CRM",
+    tagline: "Intuitive Sales Funnels & Lead Generation Metrics",
+    badge: "Enterprise SaaS",
+    categoryType: "saas",
+    description: "Customer Relationship Management system to manage sales leads, deals pipeline, team KPIs, client quotations, and automated multi-stage customer engagement.",
+    externalLink: "https://crm.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
+    features: [
+      "Dynamic pipeline cards with simple drag-drop Kanban states",
+      "Smart follow-up alerts and automated customer greeting emails",
+      "VoIP telephone integration with automated conversation logs",
+      "Custom proposal generator with pre-formatted quote panels",
+      "Sales staff conversion analytics and transaction logs"
+    ],
+    mockData: {
+      title: "C Vidya Custom Enterprise CRM Panel",
+      metrics: [
+        { label: "Qualified Sales Leads", value: "340", change: "+12 imported today", isPositive: true },
+        { label: "Client Inquiries Closed", value: "48", change: "+15% from last month", isPositive: true },
+        { label: "Pipeline Gross Estimate", value: "₹6.4L", change: "Active deals in focus", isPositive: true },
+        { label: "Average Sales Cycle Time", value: "11 Days", change: "Fast response index", isPositive: true }
+      ],
+      recentActivity: [
+        "Lead 'Sharma Commercial Complex Steel' entered contract review",
+        "Enterprise suite proposal compiled for GreenField Digital Services",
+        "Call registry logged: Discussed upgrade with Dr. Sinha (coaching partner)",
+        "Staff member Suresh closed subscription deal worth ₹45,000"
+      ],
+      chartData: [
+        { name: "Mon", value: 32 },
+        { name: "Tue", value: 45 },
+        { name: "Wed", value: 50 },
+        { name: "Thu", value: 72 },
+        { name: "Fri", value: 89 },
+        { name: "Sat", value: 64 }
+      ]
+    }
   }
+];
+
+// ==========================================
+// 2. C VIDYA AI AGENTS (AI AGENT SOFTWARE AS A SAAS)
+// ==========================================
+export const aiAgentsData: ProductService[] = [
+  {
+    id: "ai-social",
+    num: "01",
+    name: "C VIDYA AI SOCIAL MEDIA AGENT",
+    tagline: "Autonomous Content Creation, Multi-Platform Scheduling & Viral Trend Growth",
+    badge: "Autonomous AI Agent",
+    aiModel: "Generative Content & Trend AI",
+    categoryType: "ai-agent",
+    description: "Autonomous AI social media marketing agent to research viral trends, write high-converting copy, generate visual creatives, auto-schedule cross-platform campaigns across LinkedIn, X (Twitter), Instagram, and Facebook, and automate audience engagement.",
+    externalLink: "https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
+    features: [
+      "Autonomous cross-platform multi-channel posting (LinkedIn, X/Twitter, Instagram, Facebook)",
+      "AI viral headline copy generator, hashtag trending analyzer & graphic suggestions",
+      "Audience sentiment monitoring, automated DM replies & comment nurturing engine",
+      "Dynamic content calendar with optimal posting time heatmaps",
+      "ROI conversion tracking, lead generation pipelines & monthly growth reports"
+    ],
+    mockData: {
+      title: "C Vidya AI Social Media Autonomous Marketing Engine",
+      metrics: [
+        { label: "Total Posts Published", value: "4,820", change: "+340 this week", isPositive: true },
+        { label: "Audience Engagement", value: "+48.6%", change: "High viral coefficient", isPositive: true },
+        { label: "Social Leads Generated", value: "320", change: "+24% conversion rate", isPositive: true },
+        { label: "Active Connected Channels", value: "8 Platforms", change: "All synced live", isPositive: true }
+      ],
+      recentActivity: [
+        "AI Agent published viral carousel 'Top 7 SaaS Trends for 2026' on LinkedIn & X (Twitter)",
+        "Auto-replied to 42 comments on Instagram reel with personalized demo links",
+        "Generated 14-day promotional drip campaign for new product release",
+        "Sentiment analyzer detected 98.4% positive brand sentiment on latest announcement"
+      ],
+      chartData: [
+        { name: "Mon", value: 340 },
+        { name: "Tue", value: 410 },
+        { name: "Wed", value: 390 },
+        { name: "Thu", value: 520 },
+        { name: "Fri", value: 580 },
+        { name: "Sat", value: 460 }
+      ]
+    }
+  },
+  {
+    id: "ai-support",
+    num: "02",
+    name: "C VIDYA AI CUSTOMER SUPPORT AGENT",
+    tagline: "24/7 Omnichannel RAG, Automated Ticketing & Multi-Channel Resolution",
+    badge: "Autonomous AI Agent",
+    aiModel: "Neural RAG + Flash 2.5",
+    categoryType: "ai-agent",
+    description: "Next-generation AI-powered autonomous customer support agent for instant query resolution, smart ticket routing, enterprise knowledge-base RAG search, and human agent handoff.",
+    externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
+    features: [
+      "AI-driven instant 24/7 inquiry resolution & automated ticket classification",
+      "Custom Knowledge Base RAG integration for instant accurate context retrieval",
+      "Omnichannel chat support (Web Widget, WhatsApp API, Email & Mobile)",
+      "SLA monitoring, escalation queues, and seamless human agent handover",
+      "Customer satisfaction (CSAT) analytics and sentiment intelligence scoring"
+    ],
+    mockData: {
+      title: "C Vidya AI Customer Support Agent Live Neural Console",
+      metrics: [
+        { label: "Total Inquiries Resolved", value: "1,840", change: "92% Auto-resolved by AI", isPositive: true },
+        { label: "Avg Resolution Time", value: "0.8s", change: "Instant response", isPositive: true },
+        { label: "Customer CSAT Score", value: "4.9/5", change: "+0.3% this month", isPositive: true },
+        { label: "Live Agent Escalations", value: "x12", change: "Human handover queue", isPositive: true }
+      ],
+      recentActivity: [
+        "AI Agent resolved inquiry #CS-9021 'API webhook setup guide' in 0.8s",
+        "Knowledge base ingested with 15 new technical troubleshooting guides",
+        "Escalation #CS-8904 handed over smoothly to Senior Specialist Rahul",
+        "CSAT 5-Star rating received for instant resolution of billing query"
+      ],
+      chartData: [
+        { name: "Mon", value: 120 },
+        { name: "Tue", value: 180 },
+        { name: "Wed", value: 210 },
+        { name: "Thu", value: 280 },
+        { name: "Fri", value: 310 },
+        { name: "Sat", value: 190 }
+      ]
+    }
+  }
+];
+
+// Unified servicesData combining both arrays
+export const servicesData: ProductService[] = [
+  ...saasProductsData,
+  ...aiAgentsData
 ];

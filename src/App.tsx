@@ -5,6 +5,7 @@ import Logo from "./components/Logo";
 import SoftwareCarousel from "./components/SoftwareCarousel";
 import SoftwareHeroBanner from "./components/SoftwareHeroBanner";
 import ProductSuite from "./components/ProductSuite";
+import ServicesSection from "./components/ServicesSection";
 import InquiryForm from "./components/InquiryForm";
 import AiAssistant from "./components/AiAssistant";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
@@ -424,6 +425,9 @@ export default function App() {
 
                   </div>
                 </section>
+
+                {/* SERVICES SECTION - C Vidya Solutions SaaS Products & C Vidya AI Agents */}
+                <ServicesSection onOpenInquiry={(softwareName) => { window.location.hash = "contact"; }} />
 
                 {/* QUOTE BLOCK BANNER - Deep slate layout with slide movement */}
                 <section className="bg-brand-navy-900 border-y border-brand-gold-500/20 py-12 relative overflow-hidden text-center text-white min-h-[340px] flex items-center justify-center">
@@ -1416,6 +1420,30 @@ export default function App() {
 
       {/* GDPR / CCPA Cookie Consent Banner */}
       <CookieConsentBanner onManagePreferences={() => { window.location.hash = "cookies"; window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+
+      {/* Floating C Vidya AI Customer Support Agent Trigger Button */}
+      {!aiOpen && (
+        <button
+          type="button"
+          onClick={() => setAiOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-brand-navy-950 hover:bg-black text-white rounded-full shadow-2xl border border-brand-gold-500/40 hover:border-brand-gold-400 transition-all hover:scale-105 active:scale-95 cursor-pointer group"
+          title="Open C Vidya AI Customer Support Agent"
+        >
+          <div className="w-8 h-8 rounded-full bg-brand-gold-500 text-slate-950 flex items-center justify-center font-bold">
+            <Bot className="w-4 h-4" />
+          </div>
+          <span className="font-display font-extrabold text-xs uppercase tracking-wider text-white group-hover:text-brand-gold-300">
+            C VIDYA AI CUSTOMER SUPPORT AGENT
+          </span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        </button>
+      )}
+
+      {/* Interactive AI Assistant Modal */}
+      <AiAssistant 
+        isOpen={aiOpen} 
+        onClose={() => setAiOpen(false)} 
+      />
 
       {/* Interactive Compliance Center Modal */}
       <ComplianceModal 
