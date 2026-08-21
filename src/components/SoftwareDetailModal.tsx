@@ -95,10 +95,10 @@ export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }
           <div className="flex items-center gap-4">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer border border-white/15"
+              className="flex items-center gap-2.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
             >
-              <ArrowRight className="w-4 h-4 rotate-180 text-brand-gold-400" />
-              <span>Back to All Software</span>
+              <ArrowRight className="w-5 h-5 rotate-180 text-slate-950 stroke-[3]" />
+              <span>Back</span>
             </button>
             <div className="h-6 w-px bg-white/20 hidden sm:block" />
             <div className="hidden sm:flex items-center gap-2">

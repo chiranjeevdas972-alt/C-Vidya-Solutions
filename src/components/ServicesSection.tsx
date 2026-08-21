@@ -542,10 +542,10 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                     elem?.scrollIntoView({ behavior: "smooth" });
                   }, 100);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-extrabold text-xs sm:text-sm transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
+                className="flex items-center gap-2.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-black text-xs sm:text-sm transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
               >
-                <ArrowLeft className="w-4 h-4 text-slate-950 stroke-[3]" />
-                <span>Back</span>
+                <ArrowLeft className="w-5 h-5 text-slate-950 stroke-[3]" />
+                <span className="tracking-wide">Back</span>
               </button>
 
               {/* Center App Name */}
@@ -576,23 +576,9 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                   <div className="w-12 h-12 rounded-2xl bg-brand-gold-500/10 border border-brand-gold-500/30 flex items-center justify-center mb-4 text-brand-gold-400 animate-spin">
                     <RotateCw className="w-6 h-6" />
                   </div>
-                  <h4 className="font-display font-black text-lg text-white uppercase tracking-wider mb-1">
+                  <h4 className="font-display font-black text-lg text-white uppercase tracking-wider">
                     Loading {liveAppViewing.name}
                   </h4>
-                  <p className="text-xs text-slate-400 font-mono max-w-sm mb-4">
-                    Establishing live secure connection to Cloudflare Workers edge node...
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={liveAppViewing.externalLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 bg-brand-gold-500 text-slate-950 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-brand-gold-400 transition-all"
-                    >
-                      <span>Direct Open in New Tab</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
                 </div>
               )}
 
