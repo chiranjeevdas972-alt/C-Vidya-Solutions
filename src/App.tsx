@@ -11,6 +11,7 @@ import AiAssistant from "./components/AiAssistant";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
 import CompliancePage from "./components/CompliancePage";
 import InfoHubModal from "./components/InfoHubModal";
+import FAQSection from "./components/FAQSection";
 import { 
   Building2, 
   Target, 
@@ -111,14 +112,14 @@ export default function App() {
   const [hubTab, setHubTab] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog">("home");
 
   // Active page routing state
-  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
+  const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
 
   // Hash-change router listener for separate pages
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const validPages = [
-        "home", "hero", "about", "services", "portfolio", "contact", "careers", "blog",
+        "home", "hero", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
         "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
       ];
       if (hash === "home" || hash === "hero" || !hash) {
@@ -428,6 +429,14 @@ export default function App() {
 
                 {/* SERVICES SECTION - C Vidya Solutions SaaS Products & C Vidya AI Agents */}
                 <ServicesSection onOpenInquiry={(softwareName) => { window.location.hash = "contact"; }} />
+
+                {/* FAQ SECTION - Frequently Asked Questions across all SaaS & AI Products */}
+                <div id="faq">
+                  <FAQSection 
+                    onOpenChatbot={() => setAiOpen(true)}
+                    onOpenInquiry={(softwareName) => { window.location.hash = "contact"; }} 
+                  />
+                </div>
 
                 {/* QUOTE BLOCK BANNER - Deep slate layout with slide movement */}
                 <section className="bg-brand-navy-900 border-y border-brand-gold-500/20 py-12 relative overflow-hidden text-center text-white min-h-[340px] flex items-center justify-center">
@@ -1195,7 +1204,17 @@ export default function App() {
               </div>
             )}
 
-            {/* 8. SEPARATE COMPLIANCE PAGES */}
+            {/* 8. DEDICATED FAQ PAGE */}
+            {activePage === "faq" && (
+              <div className="bg-[#070b13] min-h-screen py-10">
+                <FAQSection 
+                  onOpenChatbot={() => setAiOpen(true)}
+                  onOpenInquiry={(softwareName) => { window.location.hash = "contact"; }} 
+                />
+              </div>
+            )}
+
+            {/* 9. SEPARATE COMPLIANCE PAGES */}
             {["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(activePage) && (
               <CompliancePage 
                 initialTab={activePage as any} 
