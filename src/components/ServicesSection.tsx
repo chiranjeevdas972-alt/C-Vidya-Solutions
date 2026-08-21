@@ -295,11 +295,20 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                         {product.tagline}
                       </p>
 
-                      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 text-[11px]">
-                        <span className="text-slate-400 font-mono text-[10px]">
-                          {product.features.length} Features Included
-                        </span>
-                        
+                      <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModalSoftware(product);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                          title={`View details of ${product.name}`}
+                        >
+                          <Info className="w-3 h-3 text-brand-gold-600" />
+                          <span>See more</span>
+                        </button>
+
                         {product.externalLink ? (
                           <button
                             type="button"
@@ -307,7 +316,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                               e.stopPropagation();
                               handleOpenSoftware(product);
                             }}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 ${
                               activeCategory === "saas"
                                 ? "bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 border-brand-gold-600/30"
                                 : "bg-[#42A5F5] hover:bg-blue-600 text-white border-blue-500/40"
@@ -342,12 +351,6 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                       {getProductIcon(selectedService.id, "w-5 h-5")}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono font-bold text-brand-gold-400 uppercase">
-                          {activeCategory === "saas" ? "LIVE SAAS DASHBOARD" : "AUTONOMOUS AI CONSOLE"}
-                        </span>
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      </div>
                       <h3 className="font-display font-extrabold text-base sm:text-lg text-white leading-tight uppercase">
                         {selectedService.name}
                       </h3>
@@ -378,16 +381,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                 </div>
 
                 {/* Dashboard Metrics Grid */}
-                <div className="p-5 bg-slate-50 border-b border-slate-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-mono font-bold text-slate-500 uppercase">
-                      Live Telemetry & Metrics
-                    </span>
-                    <span className="text-[10px] font-mono text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded font-bold">
-                      ● Active Production Instance
-                    </span>
-                  </div>
-
+                <div className="p-5 bg-slate-50">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {selectedService.mockData.metrics.map((metric, mIdx) => (
                       <div key={mIdx} className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs space-y-1">
@@ -407,108 +401,6 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                       </div>
                     ))}
                   </div>
-                </div>
-
-                {/* Interactive Simulator Trigger Toolbar */}
-                <div className="p-5 border-b border-slate-100 bg-white space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-slate-700 uppercase flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-brand-gold-600" />
-                      <span>Simulate Live Action / Workflow</span>
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      Events Run: {simulatedScore}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => triggerSimulationAction(selectedService.id, "Primary Process Action")}
-                      className="px-3.5 py-2 bg-brand-navy-900 hover:bg-black text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border-none shadow-xs"
-                    >
-                      <Zap className="w-3 h-3 text-brand-gold-400" />
-                      <span>Trigger Real-time Event</span>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => triggerSimulationAction(selectedService.id, "Sync Cloud Database")}
-                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
-                    >
-                      <Activity className="w-3 h-3 text-brand-gold-600" />
-                      <span>Sync Remote State</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onOpenInquiry) {
-                          onOpenInquiry(selectedService.name);
-                        } else {
-                          const inqElem = document.getElementById("inquiry") || document.getElementById("contact");
-                          inqElem?.scrollIntoView({ behavior: "smooth" });
-                        }
-                      }}
-                      className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-amber-200 ml-auto"
-                    >
-                      <MessageSquare className="w-3 h-3 text-amber-700" />
-                      <span>Request Demo</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Terminal Activity Log & Features List */}
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5 bg-slate-50/50">
-                  
-                  {/* Features List */}
-                  <div className="space-y-2.5">
-                    <h5 className="font-display font-extrabold text-xs text-brand-navy-900 uppercase tracking-wide">
-                      Core Modules & Capabilities
-                    </h5>
-                    <ul className="space-y-2">
-                      {selectedService.features.map((feat, fIdx) => (
-                        <li key={fIdx} className="text-xs text-slate-700 flex items-start gap-2 font-medium">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Real-time Log Stream */}
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <h5 className="font-display font-extrabold text-xs text-brand-navy-900 uppercase tracking-wide">
-                        Live Event Stream
-                      </h5>
-                      <span className="text-[9px] font-mono text-slate-400">AES-256 Encrypted</span>
-                    </div>
-
-                    <div className="bg-slate-900 rounded-xl p-3 text-[11px] font-mono text-slate-300 space-y-1.5 h-44 overflow-y-auto border border-slate-800">
-                      {currentLogs.map((log, lIdx) => (
-                        <div key={lIdx} className="text-slate-300 border-l-2 border-brand-gold-500 pl-2 leading-relaxed">
-                          {log}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Footer specs button */}
-                <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between">
-                  <div className="text-xs text-slate-500 font-semibold">
-                    STPI Sindri Verified Architecture • Multi-Tenant Scale Ready
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setModalSoftware(selectedService)}
-                    className="flex items-center gap-1 text-xs font-bold text-brand-gold-600 hover:text-brand-gold-700 cursor-pointer border-none bg-transparent"
-                  >
-                    <span>View Comprehensive Architecture Specs</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
               </div>

@@ -342,49 +342,6 @@ export default function FAQSection({ onOpenChatbot, onOpenInquiry }: FAQSectionP
           )}
         </div>
 
-        {/* Bottom Contact / AI Chatbot Callout Banner */}
-        <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-brand-navy-950 via-brand-navy-900 to-slate-900 text-white shadow-xl border border-brand-gold-500/20 relative overflow-hidden">
-          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-brand-gold-500/10 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-            <div className="space-y-2 max-w-xl">
-              <div className="flex items-center justify-center md:justify-start gap-2 text-brand-gold-400 text-xs font-mono font-bold tracking-widest uppercase">
-                <Sparkles className="w-4 h-4" />
-                <span>HAVE A SPECIFIC CUSTOM QUESTION?</span>
-              </div>
-              <h3 className="font-display font-black text-xl sm:text-2xl text-white tracking-wide uppercase leading-tight">
-                Ask the C Vidya AI Customer Support Agent in Real-Time
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium">
-                Our 24/7 AI Assistant is trained on our complete software catalog, API architectures, pricing structures, and live client dashboards.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
-              {onOpenChatbot && (
-                <button
-                  type="button"
-                  onClick={onOpenChatbot}
-                  className="flex items-center gap-2 px-5 py-3 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 font-display font-black text-xs sm:text-sm uppercase tracking-wide rounded-xl transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer border-none"
-                >
-                  <Bot className="w-4 h-4" />
-                  <span>Start Instant Chat</span>
-                </button>
-              )}
-              {onOpenInquiry && (
-                <button
-                  type="button"
-                  onClick={() => onOpenInquiry()}
-                  className="flex items-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm uppercase tracking-wide rounded-xl transition-all border border-white/20 cursor-pointer"
-                >
-                  <span>Request Custom Demo</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
   );
