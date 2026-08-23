@@ -4,9 +4,69 @@ interface LogoProps extends SVGProps<SVGSVGElement> {
   size?: number;
   showText?: boolean;
   className?: string;
+  iconOnly?: boolean;
 }
 
-export default function Logo({ size = 120, showText = true, className = "", ...props }: LogoProps) {
+export default function Logo({ size = 120, showText = true, iconOnly = false, className = "", ...props }: LogoProps) {
+  if (iconOnly) {
+    return (
+      <svg
+        viewBox="280 60 330 420"
+        width={size}
+        height={size}
+        className={`select-none ${className}`}
+        role="img"
+        aria-label="C VIDYA SOLUTIONS Logo Mark"
+        preserveAspectRatio="xMidYMid meet"
+        {...props}
+      >
+        <title>C VIDYA SOLUTIONS Logo Mark</title>
+        <defs>
+          <linearGradient id="chevron-blue-grad-icon" x1="0%" y1="0%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="#2979FF" />
+            <stop offset="30%" stopColor="#00E5FF" />
+            <stop offset="65%" stopColor="#0072FF" />
+            <stop offset="100%" stopColor="#0B214B" />
+          </linearGradient>
+
+          <linearGradient id="inner-bar-blue-grad-icon" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0072FF" />
+            <stop offset="40%" stopColor="#00C6FF" />
+            <stop offset="100%" stopColor="#031633" />
+          </linearGradient>
+
+          <filter id="logo-drop-shadow-icon" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.25" />
+          </filter>
+        </defs>
+
+        <g filter="url(#logo-drop-shadow-icon)">
+          {/* Outer Chevron / Arrow Shape */}
+          <path
+            d="M 315,90 
+               L 580,280 
+               L 345,450 
+               L 380,395 
+               L 485,280 
+               L 318,160 
+               Z"
+            fill="url(#chevron-blue-grad-icon)"
+          />
+
+          {/* Inner Parallel Blue Stripe Bar */}
+          <path
+            d="M 312,320 
+               L 425,240 
+               L 452,268 
+               L 312,415 
+               Z"
+            fill="url(#inner-bar-blue-grad-icon)"
+          />
+        </g>
+      </svg>
+    );
+  }
+
   return (
     <svg
       viewBox="0 0 800 700"
@@ -103,7 +163,7 @@ export default function Logo({ size = 120, showText = true, className = "", ...p
             <path d="M 180,624 L 215,624 L 215,626 L 180,626 Z" />
 
             {/* 'S' */}
-            <path d="M 257,618 C 255,616 252,616 250,616 C 246,616 244,618 244,621 C 244,624 248,625 250,626 C 253,627 257,628 257,631 C 257,634 254,635 250,635 C 246,635 244,634 243,631 L 246,629 C 247,631 249,632 250,632 C 252,632 254,631 254,629 C 254,627 251,626 249,625 C 246,624 243,623 243,620 C 243,617 246,615 250,615 C 253,615 256,616 297,615 Z" style={{ display: "none" }} /> {/* Fallback hidden node for safety */}
+            <path d="M 257,618 C 255,616 252,616 250,616 C 246,616 244,618 244,621 C 244,624 248,625 250,626 C 253,627 257,628 257,631 C 257,634 254,635 250,635 C 246,635 244,634 243,631 L 246,629 C 247,631 249,632 250,632 C 252,632 254,631 254,629 C 254,627 251,626 249,625 C 246,624 243,623 243,620 C 243,617 246,615 250,615 C 253,615 256,616 297,615 Z" style={{ display: "none" }} />
             <path d="M 257,618 C 255,616 252,616 250,616 C 246,616 244,618 244,621 C 244,624 248,625 250,626 C 253,627 257,628 257,631 C 257,634 254,635 250,635 C 246,635 244,634 243,631 L 246,629 C 247,631 249,632 250,632 C 252,632 254,631 254,629 C 254,627 251,626 249,625 C 246,624 243,623 243,620 C 243,617 246,615 250,615 C 253,615 256,616 257,618 Z" />
             {/* 'O' */}
             <path d="M 280,615 C 285,615 288,619 288,625 C 288,631 285,635 280,635 C 275,635 272,631 272,625 C 272,619 275,615 280,615 Z M 280,618 C 277,618 275,621 275,625 C 275,629 277,632 280,632 C 283,632 285,629 285,625 C 285,621 283,618 280,618 Z" />

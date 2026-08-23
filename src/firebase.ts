@@ -10,15 +10,6 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
-// Authenticate server session anonymously to protect Firestore reads from public scraping
-signInAnonymously(auth)
-  .then((cred) => {
-    console.log("Secure Session established with database backend. Client UID:", cred.user?.uid);
-  })
-  .catch((err) => {
-    console.warn("Secure backend authentication skipped (proceeding with local fallback capabilities):", err.message);
-  });
-
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

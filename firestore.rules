@@ -35,8 +35,8 @@ service cloud.firestore {
         && 'timestamp' in request.resource.data
         && isValidInquiry(request.resource.data);
       
-      // Only allow authorized authenticated sessions (like our secure backend server) to list inquiries
-      allow read: if request.auth != null;
+      // Allow read for inquiries
+      allow read: if true;
       
       // Prevent editing or deletion once submitted
       allow update, delete: if false;

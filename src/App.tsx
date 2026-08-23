@@ -1248,9 +1248,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* FLOATING DRAW-IN PANEL: Smart AI Advisory bot */}
-      <AiAssistant isOpen={aiOpen} onClose={() => setAiOpen(false)} />
-
       {/* FOOTER BLOCK: Gold wave ribbon background footer matching Image 1 base strip */}
       <footer className="bg-brand-navy-950 text-slate-300 pt-16 relative border-t-2 border-brand-gold-500">
         
@@ -1440,23 +1437,6 @@ export default function App() {
       {/* GDPR / CCPA Cookie Consent Banner */}
       <CookieConsentBanner onManagePreferences={() => { window.location.hash = "cookies"; window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
-      {/* Floating C Vidya AI Customer Support Agent Trigger Button */}
-      {!aiOpen && (
-        <button
-          type="button"
-          onClick={() => setAiOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-brand-navy-950 hover:bg-black text-white rounded-full shadow-2xl border border-brand-gold-500/40 hover:border-brand-gold-400 transition-all hover:scale-105 active:scale-95 cursor-pointer group"
-          title="Open C Vidya AI Customer Support Agent"
-        >
-          <div className="w-8 h-8 rounded-full bg-brand-gold-500 text-slate-950 flex items-center justify-center font-bold">
-            <Bot className="w-4 h-4" />
-          </div>
-          <span className="font-display font-extrabold text-xs uppercase tracking-wider text-white group-hover:text-brand-gold-300">
-            C VIDYA AI CUSTOMER SUPPORT AGENT
-          </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        </button>
-      )}
 
       {/* Interactive AI Assistant Modal */}
       <AiAssistant 
