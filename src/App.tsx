@@ -42,9 +42,15 @@ import {
   Facebook,
   Instagram,
   Twitter,
-  Linkedin
+  Linkedin,
+  UploadCloud,
+  FileText,
+  Paperclip,
+  Trash2
 } from "lucide-react";
 import { rolesData, CATEGORIES, type CareerRole } from "./careersData";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 const SLIDES = [
   {
@@ -150,7 +156,11 @@ export default function App() {
   const [applicantPhone, setApplicantPhone] = useState("");
   const [applicantExperience, setApplicantExperience] = useState("Student / Intern");
   const [applicantMessage, setApplicantMessage] = useState("");
+  const [resumeFileName, setResumeFileName] = useState("");
+  const [resumeFileSize, setResumeFileSize] = useState("");
+  const [resumeData, setResumeData] = useState("");
   const [applicationSubmittedSuccess, setApplicationSubmittedSuccess] = useState(false);
+  const [isSubmittingApplication, setIsSubmittingApplication] = useState(false);
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
   // Auto-play interval for slides
@@ -864,144 +874,297 @@ export default function App() {
                   {/* Apply Form Instant Modal Dialog Overlay */}
                   <AnimatePresence>
                     {showApplyForm && applyingForRole && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs overflow-y-auto">
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                          initial={{ opacity: 0, scale: 0.96, y: 10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                          className="bg-white border border-brand-gold-500/40 p-6 sm:p-8 rounded-2xl shadow-2xl max-w-2xl w-full my-auto space-y-5 relative text-left"
+                          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                          className="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col my-auto relative text-left overflow-hidden"
                         >
-                          <div className="flex justify-between items-start pb-3 border-b border-slate-100">
+                          {/* Header */}
+                          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 shrink-0">
                             <div>
-                              <span className="text-[10px] font-mono font-bold text-brand-gold-700 bg-brand-gold-100 px-2 py-0.5 rounded uppercase">
+                              <span className="text-[9px] font-mono font-extrabold text-brand-gold-700 bg-brand-gold-100/90 px-1.5 py-0.5 rounded uppercase tracking-wider">
                                 JOB APPLICATION FORM
                               </span>
-                              <h3 className="font-display font-black text-xl text-brand-navy-950 uppercase mt-1">
-                                Applying for: {applyingForRole.title}
+                              <h3 className="font-display font-bold text-base sm:text-lg text-brand-navy-950 truncate mt-0.5 max-w-[260px] sm:max-w-md">
+                                {applyingForRole.title}
                               </h3>
-                              <p className="text-xs text-slate-500 font-semibold mt-0.5">
-                                Category: {applyingForRole.category} • Location: {applyingForRole.location}
+                              <p className="text-[11px] text-slate-500 font-medium truncate">
+                                {applyingForRole.category} • {applyingForRole.location}
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 border-none bg-transparent cursor-pointer transition-colors"
+                              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-200/60 border-none bg-transparent cursor-pointer transition-colors"
                             >
                               <X className="w-5 h-5" />
                             </button>
                           </div>
 
-                          {applicationSubmittedSuccess ? (
-                            <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
-                              <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                              <h4 className="font-display font-extrabold text-slate-900 text-base">Application Submitted Successfully!</h4>
-                              <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
-                                Thank you, <strong>{applicantName}</strong>! Your resume and application details for <strong>{applyingForRole.title}</strong> have been logged inside the C Vidya HR registry. We will reach out to you within 3 business days.
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                                className="px-5 py-2.5 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
-                              >
-                                Close & Browse Openings
-                              </button>
-                            </div>
-                          ) : (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                if (!applicantName || !applicantEmail || !applicantPhone) {
-                                  return;
-                                }
-                                setApplicationSubmittedSuccess(true);
-                              }}
-                              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                            >
-                              {/* Full Name */}
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Full Name *</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={applicantName}
-                                  onChange={(e) => setApplicantName(e.target.value)}
-                                  placeholder="Your Name"
-                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
-                                />
-                              </div>
-
-                              {/* Email Address */}
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Email *</label>
-                                <input
-                                  type="email"
-                                  required
-                                  value={applicantEmail}
-                                  onChange={(e) => setApplicantEmail(e.target.value)}
-                                  placeholder="name@domain.com"
-                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
-                                />
-                              </div>
-
-                              {/* Mobile Number */}
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Mobile Phone *</label>
-                                <input
-                                  type="tel"
-                                  required
-                                  value={applicantPhone}
-                                  onChange={(e) => setApplicantPhone(e.target.value)}
-                                  placeholder="89877XXXXX"
-                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
-                                />
-                              </div>
-
-                              {/* Experience Level */}
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Experience *</label>
-                                <select
-                                  value={applicantExperience}
-                                  onChange={(e) => setApplicantExperience(e.target.value)}
-                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 font-bold text-slate-900"
-                                >
-                                  <option value="Student / Intern">Student / Intern</option>
-                                  <option value="Fresher Graduate">Fresher Graduate</option>
-                                  <option value="Junior (1-2 years)">Junior (1-2 years)</option>
-                                  <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
-                                  <option value="Senior (5+ years)">Senior (5+ years)</option>
-                                </select>
-                              </div>
-
-                              {/* Statement / Message */}
-                              <div className="md:col-span-2 space-y-1.5">
-                                <label className="text-xs font-mono font-bold text-slate-700 uppercase block">Motivation Message & Resume Link</label>
-                                <textarea
-                                  value={applicantMessage}
-                                  onChange={(e) => setApplicantMessage(e.target.value)}
-                                  placeholder="Paste your Google Drive resume link and write why you want to join our team..."
-                                  rows={3}
-                                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
-                                />
-                              </div>
-
-                              <div className="md:col-span-2 flex justify-end gap-3.5 pt-2 border-t border-slate-100">
+                          {/* Body / Scrollable Content */}
+                          <div className="overflow-y-auto p-4 sm:p-5 flex-1 space-y-3.5">
+                            {applicationSubmittedSuccess ? (
+                              <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3 my-auto">
+                                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+                                <h4 className="font-display font-extrabold text-slate-900 text-base">Application Submitted Successfully!</h4>
+                                <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
+                                  Thank you, <strong>{applicantName}</strong>! Your resume document {resumeFileName ? `("${resumeFileName}")` : ""} and application details for <strong>{applyingForRole.title}</strong> have been securely recorded in Firebase. We will reach out to you within 3 business days.
+                                </p>
                                 <button
                                   type="button"
                                   onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                                  className="px-5 py-2.5 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
                                 >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="submit"
-                                  className="flex items-center gap-1.5 px-5 py-2 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-sm border-none cursor-pointer"
-                                >
-                                  <Send className="w-3.5 h-3.5 text-brand-gold-400" />
-                                  <span>Submit Resume Application</span>
+                                  Close & Browse Openings
                                 </button>
                               </div>
-                            </form>
+                            ) : (
+                              <form
+                                id="career-apply-form"
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  if (!applicantName || !applicantEmail || !applicantPhone || !applyingForRole) {
+                                    return;
+                                  }
+
+                                  setIsSubmittingApplication(true);
+
+                                  const applicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+                                  const applicationData = {
+                                    id: applicationId,
+                                    name: applicantName.trim(),
+                                    email: applicantEmail.trim(),
+                                    phone: applicantPhone.trim(),
+                                    experience: applicantExperience,
+                                    message: applicantMessage.trim() || "No specific message provided",
+                                    jobTitle: applyingForRole.title,
+                                    jobCategory: applyingForRole.category,
+                                    jobLocation: applyingForRole.location,
+                                    roleType: applyingForRole.type,
+                                    resumeFileName: resumeFileName || "Resume_Document.pdf",
+                                    resumeFileSize: resumeFileSize || "PDF Document",
+                                    resumeData: resumeData || "",
+                                    timestamp: new Date().toISOString(),
+                                    status: "Submitted / Under Review"
+                                  };
+
+                                  // 1. Direct Firestore write (primary real-time database connection) - job_applications collection
+                                  try {
+                                    const firestoreData: any = { ...applicationData };
+                                    if (firestoreData.resumeData && firestoreData.resumeData.length > 700000) {
+                                      firestoreData.resumeData = firestoreData.resumeData.slice(0, 700000);
+                                      firestoreData.isLargeResume = true;
+                                    }
+                                    const appsRef = collection(db, "job_applications");
+                                    await addDoc(appsRef, firestoreData);
+                                    console.log("Application with Resume successfully written to Firestore 'job_applications' collection:", applicationId);
+                                  } catch (firestoreErr) {
+                                    console.warn("Direct Firestore insert note:", firestoreErr);
+                                  }
+
+                                  // 2. Server API Sync
+                                  try {
+                                    await fetch("/api/application", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify(applicationData)
+                                    });
+                                  } catch (serverErr) {
+                                    console.warn("Server API sync note:", serverErr);
+                                  }
+
+                                  // 3. Local fallback storage (strip heavy data from localStorage to prevent quota overflow)
+                                  try {
+                                    const localData = { ...applicationData, resumeData: "" };
+                                    const localSaved = JSON.parse(localStorage.getItem("cvidya_local_applications") || "[]");
+                                    localSaved.unshift(localData);
+                                    localStorage.setItem("cvidya_local_applications", JSON.stringify(localSaved.slice(0, 50)));
+                                  } catch (storageErr) {
+                                    console.warn("Local storage write note:", storageErr);
+                                  }
+
+                                  setIsSubmittingApplication(false);
+                                  setApplicationSubmittedSuccess(true);
+                                }}
+                                className="space-y-3"
+                              >
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {/* Full Name */}
+                                  <div className="space-y-1">
+                                    <label className="text-[11px] font-mono font-bold text-slate-700 uppercase block">Full Name *</label>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={applicantName}
+                                      onChange={(e) => setApplicantName(e.target.value)}
+                                      placeholder="Your Name"
+                                      className="w-full px-3 py-2 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                    />
+                                  </div>
+
+                                  {/* Email Address */}
+                                  <div className="space-y-1">
+                                    <label className="text-[11px] font-mono font-bold text-slate-700 uppercase block">Email *</label>
+                                    <input
+                                      type="email"
+                                      required
+                                      value={applicantEmail}
+                                      onChange={(e) => setApplicantEmail(e.target.value)}
+                                      placeholder="name@domain.com"
+                                      className="w-full px-3 py-2 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {/* Mobile Number */}
+                                  <div className="space-y-1">
+                                    <label className="text-[11px] font-mono font-bold text-slate-700 uppercase block">Mobile Phone *</label>
+                                    <input
+                                      type="tel"
+                                      required
+                                      value={applicantPhone}
+                                      onChange={(e) => setApplicantPhone(e.target.value)}
+                                      placeholder="89877XXXXX"
+                                      className="w-full px-3 py-2 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                    />
+                                  </div>
+
+                                  {/* Experience Level */}
+                                  <div className="space-y-1">
+                                    <label className="text-[11px] font-mono font-bold text-slate-700 uppercase block">Experience *</label>
+                                    <select
+                                      value={applicantExperience}
+                                      onChange={(e) => setApplicantExperience(e.target.value)}
+                                      className="w-full px-3 py-2 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 font-bold text-slate-900"
+                                    >
+                                      <option value="Student / Intern">Student / Intern</option>
+                                      <option value="Fresher Graduate">Fresher Graduate</option>
+                                      <option value="Junior (1-2 years)">Junior (1-2 years)</option>
+                                      <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
+                                      <option value="Senior (5+ years)">Senior (5+ years)</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {/* Add Resume Document Column */}
+                                <div className="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-[11px] font-mono font-bold text-brand-navy-950 uppercase flex items-center gap-1.5">
+                                      <FileText className="w-3.5 h-3.5 text-brand-gold-600" />
+                                      <span>Add Resume (PDF)</span>
+                                    </label>
+                                    <span className="text-[10px] font-mono text-slate-500">Max 3 MB</span>
+                                  </div>
+
+                                  {resumeFileName ? (
+                                    <div className="flex items-center justify-between p-2 bg-white border border-emerald-200 rounded-lg shadow-2xs">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <div className="p-1 bg-emerald-50 text-emerald-700 rounded">
+                                          <FileText className="w-4 h-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="text-xs font-bold text-slate-900 truncate">{resumeFileName}</p>
+                                          <p className="text-[10px] text-slate-500 font-mono">{resumeFileSize || "PDF Document Attached"}</p>
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setResumeFileName("");
+                                          setResumeFileSize("");
+                                          setResumeData("");
+                                        }}
+                                        className="p-1 text-slate-400 hover:text-red-500 rounded transition-colors bg-transparent border-none cursor-pointer"
+                                        title="Remove document"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-slate-300 hover:border-brand-gold-500 rounded-lg bg-white cursor-pointer transition-all hover:bg-amber-50/20 group">
+                                      <UploadCloud className="w-5 h-5 text-slate-400 group-hover:text-brand-gold-600 transition-colors mb-0.5" />
+                                      <span className="text-xs font-bold text-slate-800">
+                                        Click to browse or drop your Resume (PDF)
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                        PDF files up to 3MB accepted
+                                      </span>
+                                      <input
+                                        type="file"
+                                        accept=".pdf,application/pdf"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                                              alert("Please upload a PDF file only.");
+                                              return;
+                                            }
+                                            if (file.size > 3 * 1024 * 1024) {
+                                              alert("File size exceeds 3MB limit. Please upload a PDF under 3MB.");
+                                              return;
+                                            }
+                                            setResumeFileName(file.name);
+                                            const sizeInKb = (file.size / 1024).toFixed(1);
+                                            const sizeDisplay = file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${sizeInKb} KB`;
+                                            setResumeFileSize(sizeDisplay);
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                              setResumeData(reader.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  )}
+                                </div>
+
+                                {/* Statement / Message */}
+                                <div className="space-y-1">
+                                  <label className="text-[11px] font-mono font-bold text-slate-700 uppercase block">Motivation / Notes (Optional)</label>
+                                  <textarea
+                                    value={applicantMessage}
+                                    onChange={(e) => setApplicantMessage(e.target.value)}
+                                    placeholder="Any additional notes or qualifications for C Vidya Solutions..."
+                                    rows={2}
+                                    className="w-full px-3 py-2 bg-white border border-slate-300 text-xs sm:text-sm rounded-lg focus:outline-none focus:border-brand-gold-500 text-slate-900 font-medium"
+                                  />
+                                </div>
+                              </form>
+                            )}
+                          </div>
+
+                          {/* Footer */}
+                          {!applicationSubmittedSuccess && (
+                            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 shrink-0 flex items-center justify-end gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
+                                className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition-all border-none cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                form="career-apply-form"
+                                disabled={isSubmittingApplication}
+                                className="flex items-center gap-1.5 px-4 py-2 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-xs border-none cursor-pointer disabled:opacity-50"
+                              >
+                                {isSubmittingApplication ? (
+                                  <span>Submitting to Firebase...</span>
+                                ) : (
+                                  <>
+                                    <Send className="w-3.5 h-3.5 text-brand-gold-400" />
+                                    <span>Submit Resume Application</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           )}
                         </motion.div>
                       </div>
@@ -1040,17 +1203,9 @@ export default function App() {
                           .map((role, rIdx) => (
                             <div
                               key={rIdx}
-                              className="h-full p-5 rounded-2xl bg-white border border-slate-200/70 hover:border-brand-gold-500/30 hover:shadow-md transition-all flex flex-col justify-between"
+                              className="h-full p-6 rounded-2xl bg-white border border-slate-200/70 hover:border-brand-gold-500/30 hover:shadow-md transition-all flex flex-col justify-between"
                             >
                               <div className="space-y-3 flex-1 flex flex-col">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-[9px] font-mono font-bold text-[#b7791f] bg-amber-500/10 px-2 py-0.5 rounded uppercase">
-                                    {role.category}
-                                  </span>
-                                  <span className="text-[9px] font-mono text-slate-400 whitespace-nowrap">
-                                    {role.type}
-                                  </span>
-                                </div>
                                 <h3 className="font-display font-extrabold text-base text-slate-900 leading-snug">
                                   {role.title}
                                 </h3>
@@ -1059,11 +1214,7 @@ export default function App() {
                                 </p>
                               </div>
 
-                              <div className="pt-4 mt-auto border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
-                                <div className="flex items-center gap-1 text-slate-400 font-mono">
-                                  <MapPin className="w-3.5 h-3.5 text-brand-gold-600" />
-                                  <span className="truncate max-w-[120px]">{role.location}</span>
-                                </div>
+                              <div className="pt-4 mt-auto border-t border-slate-100 flex items-center justify-end">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1072,10 +1223,13 @@ export default function App() {
                                     setApplicantEmail("");
                                     setApplicantPhone("");
                                     setApplicantMessage("");
+                                    setResumeFileName("");
+                                    setResumeFileSize("");
+                                    setResumeData("");
                                     setApplicationSubmittedSuccess(false);
                                     setShowApplyForm(true);
                                   }}
-                                  className="px-3 py-1.5 bg-slate-900 hover:bg-brand-gold-500 hover:text-slate-950 text-white text-[10px] font-bold rounded-lg transition-all border-none cursor-pointer"
+                                  className="px-4 py-2 bg-brand-navy-900 hover:bg-brand-gold-500 hover:text-slate-950 text-white text-xs font-bold rounded-lg transition-all border-none cursor-pointer shadow-xs"
                                 >
                                   Apply Now
                                 </button>

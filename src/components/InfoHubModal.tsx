@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { 
   X, BookOpen, Briefcase, FileText, PhoneCall, Award, Users, MapPin, 
-  ChevronRight, Calendar, ArrowUpRight, GraduationCap, Building2, CheckCircle2, ShieldCheck, Mail, Send, Search, Check
+  ChevronRight, Calendar, ArrowUpRight, GraduationCap, Building2, CheckCircle2, ShieldCheck, Mail, Send, Search, Check,
+  UploadCloud, Trash2, Paperclip
 } from "lucide-react";
 import { rolesData, CATEGORIES, type CareerRole } from "../careersData";
 import InquiryForm from "./InquiryForm";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 interface InfoHubModalProps {
   isOpen: boolean;
@@ -28,6 +31,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
   const [applicantPhone, setApplicantPhone] = useState("");
   const [applicantExperience, setApplicantExperience] = useState("Student / Intern");
   const [applicantMessage, setApplicantMessage] = useState("");
+  const [resumeFileName, setResumeFileName] = useState("");
+  const [resumeFileSize, setResumeFileSize] = useState("");
+  const [resumeData, setResumeData] = useState("");
   const [applicationSubmittedSuccess, setApplicationSubmittedSuccess] = useState(false);
 
   useEffect(() => {
@@ -44,6 +50,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
       setApplicantPhone("");
       setApplicantExperience("Student / Intern");
       setApplicantMessage("");
+      setResumeFileName("");
+      setResumeFileSize("");
+      setResumeData("");
       setApplicationSubmittedSuccess(false);
     }
   }, [isOpen, initialTab]);
@@ -452,24 +461,73 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                           </p>
                         </div>
                       </div>
-                      <div className="p-3 bg-white border border-green-100 rounded-lg text-[11px] leading-relaxed text-slate-600">
-                        <strong>Next Step:</strong> To expedite your selection review by Chiranjeev Das, please email your official CV and cover letter to <span className="font-mono font-bold text-brand-navy-900">cvidyasolutions@gmail.com</span> with the subject line <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px]">"Job Application: {applyingForRole.title} - {applicantName}"</span>.
-                      </div>
                       <button 
                         onClick={() => { setShowApplyForm(false); setApplicationSubmittedSuccess(false); }}
-                        className="w-full py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 text-xs transition-colors cursor-pointer border-none"
+                        className="w-full py-2 bg-brand-navy-900 text-white font-bold rounded-lg hover:bg-black text-xs transition-colors cursor-pointer border-none"
                       >
                         Return to Career Directory
                       </button>
                     </div>
                   ) : (
                     <form 
-                      onSubmit={(e) => {
+                      onSubmit={async (e) => {
                         e.preventDefault();
-                        if (!applicantName || !applicantEmail || !applicantPhone) {
-                          alert("Please fill in your name, email, and contact number.");
+                        if (!applicantName || !applicantEmail || !applicantPhone || !applyingForRole) {
                           return;
                         }
+
+                        const applicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+                        const applicationData = {
+                          id: applicationId,
+                          name: applicantName.trim(),
+                          email: applicantEmail.trim(),
+                          phone: applicantPhone.trim(),
+                          experience: applicantExperience,
+                          message: applicantMessage.trim() || "No specific message provided",
+                          jobTitle: applyingForRole.title,
+                          jobCategory: applyingForRole.category,
+                          jobLocation: applyingForRole.location,
+                          roleType: applyingForRole.type,
+                          resumeFileName: resumeFileName || "Resume_Document.pdf",
+                          resumeFileSize: resumeFileSize || "PDF Document",
+                          resumeData: resumeData || "",
+                          timestamp: new Date().toISOString(),
+                          status: "Submitted / Under Review"
+                        };
+
+                        // Direct Firestore write
+                        try {
+                          const firestoreData: any = { ...applicationData };
+                          if (firestoreData.resumeData && firestoreData.resumeData.length > 700000) {
+                            firestoreData.resumeData = firestoreData.resumeData.slice(0, 700000);
+                            firestoreData.isLargeResume = true;
+                          }
+                          await addDoc(collection(db, "job_applications"), firestoreData);
+                        } catch (err) {
+                          console.warn("Firestore career submit note:", err);
+                        }
+
+                        // API sync
+                        try {
+                          await fetch("/api/application", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(applicationData)
+                          });
+                        } catch (serverErr) {
+                          // Absorb
+                        }
+
+                        // Local cache (strip heavy data from localStorage)
+                        try {
+                          const localData = { ...applicationData, resumeData: "" };
+                          const localSaved = JSON.parse(localStorage.getItem("cvidya_local_applications") || "[]");
+                          localSaved.unshift(localData);
+                          localStorage.setItem("cvidya_local_applications", JSON.stringify(localSaved.slice(0, 50)));
+                        } catch (storageErr) {
+                          // Absorb
+                        }
+
                         setApplicationSubmittedSuccess(true);
                         setJobApplied(applyingForRole.title);
                       }}
@@ -481,7 +539,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                           <input 
                             type="text" 
                             required
-                            placeholder="John Doe"
+                            placeholder="Your Name"
                             value={applicantName}
                             onChange={(e) => setApplicantName(e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-gold-500 text-xs bg-white text-slate-950 font-bold"
@@ -492,7 +550,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                           <input 
                             type="email" 
                             required
-                            placeholder="johndoe@example.com"
+                            placeholder="name@domain.com"
                             value={applicantEmail}
                             onChange={(e) => setApplicantEmail(e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-gold-500 text-xs bg-white text-slate-950 font-bold"
@@ -506,7 +564,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                           <input 
                             type="tel" 
                             required
-                            placeholder="e.g. +91 9876543210"
+                            placeholder="89877XXXXX"
                             value={applicantPhone}
                             onChange={(e) => setApplicantPhone(e.target.value)}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brand-gold-500 text-xs bg-white"
@@ -519,18 +577,93 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                             onChange={(e) => setApplicantExperience(e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-gold-500 bg-white text-xs text-slate-950 font-bold"
                           >
-                            <option value="Student / Intern">Student / Intern Candidate</option>
-                            <option value="Fresher (Graduated)">Fresher (Graduated)</option>
-                            <option value="1-2 Years Experience">1-2 Years Professional Experience</option>
-                            <option value="3+ Years Experience">3+ Years Professional Experience</option>
+                            <option value="Student / Intern">Student / Intern</option>
+                            <option value="Fresher Graduate">Fresher Graduate</option>
+                            <option value="Junior (1-2 years)">Junior (1-2 years)</option>
+                            <option value="Mid-Level (3-5 years)">Mid-Level (3-5 years)</option>
+                            <option value="Senior (5+ years)">Senior (5+ years)</option>
                           </select>
                         </div>
                       </div>
 
+                      {/* Add Resume Document Section */}
+                      <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-slate-900 font-bold text-xs uppercase flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5 text-brand-gold-600" />
+                            <span>Add Resume (PDF)</span>
+                          </label>
+                          <span className="text-[10px] font-mono text-slate-500">Max 3 MB</span>
+                        </div>
+
+                        {resumeFileName ? (
+                          <div className="flex items-center justify-between p-2 bg-white border border-emerald-200 rounded-lg">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="p-1 bg-emerald-50 text-emerald-700 rounded">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate">{resumeFileName}</p>
+                                <p className="text-[10px] text-slate-500 font-mono">{resumeFileSize || "PDF Document Attached"}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResumeFileName("");
+                                setResumeFileSize("");
+                                setResumeData("");
+                              }}
+                              className="p-1 text-slate-400 hover:text-red-500 rounded bg-transparent border-none cursor-pointer"
+                              title="Remove"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-slate-300 hover:border-brand-gold-500 rounded-lg bg-white cursor-pointer transition-all hover:bg-amber-50/30 group">
+                            <UploadCloud className="w-5 h-5 text-slate-400 group-hover:text-brand-gold-600 transition-colors mb-0.5" />
+                            <span className="text-xs font-bold text-slate-800">
+                              Click to browse or drop your Resume (PDF)
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              PDF files up to 3MB accepted
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                                    alert("Please upload a PDF file only.");
+                                    return;
+                                  }
+                                  if (file.size > 3 * 1024 * 1024) {
+                                    alert("File size exceeds 3MB limit. Please upload a PDF under 3MB.");
+                                    return;
+                                  }
+                                  setResumeFileName(file.name);
+                                  const sizeInKb = (file.size / 1024).toFixed(1);
+                                  const sizeDisplay = file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${sizeInKb} KB`;
+                                  setResumeFileSize(sizeDisplay);
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    setResumeData(reader.result as string);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+
                       <div>
-                        <label className="block text-slate-800 font-black mb-1">Brief Statement of Purpose</label>
+                        <label className="block text-slate-800 font-black mb-1">Motivation / Notes (Optional)</label>
                         <textarea 
-                          rows={3}
+                          rows={2}
                           placeholder="Tell us why you are interested in joining C Vidya Solutions..."
                           value={applicantMessage}
                           onChange={(e) => setApplicantMessage(e.target.value)}
@@ -543,7 +676,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                         className="w-full py-2.5 bg-brand-navy-900 text-white font-bold rounded-lg hover:bg-slate-950 text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm border-none"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>Submit Application for Review</span>
+                        <span>Submit Resume Application to Firebase</span>
                       </button>
                     </form>
                   )}
@@ -601,7 +734,6 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                         return matchesCategory && matchesSearch;
                       }).length} OF {rolesData.length} OPEN RECRUITMENTS
                     </span>
-                    <span>STPI branch Sindri • Dhanbad</span>
                   </div>
 
                   {/* Job List Directory Grid */}
@@ -631,20 +763,6 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                           className="h-full p-4 border border-slate-100 hover:border-brand-gold-500/30 bg-white rounded-xl shadow-sm hover:shadow transition-all flex flex-col justify-between space-y-3.5 group"
                         >
                           <div className="space-y-1.5 flex-1 flex flex-col">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[9.5px] font-mono font-bold text-brand-gold-600 bg-brand-gold-50 px-2 py-0.5 rounded-md uppercase">
-                                {role.category}
-                              </span>
-                              <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-md ${
-                                role.type === "Internship" 
-                                  ? "bg-purple-50 text-purple-700" 
-                                  : role.type === "Graduate Program" 
-                                  ? "bg-amber-50 text-amber-700" 
-                                  : "bg-emerald-50 text-emerald-700"
-                              }`}>
-                                {role.type}
-                              </span>
-                            </div>
                             <h5 className="font-bold text-brand-navy-900 text-[12.5px] group-hover:text-brand-gold-600 transition-colors">
                               {role.title}
                             </h5>
@@ -653,11 +771,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                             </p>
                           </div>
                           
-                          <div className="flex items-center justify-between pt-1.5 border-t border-slate-200 text-[10.5px]">
-                            <span className="text-slate-800 font-extrabold font-mono flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-slate-800 shrink-0" />
-                              <span>{role.location}</span>
-                            </span>
+                          <div className="flex items-center justify-end pt-1.5 border-t border-slate-200 text-[10.5px]">
                             <button 
                               onClick={() => {
                                 setApplyingForRole(role);
@@ -665,6 +779,9 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
                                 setApplicantEmail("");
                                 setApplicantPhone("");
                                 setApplicantMessage("");
+                                setResumeFileName("");
+                                setResumeFileSize("");
+                                setResumeData("");
                                 setApplicationSubmittedSuccess(false);
                                 setShowApplyForm(true);
                               }}

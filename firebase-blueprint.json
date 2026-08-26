@@ -15,12 +15,40 @@
         "status": { "type": "string", "description": "Lifecycle status of the inquiry." }
       },
       "required": ["id", "name", "email", "phone", "service", "message", "timestamp", "status"]
+    },
+    "JobApplication": {
+      "title": "JobApplication",
+      "description": "A candidate job application submitted from the careers page.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique application reference ID." },
+        "name": { "type": "string", "description": "Full name of the applicant." },
+        "email": { "type": "string", "format": "email", "description": "Email address of the applicant." },
+        "phone": { "type": "string", "description": "Mobile phone number of the applicant." },
+        "experience": { "type": "string", "description": "Applicant experience level (e.g., Student/Intern, Fresher, Junior, etc.)." },
+        "message": { "type": "string", "description": "Motivation message or resume drive link." },
+        "jobTitle": { "type": "string", "description": "The role/position applied for." },
+        "jobCategory": { "type": "string", "description": "Role category (e.g., Software Development)." },
+        "jobLocation": { "type": "string", "description": "Branch / campus location." },
+        "roleType": { "type": "string", "description": "Employment type (e.g., Full-Time, Internship)." },
+        "resumeFileName": { "type": "string", "description": "Uploaded resume document filename (e.g. PDF/DOCX)." },
+        "resumeFileSize": { "type": "string", "description": "Size of uploaded resume document." },
+        "resumeData": { "type": "string", "description": "Base64 or data URI payload of the uploaded resume document." },
+        "resumeUrl": { "type": "string", "description": "Direct link or Google Drive URL for the resume." },
+        "status": { "type": "string", "description": "Application review status." },
+        "timestamp": { "type": "string", "description": "Timestamp of application submission." }
+      },
+      "required": ["name", "email", "phone", "jobTitle"]
     }
   },
   "firestore": {
     "inquiries/{inquiryId}": {
       "schema": "Inquiry",
       "description": "A collection containing all onsite consultation leads and callback submissions."
+    },
+    "job_applications/{jobApplicationId}": {
+      "schema": "JobApplication",
+      "description": "A collection containing all career job applications and resume submissions."
     }
   }
 }

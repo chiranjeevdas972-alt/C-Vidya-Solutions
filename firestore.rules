@@ -10,6 +10,15 @@ service cloud.firestore {
         && 'phone' in data && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50;
     }
 
+    // Helper to validate job application structure
+    function isValidApplication(data) {
+      return data != null
+        && 'name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && 'email' in data && data.email is string && data.email.size() > 0 && data.email.size() <= 200
+        && 'phone' in data && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50
+        && 'jobTitle' in data && data.jobTitle is string && data.jobTitle.size() > 0 && data.jobTitle.size() <= 200;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
@@ -21,5 +30,13 @@ service cloud.firestore {
       allow read: if true;
       allow update, delete: if false;
     }
+
+    // Job applications collection for careers submissions
+    match /job_applications/{jobApplicationId} {
+      allow create: if isValidApplication(request.resource.data);
+      allow read: if true;
+      allow update, delete: if false;
+    }
   }
 }
+

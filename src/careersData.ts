@@ -8,7 +8,7 @@ export interface CareerRole {
 
 export const CATEGORIES = [
   "All",
-  "Software Development",
+  "Engineering & Technology",
   "AI and Data",
   "Cloud Infrastructure",
   "Quality and Assurance",
@@ -23,22 +23,22 @@ export const CATEGORIES = [
 ] as const;
 
 export const rolesData: CareerRole[] = [
-  // Engineering & Software Developer (Career Inside)
-  { title: "Software Engineer", category: "Software Development", type: "Full-Time", description: "Design scalable backend systems, secure APIs, and database migrations for C Vidya school modules.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Software Developer", category: "Software Development", type: "Full-Time", description: "Maintain and optimize high-fidelity client dashboards, OMR engines, and core CRM tools.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Full-Stack Developer", category: "Software Development", type: "Full-Time", description: "Own full-stack architecture utilizing modern React/Vite interfaces and Express server endpoints.", location: "Dhanbad HQ" },
-  { title: "Front-End Developer", category: "Software Development", type: "Full-Time", description: "Develop pixel-perfect web layouts, micro-animations, and responsive layouts with Tailwind CSS.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Back-End Developer", category: "Software Development", type: "Full-Time", description: "Implement rate-limiting algorithms, NoSQL queries, and secure Firestore structural rules.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Java Developer", category: "Software Development", type: "Full-Time", description: "Maintain robust server integrations, core school database schemas, and billing log pipelines.", location: "Dhanbad HQ" },
-  { title: "Python Developer", category: "Software Development", type: "Full-Time", description: "Write optical character recognition models for offline OMR sheets and AI chat integrations.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "PHP Developer", category: "Software Development", type: "Full-Time", description: "Support regional civic body portals, MySQL database records, and citizen logging panels.", location: "Dhanbad HQ" },
-  { title: ".NET Developer", category: "Software Development", type: "Full-Time", description: "Maintain robust offline windows integrations for desktop biometric scanner hardware.", location: "Dhanbad HQ" },
-  { title: "Mobile App Developer", category: "Software Development", type: "Full-Time", description: "Architect and build native/hybrid cross-platform wrappers for parent and student apps.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Android Developer", category: "Software Development", type: "Full-Time", description: "Develop native Android apps with Kotlin and Compose for gym scanners and parent check-ins.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "iOS Developer", category: "Software Development", type: "Full-Time", description: "Deliver premium Swift iOS apps designed for private school owners and institutional directors.", location: "Dhanbad HQ" },
-  { title: "Flutter Developer", category: "Software Development", type: "Full-Time", description: "Compile high-performance Android & iOS client applications from a single secure codebase.", location: "STPI Branch, BIT Sindri Campus" },
-  { title: "Desktop Application Developer", category: "Software Development", type: "Full-Time", description: "Build standalone system controllers to synchronize hardware biometrics and local memory caches.", location: "Dhanbad HQ" },
-  { title: "API Developer", category: "Software Development", type: "Full-Time", description: "Design, test, and throttle secure microservices for WhatsApp billing and SMS gateways.", location: "STPI Branch, BIT Sindri Campus" },
+  // Engineering (Career Inside)
+  { title: "Software Engineer", category: "Engineering & Technology", type: "Full-Time", description: "Design scalable backend systems, secure APIs, and database migrations for C Vidya school modules.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Software Developer", category: "Engineering & Technology", type: "Full-Time", description: "Maintain and optimize high-fidelity client dashboards, OMR engines, and core CRM tools.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Full-Stack Developer", category: "Engineering & Technology", type: "Full-Time", description: "Own full-stack architecture utilizing modern React/Vite interfaces and Express server endpoints.", location: "Dhanbad HQ" },
+  { title: "Front-End Developer", category: "Engineering & Technology", type: "Full-Time", description: "Develop pixel-perfect web layouts, micro-animations, and responsive layouts with Tailwind CSS.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Back-End Developer", category: "Engineering & Technology", type: "Full-Time", description: "Implement rate-limiting algorithms, NoSQL queries, and secure Firestore structural rules.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Java Developer", category: "Engineering & Technology", type: "Full-Time", description: "Maintain robust server integrations, core school database schemas, and billing log pipelines.", location: "Dhanbad HQ" },
+  { title: "Python Developer", category: "Engineering & Technology", type: "Full-Time", description: "Write optical character recognition models for offline OMR sheets and AI chat integrations.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "PHP Developer", category: "Engineering & Technology", type: "Full-Time", description: "Support regional civic body portals, MySQL database records, and citizen logging panels.", location: "Dhanbad HQ" },
+  { title: ".NET Developer", category: "Engineering & Technology", type: "Full-Time", description: "Maintain robust offline windows integrations for desktop biometric scanner hardware.", location: "Dhanbad HQ" },
+  { title: "Mobile App Developer", category: "Engineering & Technology", type: "Full-Time", description: "Architect and build native/hybrid cross-platform wrappers for parent and student apps.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Android Developer", category: "Engineering & Technology", type: "Full-Time", description: "Develop native Android apps with Kotlin and Compose for gym scanners and parent check-ins.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "iOS Developer", category: "Engineering & Technology", type: "Full-Time", description: "Deliver premium Swift iOS apps designed for private school owners and institutional directors.", location: "Dhanbad HQ" },
+  { title: "Flutter Developer", category: "Engineering & Technology", type: "Full-Time", description: "Compile high-performance Android & iOS client applications from a single secure codebase.", location: "STPI Branch, BIT Sindri Campus" },
+  { title: "Desktop Application Developer", category: "Engineering & Technology", type: "Full-Time", description: "Build standalone system controllers to synchronize hardware biometrics and local memory caches.", location: "Dhanbad HQ" },
+  { title: "API Developer", category: "Engineering & Technology", type: "Full-Time", description: "Design, test, and throttle secure microservices for WhatsApp billing and SMS gateways.", location: "STPI Branch, BIT Sindri Campus" },
 
   // AI and Data
   { title: "AI Engineer", category: "AI and Data", type: "Full-Time", description: "Embed real-time Gemini model routing systems into our custom CRM administrative panel.", location: "STPI Branch, BIT Sindri Campus" },

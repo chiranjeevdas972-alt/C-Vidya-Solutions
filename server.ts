@@ -13,8 +13,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Middleware
-app.use(express.json());
+// Middleware - allow up to 15mb payload for PDF resume attachments
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // In-memory log of client inquiries for demo/leads panel (fallback storage)
 const inquiries: Array<{
@@ -24,6 +25,22 @@ const inquiries: Array<{
   phone: string;
   service: string;
   message: string;
+  timestamp: string;
+  status: string;
+}> = [];
+
+// In-memory log of job applications (fallback storage)
+const applications: Array<{
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  experience: string;
+  message: string;
+  jobTitle: string;
+  jobCategory?: string;
+  jobLocation?: string;
+  roleType?: string;
   timestamp: string;
   status: string;
 }> = [];
@@ -698,6 +715,124 @@ app.get("/api/inquiries", authAttemptsRateLimiter, async (req, res) => {
     
     const sortedMemory = [...inquiries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return res.json({ inquiries: sortedMemory });
+  }
+});
+
+// API: Submit Career Application
+app.post("/api/application", contactFormRateLimiter, async (req, res) => {
+  const { name, email, phone, experience, message, jobTitle, jobCategory, jobLocation, roleType, resumeFileName, resumeFileSize, resumeData, resumeUrl } = req.body;
+
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: "Name, email, and phone are required parameters." });
+  }
+
+  const cleanName = sanitizeInput(name, 150);
+  const cleanEmail = sanitizeInput(email, 200);
+  const cleanPhone = sanitizeInput(phone, 50);
+  const cleanExperience = sanitizeInput(experience, 100) || "Student / Intern";
+  const cleanMessage = sanitizeInput(message, 5000) || "";
+  const cleanJobTitle = sanitizeInput(jobTitle, 200) || "General Application";
+  const cleanJobCategory = sanitizeInput(jobCategory, 100) || "Engineering";
+  const cleanJobLocation = sanitizeInput(jobLocation, 150) || "STPI Sindri, BIT Sindri Campus";
+  const cleanRoleType = sanitizeInput(roleType, 50) || "Full-Time";
+  const cleanResumeName = sanitizeInput(resumeFileName || "", 250);
+  const cleanResumeSize = sanitizeInput(resumeFileSize || "", 50);
+  const cleanResumeUrl = sanitizeInput(resumeUrl || "", 2000);
+
+  if (!cleanName || cleanName.length < 2) {
+    return res.status(400).json({ error: "Please enter a valid name." });
+  }
+
+  if (!isValidEmail(cleanEmail)) {
+    return res.status(400).json({ error: "Please enter a valid structured email address." });
+  }
+
+  if (!isValidPhone(cleanPhone)) {
+    return res.status(400).json({ error: "Please enter a valid telephone number." });
+  }
+
+  const id = `app_${Math.random().toString(36).substr(2, 9)}`;
+  const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+  const status = "Submitted / Under Review";
+
+  const newApp = {
+    id,
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    experience: cleanExperience,
+    message: cleanMessage,
+    jobTitle: cleanJobTitle,
+    jobCategory: cleanJobCategory,
+    jobLocation: cleanJobLocation,
+    roleType: cleanRoleType,
+    resumeFileName: cleanResumeName || (resumeData ? "Uploaded_Resume.pdf" : ""),
+    resumeFileSize: cleanResumeSize,
+    resumeData: typeof resumeData === "string" ? resumeData.slice(0, 6000000) : "",
+    resumeUrl: cleanResumeUrl,
+    timestamp,
+    status
+  };
+
+  applications.push(newApp);
+  console.log("Captured job application in local cache:", newApp.id, newApp.name);
+
+  // Sync to Firestore job_applications
+  try {
+    const firestoreData: any = { ...newApp };
+    // Firestore max document size is 1MB - safely cap if full base64 exceeds ~700KB
+    if (typeof firestoreData.resumeData === "string" && firestoreData.resumeData.length > 700000) {
+      firestoreData.resumeData = firestoreData.resumeData.slice(0, 700000);
+      firestoreData.isLargeResume = true;
+    }
+    const docRef = doc(db, "job_applications", id);
+    await setDoc(docRef, firestoreData);
+    console.log("Successfully persisted application to Firestore job_applications:", id);
+  } catch (error) {
+    console.error("Failed to persist application to Firestore job_applications, using local fallback:", error);
+  }
+
+  return res.json({
+    success: true,
+    message: `Thank you, ${name}! Your application for '${cleanJobTitle}' has been received and saved.`,
+    application: newApp
+  });
+});
+
+// API: Fetch applications (for admin / dashboard inspection)
+app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
+  const { password } = req.query;
+  const validPasswords = ["8987766981", "cvidya2026", "cvidya2025"];
+
+  if (typeof password !== "string" || password.length < 5 || password.length > 128) {
+    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
+  }
+
+  if (!validPasswords.includes(password)) {
+    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
+  }
+
+  try {
+    const q = query(collection(db, "job_applications"), orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+    const firestoreApps: any[] = [];
+    
+    snapshot.forEach((d) => {
+      firestoreApps.push(d.data());
+    });
+
+    const merged = [...firestoreApps];
+    applications.forEach((appItem) => {
+      if (!merged.some((x) => x.id === appItem.id)) {
+        merged.push(appItem);
+      }
+    });
+
+    merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return res.json({ applications: merged });
+  } catch (error) {
+    console.error("Failed to list job_applications from Firestore, falling back to local memory store:", error);
+    return res.json({ applications: applications });
   }
 });
 

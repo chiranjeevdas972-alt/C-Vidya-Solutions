@@ -19,6 +19,8 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
   const [submittedInquiries, setSubmittedInquiries] = useState<any[]>([]);
+  const [submittedApplications, setSubmittedApplications] = useState<any[]>([]);
+  const [activePanelTab, setActivePanelTab] = useState<"inquiries" | "applications">("inquiries");
   const [showInquiriesPanel, setShowInquiriesPanel] = useState(false);
   const [ownerPassword, setOwnerPassword] = useState(() => {
     return localStorage.getItem("cvidya_owner_pass") || "";
@@ -50,8 +52,9 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
 
     try {
       let combinedLeads: any[] = [];
+      let combinedApps: any[] = [];
 
-      // 1. Fetch directly from Firebase Firestore
+      // 1. Fetch inquiries directly from Firebase Firestore
       try {
         const inqCol = collection(db, "inquiries");
         const querySnapshot = await getDocs(inqCol);
@@ -60,6 +63,17 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
         });
       } catch (firestoreErr) {
         console.warn("Direct Firestore read attempt:", firestoreErr);
+      }
+
+      // Fetch applications directly from Firebase Firestore
+      try {
+        const appsCol = collection(db, "applications");
+        const appSnap = await getDocs(appsCol);
+        appSnap.forEach((docSnap) => {
+          combinedApps.push({ id: docSnap.id, ...docSnap.data() });
+        });
+      } catch (appErr) {
+        console.warn("Direct Firestore apps read:", appErr);
       }
 
       // 2. Fetch from Backend API if accessible
@@ -82,6 +96,25 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
         console.warn("Server API leads check notice:", serverErr);
       }
 
+      try {
+        const resApp = await fetch(`/api/applications?password=${encodeURIComponent(password)}`);
+        if (resApp.ok) {
+          const contentType = resApp.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await resApp.json();
+            if (data?.applications && Array.isArray(data.applications)) {
+              data.applications.forEach((item: any) => {
+                if (!combinedApps.some(l => l.id === item.id || (l.phone === item.phone && l.timestamp === item.timestamp))) {
+                  combinedApps.push(item);
+                }
+              });
+            }
+          }
+        }
+      } catch (serverErr) {
+        // Absorb
+      }
+
       // 3. Merge local cached storage backup
       try {
         const localCached = JSON.parse(localStorage.getItem("cvidya_local_leads") || "[]");
@@ -96,7 +129,21 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
         console.warn("Local storage read notice:", storageErr);
       }
 
+      try {
+        const localAppCached = JSON.parse(localStorage.getItem("cvidya_local_applications") || "[]");
+        if (Array.isArray(localAppCached)) {
+          localAppCached.forEach((item: any) => {
+            if (!combinedApps.some(l => l.id === item.id || (l.phone === item.phone && l.name === item.name))) {
+              combinedApps.push(item);
+            }
+          });
+        }
+      } catch (storageErr) {
+        // Absorb
+      }
+
       setSubmittedInquiries(combinedLeads);
+      setSubmittedApplications(combinedApps);
       setIsAuthorized(true);
       setAuthError("");
       if (passToCheck) {
@@ -104,7 +151,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
         localStorage.setItem("cvidya_owner_pass", passToCheck);
       }
     } catch (err) {
-      console.error("Error fetching inquiries:", err);
+      console.error("Error fetching data:", err);
       setIsAuthorized(true); // Don't block authenticated owner if list is empty
     }
   };
@@ -762,18 +809,15 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                   </div>
                 </div>
               ) : (
-                <div id="leads-logs-panel" className="mt-4 p-3 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3 max-h-[260px] overflow-y-auto">
+                <div id="leads-logs-panel" className="mt-4 p-3 rounded-xl bg-slate-900 text-slate-200 border border-slate-800 space-y-3 max-h-[300px] overflow-y-auto">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                     <div className="flex items-center gap-1.5">
                       <Database className="w-3.5 h-3.5 text-brand-gold-400" />
                       <span className="text-[11px] font-mono font-bold text-white tracking-wider uppercase">
-                        CAPTURED LEADS
+                        FIREBASE LOGS
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                        {submittedInquiries.length} Logs
-                      </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -782,38 +826,100 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                           setIsAuthorized(false);
                           setPasswordInput("");
                           setSubmittedInquiries([]);
+                          setSubmittedApplications([]);
                         }}
-                        className="text-[9px] font-mono text-slate-400 hover:text-red-400 px-1 py-0.5 bg-slate-800 hover:bg-red-500/15 rounded transition-all cursor-pointer"
+                        className="text-[9px] font-mono text-slate-400 hover:text-red-400 px-1.5 py-0.5 bg-slate-800 hover:bg-red-500/15 rounded transition-all cursor-pointer"
                       >
                         🔒 LOCK
                       </button>
                     </div>
                   </div>
 
-                  {submittedInquiries.length === 0 ? (
-                    <div className="text-center py-4 text-[10.5px] text-slate-500 font-mono">
-                      No lead records logged yet.
-                    </div>
-                  ) : (
-                    <div className="space-y-2 font-mono text-[10px] leading-relaxed">
-                      {submittedInquiries.map((inq, i) => (
-                        <div key={inq.id || i} className="p-2 bg-slate-950 rounded text-slate-300 border border-slate-800">
-                          <div className="flex justify-between items-start mb-1">
-                            <div>
-                              <span className="text-brand-gold-400 font-bold">{inq.name}</span>
-                              <span className="text-slate-500"> ({inq.email})</span>
+                  {/* Tabs between Inquiries & Job Applications */}
+                  <div className="flex gap-1.5 pb-1 border-b border-slate-800/80">
+                    <button
+                      type="button"
+                      onClick={() => setActivePanelTab("inquiries")}
+                      className={`px-2 py-1 rounded text-[9.5px] font-mono font-bold transition-all cursor-pointer ${
+                        activePanelTab === "inquiries"
+                          ? "bg-brand-gold-500 text-brand-navy-950 shadow-xs"
+                          : "bg-slate-800/80 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      Inquiries ({submittedInquiries.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePanelTab("applications")}
+                      className={`px-2 py-1 rounded text-[9.5px] font-mono font-bold transition-all cursor-pointer ${
+                        activePanelTab === "applications"
+                          ? "bg-brand-gold-500 text-brand-navy-950 shadow-xs"
+                          : "bg-slate-800/80 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      Job Applications ({submittedApplications.length})
+                    </button>
+                  </div>
+
+                  {activePanelTab === "inquiries" ? (
+                    submittedInquiries.length === 0 ? (
+                      <div className="text-center py-4 text-[10.5px] text-slate-500 font-mono">
+                        No customer inquiry records logged yet.
+                      </div>
+                    ) : (
+                      <div className="space-y-2 font-mono text-[10px] leading-relaxed">
+                        {submittedInquiries.map((inq, i) => (
+                          <div key={inq.id || i} className="p-2 bg-slate-950 rounded text-slate-300 border border-slate-800">
+                            <div className="flex justify-between items-start mb-1">
+                              <div>
+                                <span className="text-brand-gold-400 font-bold">{inq.name}</span>
+                                <span className="text-slate-500"> ({inq.email})</span>
+                              </div>
+                              <span className="text-[8px] text-[#ef8354] bg-[#ef8354]/10 px-1 py-0.5 rounded-xs">
+                                {inq.status || "Pending"}
+                              </span>
                             </div>
-                            <span className="text-[8px] text-[#ef8354] bg-[#ef8354]/10 px-1 py-0.5 rounded-xs">
-                              {inq.status}
-                            </span>
+                            <div className="text-slate-400 text-[9.5px]">📞 Phone: {inq.phone} | ⚙️ Suite: {inq.service}</div>
+                            <p className="text-slate-300 text-[9.5px] mt-1 break-all italic">
+                              "{inq.message}"
+                            </p>
                           </div>
-                          <div className="text-slate-400 text-[9.5px]">📞 Phone: {inq.phone} | ⚙️ Suite: {inq.service}</div>
-                          <p className="text-slate-300 text-[9.5px] mt-1 break-all italic">
-                            "{inq.message}"
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    submittedApplications.length === 0 ? (
+                      <div className="text-center py-4 text-[10.5px] text-slate-500 font-mono">
+                        No candidate job applications logged yet.
+                      </div>
+                    ) : (
+                      <div className="space-y-2 font-mono text-[10px] leading-relaxed">
+                        {submittedApplications.map((appItem, i) => (
+                          <div key={appItem.id || i} className="p-2 bg-slate-950 rounded text-slate-300 border border-slate-800">
+                            <div className="flex justify-between items-start mb-1">
+                              <div>
+                                <span className="text-brand-gold-400 font-bold">{appItem.name}</span>
+                                <span className="text-slate-500"> ({appItem.email})</span>
+                              </div>
+                              <span className="text-[8px] text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded-xs">
+                                {appItem.status || "Submitted"}
+                              </span>
+                            </div>
+                            <div className="text-slate-400 text-[9.5px]">
+                              💼 Role: <strong className="text-slate-200">{appItem.jobTitle}</strong> | 📞 Phone: {appItem.phone}
+                            </div>
+                            <div className="text-slate-500 text-[9px]">
+                              🎓 Experience: {appItem.experience}
+                            </div>
+                            {appItem.message && (
+                              <p className="text-slate-300 text-[9.5px] mt-1 break-all italic">
+                                "{appItem.message}"
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
               )
