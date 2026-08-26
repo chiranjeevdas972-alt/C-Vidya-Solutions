@@ -495,10 +495,6 @@ export default function SoftwareHeroBanner() {
                         </p>
                       </div>
                     </div>
-
-                    <span className="text-[8px] font-mono font-black uppercase bg-brand-navy-900 text-brand-gold-400 px-1.5 py-0.5 rounded-md border border-brand-gold-500/30 shrink-0">
-                      {prod.badge}
-                    </span>
                   </div>
 
                   {/* Software Image Preview */}
@@ -509,24 +505,6 @@ export default function SoftwareHeroBanner() {
                       className="w-full h-full object-cover object-top filter brightness-95 group-hover/card:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80" />
-                    
-                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[9.5px] font-mono text-slate-200">
-                      <span className="bg-slate-950/90 px-2 py-0.5 rounded border border-slate-700 text-brand-gold-300 font-bold">
-                        Click to view 3 pages
-                      </span>
-                      {prod.link && (
-                        <a
-                          href={prod.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 px-1.5 py-0.5 rounded text-[9px] font-extrabold flex items-center gap-0.5 shadow-md"
-                          title="Demo"
-                        >
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
-                      )}
-                    </div>
                   </div>
 
                   <p className="text-[10.5px] text-slate-300 leading-snug line-clamp-2 font-normal">
