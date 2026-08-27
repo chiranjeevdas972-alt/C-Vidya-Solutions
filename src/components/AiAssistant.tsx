@@ -75,12 +75,19 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
 
   useEffect(() => {
     if (isOpen) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         inputRef.current?.focus();
       }, 150);
+      return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [isOpen, messages, isTyping]);
+  }, [isOpen, messages, isTyping, onClose]);
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim()) return;
@@ -171,10 +178,21 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
   if (!isOpen) return null;
 
   return (
-    <div 
-      id="ai-assistant-drawer" 
-      className="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-slate-950 border-l border-brand-gold-500/20 shadow-2xl z-50 flex flex-col justify-between font-sans text-white"
-    >
+    <>
+      {/* Backdrop overlay for focus and dismiss */}
+      <div 
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+        aria-hidden="true"
+      />
+
+      <div 
+        id="ai-assistant-drawer" 
+        role="dialog"
+        aria-modal="true"
+        aria-label="C-Vidya AI Customer Support Assistant"
+        className="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-slate-950 border-l border-brand-gold-500/20 shadow-2xl z-50 flex flex-col justify-between font-sans text-white"
+      >
       
       {/* Drawer Header Block */}
       <div className="p-4 bg-brand-navy-900 border-b border-brand-gold-500/20 flex justify-between items-center relative">
@@ -367,5 +385,6 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
       </div>
 
     </div>
+    </>
   );
 }

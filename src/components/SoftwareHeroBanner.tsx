@@ -376,89 +376,65 @@ export default function SoftwareHeroBanner() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Top Header Navigation Row */}
-      <div className="flex items-center justify-between gap-2 mb-2.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-2.5 w-2.5 relative shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-gold-500"></span>
-          </span>
-          <span className="text-[11px] font-mono font-bold text-brand-gold-400 truncate uppercase tracking-wider">
-            {activeTab === "auto"
-              ? ""
-              : selectedProduct?.name}
-          </span>
-        </div>
+      {/* Top Header Navigation Row - only for auto-rotate pagination/controls */}
+      {activeTab === "auto" && (
+        <>
+          <div className="flex items-center justify-end gap-2 mb-2.5">
+            {/* Auto-Rotate Controls if in Auto Mode */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5">
+                {ROTATE_GROUPS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentGroupIndex(idx);
+                      setProgress(0);
+                    }}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      idx === currentGroupIndex
+                        ? "w-6 bg-brand-gold-500"
+                        : "w-2 bg-slate-700 hover:bg-slate-500"
+                    }`}
+                    title={`Group ${idx + 1}`}
+                  />
+                ))}
+              </div>
 
-        {/* Auto-Rotate Controls if in Auto Mode */}
-        {activeTab === "auto" ? (
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5">
-              {ROTATE_GROUPS.map((_, idx) => (
+              <div className="flex items-center gap-0.5 ml-1 bg-slate-800/90 p-0.5 rounded-lg border border-slate-700">
                 <button
-                  key={idx}
-                  onClick={() => {
-                    setCurrentGroupIndex(idx);
-                    setProgress(0);
-                  }}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    idx === currentGroupIndex
-                      ? "w-6 bg-brand-gold-500"
-                      : "w-2 bg-slate-700 hover:bg-slate-500"
-                  }`}
-                  title={`Group ${idx + 1}`}
-                />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-0.5 ml-1 bg-slate-800/90 p-0.5 rounded-lg border border-slate-700">
-              <button
-                onClick={handlePrevGroup}
-                className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
-                title="Previous Products"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setIsPaused(!isPaused)}
-                className="p-1 hover:bg-slate-700 rounded text-brand-gold-400 transition-colors cursor-pointer"
-                title={isPaused ? "Play" : "Pause"}
-              >
-                {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                onClick={handleNextGroup}
-                className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
-                title="Next Products"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+                  onClick={handlePrevGroup}
+                  className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  title="Previous Products"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setIsPaused(!isPaused)}
+                  className="p-1 hover:bg-slate-700 rounded text-brand-gold-400 transition-colors cursor-pointer"
+                  title={isPaused ? "Play" : "Pause"}
+                >
+                  {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  onClick={handleNextGroup}
+                  className="p-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  title="Next Products"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
-        ) : (
-          <button
-            onClick={() => {
-              setActiveTab("auto");
-              setProgress(0);
-            }}
-            className="text-[10px] font-mono font-bold text-brand-gold-400 hover:text-brand-gold-300 bg-brand-navy-900 border border-brand-gold-500/30 px-2 py-0.5 rounded-lg cursor-pointer flex items-center gap-1 transition-all"
-          >
-            <span>🔄 Auto-Rotate All</span>
-          </button>
-        )}
-      </div>
 
-      {/* 3-Second Visual Progress Bar (only active when in auto-rotate) */}
-      <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-3">
-        <div
-          className={`h-full transition-all duration-75 ease-linear ${
-            activeTab === "auto"
-              ? "bg-gradient-to-r from-brand-gold-500 via-yellow-400 to-amber-500"
-              : "bg-brand-gold-500/40"
-          }`}
-          style={{ width: activeTab === "auto" ? `${progress}%` : "100%" }}
-        />
-      </div>
+          {/* 3-Second Visual Progress Bar (only active when in auto-rotate) */}
+          <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-3">
+            <div
+              className="h-full transition-all duration-75 ease-linear bg-gradient-to-r from-brand-gold-500 via-yellow-400 to-amber-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </>
+      )}
 
       {/* MAIN DISPLAY AREA: Either Auto-Rotating 3 Products OR 3 Feature Modules for Selected Product */}
       <AnimatePresence mode="wait">
@@ -534,25 +510,13 @@ export default function SoftwareHeroBanner() {
                 )}
                 <div>
                   <h3 className="font-display font-extrabold text-sm text-white leading-tight">
-                    {selectedProduct?.name} — 3 Core Module Views
+                    {selectedProduct?.name}
                   </h3>
                   <p className="text-[11px] text-slate-300 font-sans">
                     {selectedProduct?.description}
                   </p>
                 </div>
               </div>
-
-              {selectedProduct?.link && (
-                <a
-                  href={selectedProduct.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 px-3 py-1.5 rounded-lg font-bold text-xs shrink-0 flex items-center gap-1.5 shadow-md transition-colors"
-                >
-                  <span>Live Demo</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
             </div>
 
             {/* 3 Pages / Modules Grid for Selected Software */}
@@ -573,9 +537,6 @@ export default function SoftwareHeroBanner() {
                           {mod.title}
                         </h5>
                       </div>
-                      <span className="text-[8px] font-mono font-bold text-brand-gold-400 bg-brand-gold-500/10 px-1.5 py-0.5 rounded border border-brand-gold-500/20 shrink-0">
-                        {mod.badge}
-                      </span>
                     </div>
 
                     <div className="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-900 aspect-16/9 sm:aspect-4/3">
@@ -585,9 +546,6 @@ export default function SoftwareHeroBanner() {
                         className="w-full h-full object-cover object-top filter brightness-95 group-hover/mod:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-75" />
-                      <div className="absolute bottom-1.5 left-2 text-[9px] font-mono text-brand-gold-300 font-bold bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800">
-                        Page {idx + 1} View
-                      </div>
                     </div>
 
                     <p className="text-[10.5px] text-slate-300 leading-snug font-normal">

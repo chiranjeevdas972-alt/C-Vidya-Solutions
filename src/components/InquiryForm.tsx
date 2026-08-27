@@ -67,13 +67,26 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
 
       // Fetch applications directly from Firebase Firestore
       try {
+        const jobAppsCol = collection(db, "job_applications");
+        const jobAppSnap = await getDocs(jobAppsCol);
+        jobAppSnap.forEach((docSnap) => {
+          combinedApps.push({ id: docSnap.id, ...docSnap.data() });
+        });
+      } catch (jobAppErr) {
+        console.warn("Direct Firestore job_applications read:", jobAppErr);
+      }
+
+      // Backward compatibility fallback for legacy applications collection
+      try {
         const appsCol = collection(db, "applications");
         const appSnap = await getDocs(appsCol);
         appSnap.forEach((docSnap) => {
-          combinedApps.push({ id: docSnap.id, ...docSnap.data() });
+          if (!combinedApps.some(a => a.id === docSnap.id)) {
+            combinedApps.push({ id: docSnap.id, ...docSnap.data() });
+          }
         });
       } catch (appErr) {
-        console.warn("Direct Firestore apps read:", appErr);
+        // Safe backward-compat fallback
       }
 
       // 2. Fetch from Backend API if accessible

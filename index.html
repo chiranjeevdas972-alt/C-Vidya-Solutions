@@ -37,39 +37,72 @@
     <meta name="twitter:description" content="Software Company providing modern management solutions." />
     <meta name="twitter:image" content="https://cvidyasolutions.com/logo.png" />
 
-    <!-- Structured Data: JSON-LD Organization Schema -->
+    <!-- Structured Data: JSON-LD Schemas -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "C Vidya Solutions",
-        "alternateName": "C Vidya",
-        "url": "https://cvidyasolutions.com",
-        "logo": "https://cvidyasolutions.com/logo.png",
-        "image": "https://cvidyasolutions.com/logo.png",
-        "description": "C Vidya Solutions is a premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, automated civic pipelines, and OMR models.",
-        "foundingDate": "2025",
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "telephone": "+91-9288517027",
-          "contactType": "customer service",
-          "email": "cvidyasolutions@gmail.com",
-          "areaServed": "IN",
-          "availableLanguage": ["English", "Hindi"]
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Surunga, Baliapur",
-          "addressLocality": "Dhanbad",
-          "addressRegion": "Jharkhand",
-          "postalCode": "828115",
-          "addressCountry": "IN"
-        },
-        "sameAs": [
-          "https://facebook.com/cvidyasolutions",
-          "https://twitter.com/cvidyasolutions",
-          "https://instagram.com/cvidyasolutions",
-          "https://linkedin.com/company/cvidyasolutions"
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://cvidyasolutions.com/#organization",
+            "name": "C Vidya Solutions",
+            "alternateName": "C Vidya",
+            "url": "https://cvidyasolutions.com",
+            "logo": "https://cvidyasolutions.com/logo.png",
+            "image": "https://cvidyasolutions.com/logo.png",
+            "description": "C Vidya Solutions is a premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, automated civic pipelines, and OMR models.",
+            "foundingDate": "2025",
+            "founder": {
+              "@type": "Person",
+              "name": "Chiranjeev Das",
+              "jobTitle": "Founder & Director"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+91-9288517027",
+              "contactType": "customer service",
+              "email": "cvidyasolutions@gmail.com",
+              "areaServed": "IN",
+              "availableLanguage": ["English", "Hindi"]
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Surunga, Baliapur",
+              "addressLocality": "Dhanbad",
+              "addressRegion": "Jharkhand",
+              "postalCode": "828115",
+              "addressCountry": "IN"
+            },
+            "sameAs": [
+              "https://facebook.com/cvidyasolutions",
+              "https://twitter.com/cvidyasolutions",
+              "https://instagram.com/cvidyasolutions",
+              "https://linkedin.com/company/cvidyasolutions"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://cvidyasolutions.com/#website",
+            "url": "https://cvidyasolutions.com",
+            "name": "C Vidya Solutions",
+            "description": "Innovating Software for a Simpler Future",
+            "publisher": {
+              "@id": "https://cvidyasolutions.com/#organization"
+            },
+            "inLanguage": "en-US"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "C Vidya Library Management",
+            "operatingSystem": "Web, Cloud, Windows, Android, iOS",
+            "applicationCategory": "BusinessApplication",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "INR"
+            },
+            "description": "Cloud-based circulation, barcode ISBN scanner, and member registration system."
+          }
         ]
       }
     </script>

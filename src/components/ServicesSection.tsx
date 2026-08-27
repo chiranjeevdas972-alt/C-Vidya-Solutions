@@ -155,11 +155,6 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
         
         {/* Section Header */}
         <div className="text-center max-w-4xl mx-auto mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-navy-900 text-brand-gold-400 text-xs font-mono font-bold tracking-widest uppercase shadow-xs border border-brand-gold-500/20">
-            <Sparkles className="w-3.5 h-3.5 text-brand-gold-400 animate-pulse" />
-            <span>C VIDYA COMPLETE SERVICES SUITE</span>
-          </div>
-
           <h2 className="font-display font-black text-3xl sm:text-5xl text-brand-navy-950 tracking-tight uppercase leading-none">
             INTELLIGENT SAAS PRODUCTS & <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold-600 via-[#d69e2e] to-[#42A5F5]">

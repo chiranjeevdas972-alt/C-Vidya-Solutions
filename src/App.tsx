@@ -120,23 +120,97 @@ export default function App() {
   // Active page routing state
   const [activePage, setActivePage] = useState<"home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq" | "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability">("home");
 
-  // Hash-change router listener for separate pages
+  // Hash-change router listener for separate pages & Dynamic SEO updater
   useEffect(() => {
+    const pageMetaMap: Record<string, { title: string; description: string }> = {
+      home: {
+        title: "C Vidya Solutions - Innovating Software for a Simpler Future",
+        description: "C Vidya Solutions is a premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, and autonomous AI agents."
+      },
+      about: {
+        title: "About Us - C Vidya Solutions | Dhanbad & STPI Sindri",
+        description: "Learn about C Vidya Solutions, founded by Chiranjeev Das, operating from STPI Sindri, BIT Sindri Campus in Dhanbad, Jharkhand."
+      },
+      services: {
+        title: "Intelligent SaaS Products & Autonomous AI Agents - C Vidya Solutions",
+        description: "Explore 7 flagship SaaS software suites and 4 autonomous AI agents built for libraries, fitness centres, coaching institutes, and enterprises."
+      },
+      portfolio: {
+        title: "Portfolio & Case Studies - C Vidya Solutions",
+        description: "Discover real-world case studies and software deployments across education, civic pipelines, and corporate management."
+      },
+      contact: {
+        title: "Contact Us & Free Demos - C Vidya Solutions",
+        description: "Request a callback demo or get in touch with the C Vidya Solutions engineering team at +91 9288517027 or cvidyasolutions@gmail.com."
+      },
+      careers: {
+        title: "Careers & Open Positions - C Vidya Solutions",
+        description: "Join C Vidya Solutions! Explore open engineering, design, AI/ML, and student internship positions at our STPI Sindri branch."
+      },
+      blog: {
+        title: "Engineering Blog & Tech Insights - C Vidya Solutions",
+        description: "Read latest articles on cloud architectures, school ERP automations, library systems, and autonomous AI customer agents."
+      },
+      faq: {
+        title: "Frequently Asked Questions - C Vidya Solutions",
+        description: "Find answers to questions regarding C Vidya software suites, cloud deployments, security, pricing, and live interactive demos."
+      },
+      privacy: {
+        title: "Privacy Policy - C Vidya Solutions",
+        description: "Official Privacy Policy of C Vidya Solutions in compliance with the Digital Personal Data Protection Act, GDPR, and CCPA."
+      },
+      terms: {
+        title: "Terms & Conditions - C Vidya Solutions",
+        description: "Master subscription terms, commercial agreements, and SLA policies of C Vidya Solutions."
+      },
+      billing: {
+        title: "Billing & Invoicing Terms - C Vidya Solutions",
+        description: "GST invoicing, payment schedules, and subscription renewals policy for C Vidya software products."
+      },
+      refund: {
+        title: "Refund & Cancellation Policy - C Vidya Solutions",
+        description: "Review C Vidya Solutions 14-day satisfaction refund policy and subscription cancellation guidelines."
+      },
+      cookies: {
+        title: "Cookie Policy - C Vidya Solutions",
+        description: "Manage your cookie preferences and learn how C Vidya Solutions protects your browsing privacy."
+      },
+      disclaimer: {
+        title: "Legal Disclaimer - C Vidya Solutions",
+        description: "Official legal disclaimer, intellectual property notices, and software service warranties."
+      },
+      portability: {
+        title: "Data Portability & GDPR Article 15 - C Vidya Solutions",
+        description: "Export your account records and database ledgers in accordance with international data portability standards."
+      }
+    };
+
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const validPages = [
         "home", "hero", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
         "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
       ];
-      if (hash === "home" || hash === "hero" || !hash) {
-        setActivePage("home");
-      } else if (validPages.includes(hash)) {
-        setActivePage(hash as any);
-        if (["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(hash)) {
-          setComplianceTab(hash);
-        }
-      } else {
-        setActivePage("home");
+      let target = "home";
+      if (hash && validPages.includes(hash)) {
+        target = hash === "hero" ? "home" : hash;
+      }
+      
+      setActivePage(target as any);
+      if (["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(target)) {
+        setComplianceTab(target);
+      }
+
+      // Update SEO Head dynamically
+      const meta = pageMetaMap[target] || pageMetaMap.home;
+      document.title = meta.title;
+      const descTag = document.querySelector('meta[name="description"]');
+      if (descTag) {
+        descTag.setAttribute("content", meta.description);
+      }
+      const canonicalTag = document.querySelector('link[rel="canonical"]');
+      if (canonicalTag) {
+        canonicalTag.setAttribute("href", `https://cvidyasolutions.com${target === "home" ? "" : "#" + target}`);
       }
     };
 
@@ -257,26 +331,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Quick Action Navigation links */}
-                        <div className="flex flex-wrap gap-3.5 pt-1.5">
-                          <button
-                            type="button"
-                            onClick={() => { setActivePage("services"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            className="flex items-center gap-2 px-5 py-3 bg-brand-navy-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-all hover:shadow-md cursor-pointer border-none"
-                          >
-                            <span>Explore Product Suite</span>
-                            <ArrowRight className="w-4 h-4 text-brand-gold-400" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAiOpen(true)}
-                            className="flex items-center gap-2 px-5 py-3 bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 text-xs font-bold rounded-xl transition-all hover:shadow-md cursor-pointer border-none"
-                          >
-                            <Bot className="w-4 h-4" />
-                            <span>Consult Vidya AI Consultant</span>
-                          </button>
-                        </div>
-
                       </div>
 
                     </div>
@@ -359,10 +413,6 @@ export default function App() {
                       
                       {/* Left Side: Descriptive Column */}
                       <div className="lg:col-span-5 space-y-6">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono font-bold tracking-widest uppercase border border-slate-200">
-                          <Settings className="w-3.5 h-3.5" />
-                          <span>FUNCTIONAL CORE SERVICES</span>
-                        </div>
                         <h3 className="font-display font-black text-3xl sm:text-4xl text-brand-navy-900 tracking-wider uppercase leading-none">
                           SOFTWARE SOLUTIONS TO <br className="hidden sm:inline" />
                           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold-600 to-brand-gold-500">
