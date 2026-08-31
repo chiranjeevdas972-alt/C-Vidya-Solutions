@@ -20,11 +20,13 @@ export default function FAQPage({ onNavigateContact, onOpenAssistant }: FAQPageP
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({
-    "gen-1": false,
+    "gen-1": true,
     "gen-2": false,
     "gen-3": false,
-    "tech-1": false,
-    "tech-2": false
+    "tech-1": true,
+    "tech-2": false,
+    "serv-1": true,
+    "sup-1": true
   });
 
   const toggleItem = (id: string) => {

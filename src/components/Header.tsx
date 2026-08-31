@@ -97,7 +97,7 @@ export default function Header({ activePage = "home", onOpenAssistant, onOpenHub
               onClick={onOpenConsultation || (() => onOpenHub("contact"))}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
-              <span>Schedule a Demo</span>
+              <span>Book a Demo</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -149,7 +149,7 @@ export default function Header({ activePage = "home", onOpenAssistant, onOpenHub
                 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-xs text-center"
               >
-                Schedule a Consultation
+                Book a Demo
               </button>
             </div>
           </div>

@@ -119,11 +119,6 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
           
           {/* Left Column */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-200 bg-blue-50 text-xs font-mono font-bold tracking-wider text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-              <span>WE&apos;RE HIRING</span>
-            </div>
-
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]">
               Build the Future of{" "}
               <span className="text-blue-600">Enterprise Tech.</span>
@@ -152,21 +147,22 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
             </div>
           </div>
 
-          {/* Right Column: Hero Image with Quote Overlay */}
-          <div className="lg:col-span-6">
-            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 group">
+          {/* Right Column: Clean Hero Image with Quote Below */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 group">
               <img 
                 src="/assets/images/careers_team_meeting_1788168610696.jpg" 
                 alt="C Vidya Solutions Team Collaboration"
                 className="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              
-              {/* Overlay Quote Card */}
-              <div className="absolute bottom-6 left-6 right-6 bg-slate-950/75 backdrop-blur-md border border-white/10 rounded-xl p-5 text-white">
-                <p className="text-sm italic font-medium leading-relaxed">
-                  &ldquo;We engineer trust through transparency and relentless innovation.&rdquo;
-                </p>
-              </div>
+            </div>
+            
+            {/* Quote placed below the image */}
+            <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-4 sm:p-5 text-slate-800 flex items-center gap-3 shadow-xs">
+              <div className="w-1.5 h-8 bg-blue-600 rounded-full shrink-0" />
+              <p className="text-sm italic font-medium leading-relaxed text-slate-700">
+                &ldquo;We engineer trust through transparency and relentless innovation.&rdquo;
+              </p>
             </div>
           </div>
 

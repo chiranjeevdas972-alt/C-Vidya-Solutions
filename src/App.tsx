@@ -303,7 +303,7 @@ export default function App() {
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
           </div>
           <span className="text-xs font-bold font-mono tracking-wider uppercase pr-1">
-            AI Assistant
+            C Vidya AI
           </span>
         </button>
       </div>

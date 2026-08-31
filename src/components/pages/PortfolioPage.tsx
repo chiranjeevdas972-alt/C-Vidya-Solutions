@@ -131,11 +131,6 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
       
       {/* 1. HERO SECTION */}
       <section className="pt-10 sm:pt-14 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-xs font-mono font-bold tracking-wider text-blue-700">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-          <span>PRODUCTION CASE STUDIES &amp; PORTFOLIO</span>
-        </div>
-
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950">
           Engineering Impact &amp; <span className="text-blue-600">Proof of Value</span>
         </h1>
