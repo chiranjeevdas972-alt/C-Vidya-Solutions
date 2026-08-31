@@ -1,43 +1,52 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, Menu, X, Bot, ArrowRight } from "lucide-react";
+import { Phone, Mail, MapPin, Menu, X, ArrowRight, Sparkles, MessageSquare } from "lucide-react";
 import Logo from "./Logo";
 
 interface HeaderProps {
+  activePage?: string;
   onOpenAssistant: () => void;
-  onOpenHub: (tab: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog") => void;
+  onOpenHub: (tab: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq") => void;
+  onOpenConsultation?: () => void;
 }
 
-export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
+export default function Header({ activePage = "home", onOpenAssistant, onOpenHub, onOpenConsultation }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const phoneNum = "+91 9288517027";
-  const emailAddr = "cvidyasolutions@gmail.com";
-  const officerEmail = "chiranjeev0058@gmail.com";
-  const locationText = "Dhanbad, Jharkhand";
+  const navItems: { id: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "faq" | "blog"; label: string }[] = [
+    { id: "home", label: "Home" },
+    { id: "about", label: "About" },
+    { id: "services", label: "Services" },
+    { id: "portfolio", label: "Portfolio / Case Studies" },
+    { id: "contact", label: "Contact Us" },
+    { id: "careers", label: "Careers" },
+    { id: "faq", label: "FAQ" },
+    { id: "blog", label: "Blog" },
+  ];
 
   return (
-    <div className="sticky top-0 z-50 w-full shadow-sm">
-      {/* Top Banner Contact Row */}
-      <div id="top-bar" className="bg-brand-navy-900 border-b border-brand-gold-500/20 text-xs text-brand-gold-100 py-2 px-4 hidden md:block">
-        <div className="max-w-7xl mx-auto flex justify-between items-center font-mono">
+    <div className="sticky top-0 z-50 w-full shadow-xs bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+      
+      {/* Top Banner (Corporate bar with phone on left, email shifted to right) */}
+      <div id="top-bar" className="bg-[#071739] text-xs text-slate-300 py-1.5 px-4 hidden md:block border-b border-blue-900/40 font-mono">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <a href={`tel:${phoneNum}`} className="flex items-center gap-1.5 hover:text-brand-gold-300 transition-colors">
-              <Phone className="w-3.5 h-3.5 text-brand-gold-400" />
-              <span>{phoneNum}</span>
+            <a href="tel:+919288517027" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
+              <Phone className="w-3 h-3 text-blue-400" />
+              <span>+91 92885 17027</span>
             </a>
           </div>
           <div className="flex items-center gap-4">
-            <a href={`mailto:${emailAddr}`} className="flex items-center gap-1.5 hover:text-brand-gold-300 transition-colors">
-                <Mail className="w-3.5 h-3.5 text-brand-gold-400" />
-                <span>{emailAddr}</span>
+            <a href="mailto:cvidyasolutions@gmail.com" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors text-slate-300">
+              <Mail className="w-3 h-3 text-blue-400" />
+              <span>cvidyasolutions@gmail.com</span>
             </a>
           </div>
         </div>
       </div>
 
       {/* Main Header / Navigation */}
-      <header id="main-nav" className="bg-white/95 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <header id="main-nav" className="w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
           
           {/* Logo Brand Emblem */}
           <a 
@@ -48,155 +57,105 @@ export default function Header({ onOpenAssistant, onOpenHub }: HeaderProps) {
             }}
             className="flex items-center gap-3 group"
           >
-            <Logo size={54} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
+            <Logo size={42} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
             <div>
-              <div className="font-display font-bold text-xl md:text-2xl tracking-wider text-brand-navy-900 group-hover:text-brand-gold-700 transition-colors">
+              <div className="font-display font-bold text-xl md:text-2xl tracking-tight text-slate-950 group-hover:text-blue-600 transition-colors">
                 C VIDYA
               </div>
-              <div className="text-xs font-mono tracking-widest text-brand-gold-600 font-bold -mt-0.5">
+              <div className="text-[10px] font-mono tracking-widest text-blue-600 font-bold -mt-0.5">
                 SOLUTIONS
               </div>
             </div>
           </a>
 
           {/* Desktop Navigation Link Anchors */}
-          <nav className="hidden lg:flex items-center gap-8 text-[15px] font-bold text-brand-navy-900">
-            <button 
-              onClick={() => onOpenHub("home")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold text-brand-navy-900"
-            >
-              Home
-            </button>
-            <button 
-              onClick={() => onOpenHub("about")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold text-brand-navy-900"
-            >
-              About
-            </button>
-            <button 
-              onClick={() => onOpenHub("services")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
-            >
-              Services
-            </button>
-            <button 
-              onClick={() => onOpenHub("portfolio")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
-            >
-              Portfolio / Case Studies
-            </button>
-            <button 
-              onClick={() => onOpenHub("contact")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
-            >
-              Contact Us
-            </button>
-            <button 
-              onClick={() => onOpenHub("careers")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
-            >
-              Careers
-            </button>
-            <button 
-              onClick={() => onOpenHub("blog")}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold"
-            >
-              Blog
-            </button>
-            <button 
-              onClick={() => { window.location.hash = "faq"; }}
-              className="hover:text-brand-gold-600 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:h-[2.5px] after:w-0 hover:after:w-full after:bg-brand-gold-500 after:transition-all cursor-pointer bg-transparent border-none font-bold text-brand-gold-600"
-            >
-              FAQ
-            </button>
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm xl:text-[15px] font-semibold text-slate-700">
+            {navItems.map((item) => {
+              const isActive = activePage === item.id;
+              return (
+                <button 
+                  key={item.id}
+                  onClick={() => onOpenHub(item.id)}
+                  className={`relative py-1.5 transition-colors cursor-pointer bg-transparent border-none ${
+                    isActive 
+                      ? "text-blue-600 font-bold" 
+                      : "hover:text-blue-600 text-slate-700"
+                  }`}
+                >
+                  {item.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full" />
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-
+          {/* Right Action Button */}
+          <div className="hidden sm:flex items-center gap-3">
+            <button
+              onClick={onOpenConsultation || (() => onOpenHub("contact"))}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+            >
+              <span>Schedule a Demo</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* Mobile Menu Toggle */}
           <div className="flex lg:hidden items-center gap-2">
             <button
               id="mobile-nav-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 hover:bg-slate-100 rounded-full text-brand-navy-800"
+              className="p-2 hover:bg-slate-100 rounded-lg text-slate-800 cursor-pointer"
+              aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Fullscreen Panel */}
+        {/* Mobile Dropdown Panel */}
         {mobileMenuOpen && (
           <div id="mobile-nav-menu" className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3">
-            <nav className="flex flex-col gap-2 font-semibold text-brand-navy-800">
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("home"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
-              >
-                Home Overview
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("about"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
-              >
-                About Us
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("services"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold bg-transparent border-none"
-              >
-                Services Suite
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("portfolio"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
-              >
-                Portfolio / Case Studies
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("contact"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
-              >
-                Contact Us
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("careers"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
-              >
-                Careers
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); onOpenHub("blog"); }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold"
-              >
-                Blog
-              </button>
-              <button 
-                onClick={() => { setMobileMenuOpen(false); window.location.hash = "faq"; }}
-                className="w-full text-left py-2.5 px-3 rounded-lg hover:bg-slate-50 hover:text-brand-gold-600 cursor-pointer text-sm font-semibold text-brand-gold-600"
-              >
-                FAQ
-              </button>
+            <nav className="flex flex-col gap-1 text-slate-800">
+              {navItems.map((item) => {
+                const isActive = activePage === item.id;
+                return (
+                  <button 
+                    key={item.id}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenHub(item.id);
+                    }}
+                    className={`w-full text-left py-3 px-3.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent border-none ${
+                      isActive 
+                        ? "bg-blue-50 text-blue-600 font-bold" 
+                        : "hover:bg-slate-50 text-slate-800"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
-            <hr className="border-slate-100" />
-            <div className="flex flex-col gap-2.5 pt-2">
-              <a
-                href="#contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full inline-block text-center py-3 bg-brand-gold-500 hover:bg-brand-gold-600 text-white rounded-lg font-bold text-sm shadow-sm"
+
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onOpenConsultation) onOpenConsultation();
+                  else onOpenHub("contact");
+                }}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-xs text-center"
               >
-                Request Callback Demos
-              </a>
-            </div>
-            
-            {/* Quick Contact info */}
-            <div className="pt-4 text-center text-xs text-slate-500 space-y-1">
-              <p>📞 Phone: {phoneNum}</p>
-              <p>✉️ {emailAddr}</p>
+                Schedule a Consultation
+              </button>
             </div>
           </div>
         )}
       </header>
+
     </div>
   );
 }
