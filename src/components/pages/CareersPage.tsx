@@ -232,18 +232,24 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
               </div>
             </div>
 
-            {/* Card 4: State-of-the-art Gear (Wide Image Card) */}
-            <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-xs border border-slate-800 min-h-[220px] flex flex-col justify-end p-8 text-white group bg-slate-950">
-              <img 
-                src="/assets/images/careers_workspace_monitors_1788168702798.jpg" 
-                alt="Modern Workspace Gear"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+            {/* Card 4: State-of-the-art Gear (Clean Image on Top, Content Below) */}
+            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group">
+              <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-950">
+                <img 
+                  src="/assets/images/careers_workspace_monitors_1788168702798.jpg" 
+                  alt="Modern Workspace Gear"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
 
-              <div className="space-y-1.5 relative z-10 max-w-xl">
-                <h3 className="text-lg font-bold text-white">State-of-the-art Gear</h3>
-                <p className="text-xs text-slate-200 leading-relaxed">
+              <div className="p-6 sm:p-8 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Laptop className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-950">State-of-the-art Gear</h3>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   Latest Apple silicon, ergonomic setups, and all the specialized software you need to perform at your peak.
                 </p>
               </div>

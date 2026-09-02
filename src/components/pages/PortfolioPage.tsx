@@ -157,170 +157,34 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
         </div>
       </section>
 
-      {/* 2. CASE STUDIES GRID - HIGH CONTRAST & FULLY RESPONSIVE */}
+      {/* 2. CASE STUDIES GRID - CLEAN IMAGE ON TOP, CONTENT ON BOTTOM */}
       <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        
-        {/* Top Hero Layout (First 3 Projects) */}
-        {activeFilter === "All Projects" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mb-8">
-            
-            {/* Main Featured Card: Global Payments Consolidation */}
-            <div 
-              onClick={() => setSelectedCase(projects[0])}
-              className="lg:col-span-7 min-h-[420px] sm:min-h-[460px] relative rounded-2xl overflow-hidden shadow-lg group cursor-pointer border border-slate-800 flex flex-col justify-end p-6 sm:p-8 md:p-10 text-white bg-slate-950 transition-all hover:border-blue-500/70"
-            >
-              {/* Background Photo */}
-              <img 
-                src={projects[0].bgImage} 
-                alt={projects[0].title}
-                className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-60"
-              />
-              {/* Solid Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/20" />
-
-              <div className="space-y-3.5 relative z-10">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-mono font-bold tracking-wider uppercase">
-                    {projects[0].badge}
-                  </span>
-                  <span className="text-xs font-mono text-slate-300 font-medium">Production Architecture</span>
-                </div>
-
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
-                  {projects[0].title}
-                </h3>
-
-                <p className="text-xs sm:text-sm md:text-base text-slate-200 max-w-xl leading-relaxed">
-                  {projects[0].description}
-                </p>
-
-                {/* Micro Metric Bar */}
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-800/80 max-w-lg">
-                  {projects[0].stats.map((s, idx) => (
-                    <div key={idx} className="bg-slate-900/80 backdrop-blur-xs rounded-lg p-2 border border-slate-700/50">
-                      <div className="text-[10px] font-mono uppercase text-slate-400">{s.label}</div>
-                      <div className="text-xs sm:text-sm font-bold font-mono text-blue-400">{s.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-400 pt-1 group-hover:text-blue-300 transition-colors">
-                  <span>View Technical Blueprint &amp; Telemetry</span>
-                  <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: 2 Stacked Cards */}
-            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
-              
-              {/* Top Right Card: Predictive Retail Engine */}
-              <div 
-                onClick={() => setSelectedCase(projects[1])}
-                className="relative rounded-2xl overflow-hidden shadow-md group cursor-pointer border border-slate-200 flex flex-col justify-between p-6 sm:p-7 min-h-[220px] text-slate-950 bg-white transition-all hover:border-blue-500/60"
-              >
-                {/* Subtle Visual Background */}
-                <img 
-                  src={projects[1].bgImage} 
-                  alt={projects[1].title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/90 to-white/60" />
-
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                    <BarChart3 className="w-5 h-5" />
-                  </div>
-                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-mono font-bold">
-                    {projects[1].badge}
-                  </span>
-                </div>
-
-                <div className="relative z-10 space-y-2 pt-4">
-                  <h3 className="text-xl font-bold text-slate-950 group-hover:text-emerald-700 transition-colors leading-snug">
-                    {projects[1].title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
-                    {projects[1].description}
-                  </p>
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                      <span>Forecast Accuracy: 96.8%</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-600">
-                      <span>Read Case</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Right Card: Enterprise Cloud Migration */}
-              <div 
-                onClick={() => setSelectedCase(projects[2])}
-                className="relative rounded-2xl overflow-hidden shadow-md group cursor-pointer border border-slate-800 flex flex-col justify-end p-6 sm:p-7 min-h-[220px] text-white bg-slate-950 transition-all hover:border-indigo-500/70"
-              >
-                <img 
-                  src={projects[2].bgImage} 
-                  alt={projects[2].title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/40" />
-
-                <div className="relative z-10 space-y-2">
-                  <div className="flex items-center justify-between pb-1">
-                    <span className="px-2.5 py-1 bg-indigo-600/60 text-indigo-200 border border-indigo-400/40 rounded text-xs font-mono font-bold">
-                      {projects[2].badge}
-                    </span>
-                    <div className="w-7 h-7 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors leading-snug">
-                    {projects[2].title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-2">
-                    {projects[2].description}
-                  </p>
-                  <div className="text-[11px] font-mono text-indigo-300 font-semibold pt-1">
-                    ✓ 500+ Apps Migrated • Zero Downtime
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* Dynamic Multi-Card Grid for All & Filtered Views */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(activeFilter === "All Projects" ? projects.slice(3) : filteredProjects).map((project) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {filteredProjects.map((project) => (
             <div 
               key={project.id}
               onClick={() => setSelectedCase(project)}
               className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col justify-between"
             >
               <div>
-                {/* Visual Header */}
-                <div className="relative h-52 w-full overflow-hidden bg-slate-900">
+                {/* Visual Header - Clean Unobscured Image */}
+                <div className="relative h-56 sm:h-60 w-full overflow-hidden bg-slate-950">
                   <img 
                     src={project.bgImage} 
                     alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-85"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
                   
                   <div className="absolute top-4 left-4 z-10">
-                    <span className={`px-3 py-1 rounded text-xs font-mono font-bold tracking-wider ${project.badgeColor}`}>
+                    <span className={`px-3 py-1 rounded text-xs font-mono font-bold tracking-wider ${project.badgeColor} shadow-xs`}>
                       {project.badge}
                     </span>
                   </div>
                 </div>
 
-                {/* Content Body */}
-                <div className="p-6 space-y-3">
-                  <h3 className="text-xl font-bold text-slate-950 group-hover:text-blue-600 transition-colors leading-snug">
+                {/* Content Body on Bottom Side of Image */}
+                <div className="p-6 sm:p-7 space-y-3">
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-950 group-hover:text-blue-600 transition-colors leading-snug">
                     {project.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-3">
@@ -330,25 +194,24 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
               </div>
 
               {/* Card Footer / Stats */}
-              <div className="p-6 pt-0 space-y-4">
+              <div className="p-6 sm:p-7 pt-0 space-y-4">
                 <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
                   {project.stats.map((s, idx) => (
                     <div key={idx}>
                       <div className="text-[10px] font-mono text-slate-400 uppercase truncate">{s.label}</div>
-                      <div className="text-xs font-bold text-slate-900 font-mono mt-0.5 truncate">{s.value}</div>
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 font-mono mt-0.5 truncate">{s.value}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-bold text-blue-600 pt-2 border-t border-slate-100">
-                  <span>Explore Architecture</span>
+                <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-blue-600 pt-2 border-t border-slate-100 group-hover:text-blue-700">
+                  <span>Explore Architecture &amp; Telemetry</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
           ))}
         </div>
-
       </section>
 
       {/* Case Study Details Modal */}

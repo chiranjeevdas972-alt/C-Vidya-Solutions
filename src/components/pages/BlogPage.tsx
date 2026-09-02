@@ -98,7 +98,6 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
                 <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded font-semibold">
                   {mainArticle.category}
                 </span>
-                <span>{mainArticle.date}</span>
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight group-hover:text-blue-600 transition-colors">
@@ -138,31 +137,34 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
               </div>
             </div>
 
-            {/* Right Bottom: Security / Zero-Trust Card (with image) */}
+            {/* Right Bottom: Security / Zero-Trust Card (Clean Image on Top, Content Below) */}
             <div 
               onClick={() => setSelectedArticle(rightBottomArticle)}
-              className="relative rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-end p-8 text-white min-h-[220px] group border border-slate-800 bg-slate-950"
+              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between group"
             >
-              <img 
-                src={rightBottomArticle.image} 
-                alt={rightBottomArticle.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/20" />
+              <div className="relative h-44 w-full overflow-hidden bg-slate-950">
+                <img 
+                  src={rightBottomArticle.image} 
+                  alt={rightBottomArticle.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
 
-              <div className="space-y-2 relative z-10">
-                <span className="inline-block px-2.5 py-0.5 bg-amber-500/90 text-white rounded text-[11px] font-mono font-bold">
+              <div className="p-6 space-y-3">
+                <span className="inline-block px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[11px] font-mono font-bold">
                   {rightBottomArticle.category}
                 </span>
 
-                <h3 className="text-lg font-bold text-white leading-snug">
+                <h3 className="text-lg font-bold text-slate-950 leading-snug group-hover:text-blue-600 transition-colors">
                   {rightBottomArticle.title}
                 </h3>
 
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-300 group-hover:text-white pt-2">
-                  <span>Read More</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
+                <div className="pt-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 group-hover:text-blue-700">
+                    <span>Read More</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </div>
             </div>
 
