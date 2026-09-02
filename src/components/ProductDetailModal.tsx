@@ -19,9 +19,10 @@ interface ProductDetailModalProps {
   product: ProductService | null;
   onClose: () => void;
   onOpenConsultation?: () => void;
+  onOpenSoftware?: (product: ProductService) => void;
 }
 
-export default function ProductDetailModal({ product, onClose, onOpenConsultation }: ProductDetailModalProps) {
+export default function ProductDetailModal({ product, onClose, onOpenConsultation, onOpenSoftware }: ProductDetailModalProps) {
   if (!product) return null;
 
   const [leadName, setLeadName] = useState("");
@@ -77,13 +78,25 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 relative max-h-[92vh] overflow-y-auto">
         
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+            <span>Back</span>
+          </button>
+          
+          <button 
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Product Header */}
         <div className="space-y-2">
@@ -91,11 +104,6 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
             <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-mono font-bold uppercase tracking-wider">
               {product.categoryType === "saas" ? "Enterprise SaaS Platform" : "Autonomous AI Agent"}
             </span>
-            {product.badge && (
-              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-mono">
-                {product.badge}
-              </span>
-            )}
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
@@ -131,19 +139,19 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
             <div className="text-[11px] text-slate-500">Explore interactive console with live telemetry.</div>
           </div>
 
-          {product.externalLink ? (
-            <a
-              href={product.externalLink}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors shrink-0"
-            >
-              <span>Launch Live Demo</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <span className="text-xs font-medium text-slate-500">Available on request</span>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenSoftware) {
+                onOpenSoftware(product);
+              } else if (product.externalLink) {
+                window.open(product.externalLink, "_blank");
+              }
+            }}
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            <span>Click Here</span>
+          </button>
         </div>
 
         {/* Quick Callback / Demo Inquiry */}

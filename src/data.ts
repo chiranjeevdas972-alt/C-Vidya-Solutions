@@ -102,6 +102,7 @@ export const saasProductsData: ProductService[] = [
     badge: "Cloud-Based SaaS",
     categoryType: "saas",
     description: "All-in-one ERP solution for schools, colleges, and academic institutes to manage student admissions, fees collection, attendance, exams, and results.",
+    externalLink: "https://institutes.cvidyasolutions.workers.dev/",
     imageUrl: institutesImg,
     features: [
       "End-to-end admission counseling CRM pipeline",

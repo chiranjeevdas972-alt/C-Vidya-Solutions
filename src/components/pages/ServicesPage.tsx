@@ -27,10 +27,11 @@ import { db } from "../../firebase";
 
 interface ServicesPageProps {
   onSelectProduct: (product: any) => void;
+  onOpenSoftware?: (product: any) => void;
   onOpenConsultation?: () => void;
 }
 
-export default function ServicesPage({ onSelectProduct, onOpenConsultation }: ServicesPageProps) {
+export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenConsultation }: ServicesPageProps) {
   // Consultation Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -135,14 +136,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[0].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[0]);
+                  } else {
+                    onSelectProduct(saasProductsData[0]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -169,14 +175,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[1].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[1]);
+                  } else {
+                    onSelectProduct(saasProductsData[1]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -203,14 +214,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[2].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[2]);
+                  } else {
+                    onSelectProduct(saasProductsData[2]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -237,14 +253,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[3].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[3]);
+                  } else {
+                    onSelectProduct(saasProductsData[3]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -271,14 +292,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[4].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[4]);
+                  } else {
+                    onSelectProduct(saasProductsData[4]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -305,14 +331,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[5].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[5]);
+                  } else {
+                    onSelectProduct(saasProductsData[5]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -339,14 +370,19 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
               >
                 View more
               </button>
-              <a 
-                href={saasProductsData[6].externalLink || "#"}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold shadow-xs transition-colors"
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(saasProductsData[6]);
+                  } else {
+                    onSelectProduct(saasProductsData[6]);
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Check Demo
-              </a>
+                Click here
+              </button>
             </div>
           </div>
 
@@ -366,72 +402,192 @@ export default function ServicesPage({ onSelectProduct, onOpenConsultation }: Se
           {/* Agent 1 */}
           <div 
             onClick={() => onSelectProduct(aiAgentsData[0])}
-            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex items-start gap-4"
+            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
-              <MessageSquare className="w-6 h-6" />
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-white tracking-wide group-hover:text-blue-400 transition-colors">
+                  C VIDYA AI SOCIAL MEDIA AGENT
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Automate posts, engage audience &amp; grow your brand 24/7
+                </p>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-wide">
-                C VIDYA AI SOCIAL MEDIA AGENT
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Automate posts, engage audience &amp; grow your brand 24/7
-              </p>
+
+            <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectProduct(aiAgentsData[0]);
+                }}
+                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                View more
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenSoftware) {
+                    onOpenSoftware(aiAgentsData[0]);
+                  } else {
+                    onSelectProduct(aiAgentsData[0]);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+              >
+                Click here
+              </button>
             </div>
           </div>
 
           {/* Agent 2 */}
           <div 
             onClick={() => onSelectProduct(aiAgentsData[1])}
-            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex items-start gap-4"
+            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
-              <Headphones className="w-6 h-6" />
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
+                <Headphones className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-white tracking-wide group-hover:text-blue-400 transition-colors">
+                  C VIDYA AI CUSTOMER SUPPORT AGENT
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Smart replies, instant support &amp; happy customers always
+                </p>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-wide">
-                C VIDYA AI CUSTOMER SUPPORT AGENT
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Smart replies, instant support &amp; happy customers always
-              </p>
+
+            <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectProduct(aiAgentsData[1]);
+                }}
+                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                View more
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenSoftware) {
+                    onOpenSoftware(aiAgentsData[1]);
+                  } else {
+                    onSelectProduct(aiAgentsData[1]);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+              >
+                Click here
+              </button>
             </div>
           </div>
 
           {/* Agent 3 */}
           <div 
             onClick={() => onSelectProduct(aiAgentsData[2])}
-            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex items-start gap-4"
+            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
-              <TrendingUp className="w-6 h-6" />
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-white tracking-wide group-hover:text-blue-400 transition-colors">
+                  C VIDYA BUSINESS SALES FLOW AI AGENT
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Generate leads, follow-ups &amp; close more deals seamlessly
+                </p>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-wide">
-                C VIDYA BUSINESS SALES FLOW AI AGENT
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Generate leads, follow-ups &amp; close more deals seamlessly
-              </p>
+
+            <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectProduct(aiAgentsData[2]);
+                }}
+                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                View more
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenSoftware) {
+                    onOpenSoftware(aiAgentsData[2]);
+                  } else {
+                    onSelectProduct(aiAgentsData[2]);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+              >
+                Click here
+              </button>
             </div>
           </div>
 
           {/* Agent 4 */}
           <div 
             onClick={() => onSelectProduct(aiAgentsData[3])}
-            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex items-start gap-4"
+            className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
-              <Megaphone className="w-6 h-6" />
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-600/30 border border-blue-400/20 text-blue-400 flex items-center justify-center shrink-0 mt-1">
+                <Megaphone className="w-6 h-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-white tracking-wide group-hover:text-blue-400 transition-colors">
+                  C VIDYA AI MARKETING FOR B2B SAAS COMPANIES AI AGENT
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Data-driven campaigns, more reach, more conversions
+                </p>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-wide">
-                C VIDYA AI MARKETING FOR B2B SAAS COMPANIES AI AGENT
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Data-driven campaigns, more reach, more conversions
-              </p>
+
+            <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectProduct(aiAgentsData[3]);
+                }}
+                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                View more
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onOpenSoftware) {
+                    onOpenSoftware(aiAgentsData[3]);
+                  } else {
+                    onSelectProduct(aiAgentsData[3]);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+              >
+                Click here
+              </button>
             </div>
           </div>
 

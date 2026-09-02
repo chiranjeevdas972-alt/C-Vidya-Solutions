@@ -34,12 +34,13 @@ import {
 interface SoftwareDetailModalProps {
   software: ProductService | null;
   onClose: () => void;
+  onOpenLiveApp?: (software: ProductService) => void;
   onOpenInquiry?: (softwareName?: string) => void;
 }
 
 type DetailPageType = "offline-sync" | "whatsapp-biometrics" | "onsite-support" | null;
 
-export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }: SoftwareDetailModalProps) {
+export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, onOpenInquiry }: SoftwareDetailModalProps) {
   const [activeDetailPage, setActiveDetailPage] = useState<DetailPageType>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -118,60 +119,20 @@ export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }
         className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-50 overflow-y-auto flex flex-col"
       >
         {/* Sticky Top Full Page Header */}
-        <div className="sticky top-0 z-30 bg-gradient-to-r from-brand-navy-950 via-brand-navy-900 to-slate-900 text-white shadow-xl border-b border-brand-gold-500/30 px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                if (activeDetailPage) {
-                  setActiveDetailPage(null);
-                } else {
-                  onClose();
-                }
-              }}
-              className="flex items-center gap-2.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-black text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
-            >
-              <ArrowRight className="w-5 h-5 rotate-180 text-slate-950 stroke-[3]" />
-              <span>{activeDetailPage ? "Back to Software" : "Back"}</span>
-            </button>
-            <div className="h-6 w-px bg-white/20 hidden sm:block" />
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="font-mono text-xs text-brand-gold-400 font-bold">
-                SOFTWARE MODULE #{software.num}
-              </span>
-              <span className="text-white/40">•</span>
-              <span className="text-xs text-slate-300 font-semibold">
-                {activeDetailPage 
-                  ? activeDetailPage === "offline-sync" 
-                    ? "Offline + Cloud Auto-Sync Architecture" 
-                    : activeDetailPage === "whatsapp-biometrics"
-                    ? "WhatsApp & Biometrics Integration"
-                    : "On-Site Engineering Support"
-                  : software.name
-                }
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {software.externalLink && (
-              <a
-                href={software.externalLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>Click here ↗</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
-              aria-label="Close page"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-4 flex items-center">
+          <button
+            onClick={() => {
+              if (activeDetailPage) {
+                setActiveDetailPage(null);
+              } else {
+                onClose();
+              }
+            }}
+            className="flex items-center gap-2.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
+          >
+            <ArrowRight className="w-4 h-4 rotate-180 text-white stroke-[2.5]" />
+            <span>{activeDetailPage ? "Back to Overview" : "Back"}</span>
+          </button>
         </div>
 
         {/* ------------------------------------------------------------- */}
@@ -675,6 +636,36 @@ export default function SoftwareDetailModal({ software, onClose, onOpenInquiry }
                   <ArrowRight className="w-3 h-3" />
                 </div>
               </button>
+            </div>
+
+            {/* Bottom Navigation & Inquire Bar */}
+            <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 pb-12">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180 text-white" />
+                <span>Back to Services / AI Agents</span>
+              </button>
+
+              <div className="flex items-center gap-3">
+                {software.externalLink && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenLiveApp) {
+                        onOpenLiveApp(software);
+                      } else {
+                        window.open(software.externalLink, "_blank");
+                      }
+                    }}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  >
+                    <span>Click Here</span>
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>

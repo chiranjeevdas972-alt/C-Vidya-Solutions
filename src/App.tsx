@@ -11,6 +11,8 @@ import CareersPage from "./components/pages/CareersPage";
 import FAQPage from "./components/pages/FAQPage";
 import BlogPage from "./components/pages/BlogPage";
 import ProductDetailModal from "./components/ProductDetailModal";
+import SoftwareDetailModal from "./components/SoftwareDetailModal";
+import LiveSoftwareApp from "./components/LiveSoftwareApp";
 import AiAssistant from "./components/AiAssistant";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
 import CompliancePage from "./components/CompliancePage";
@@ -36,6 +38,8 @@ export default function App() {
   const [complianceOpen, setComplianceOpen] = useState(false);
   const [complianceTab, setComplianceTab] = useState("privacy");
   const [selectedProduct, setSelectedProduct] = useState<ProductService | null>(null);
+  const [activeSoftwareDetail, setActiveSoftwareDetail] = useState<ProductService | null>(null);
+  const [activeLiveSoftware, setActiveLiveSoftware] = useState<ProductService | null>(null);
 
   // Active page routing state
   const [activePage, setActivePage] = useState<
@@ -220,7 +224,8 @@ export default function App() {
             {activePage === "home" && (
               <HomePage 
                 onNavigate={navigateTo}
-                onSelectProduct={(product) => setSelectedProduct(product)}
+                onSelectProduct={(product) => setActiveSoftwareDetail(product)}
+                onOpenSoftware={(product) => setActiveLiveSoftware(product)}
                 onOpenConsultation={() => navigateTo("contact")}
               />
             )}
@@ -235,7 +240,8 @@ export default function App() {
             {/* 3. SERVICES PAGE */}
             {activePage === "services" && (
               <ServicesPage 
-                onSelectProduct={(product) => setSelectedProduct(product)}
+                onSelectProduct={(product) => setActiveSoftwareDetail(product)}
+                onOpenSoftware={(product) => setActiveLiveSoftware(product)}
                 onOpenConsultation={() => navigateTo("contact")}
               />
             )}
@@ -313,9 +319,42 @@ export default function App() {
         <ProductDetailModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+          onOpenSoftware={(product) => {
+            setSelectedProduct(null);
+            setActiveLiveSoftware(product);
+          }}
           onOpenConsultation={() => {
             setSelectedProduct(null);
             navigateTo("contact");
+          }}
+        />
+      )}
+
+      {/* 5b. FULL SOFTWARE & AGENT DETAIL VIEW WITH BACK BUTTON */}
+      {activeSoftwareDetail && (
+        <SoftwareDetailModal
+          software={activeSoftwareDetail}
+          onClose={() => setActiveSoftwareDetail(null)}
+          onOpenLiveApp={(product) => {
+            setActiveSoftwareDetail(null);
+            setActiveLiveSoftware(product);
+          }}
+          onOpenInquiry={(serviceTopic) => {
+            setActiveSoftwareDetail(null);
+            navigateTo("contact");
+          }}
+        />
+      )}
+
+      {/* 5c. LIVE SOFTWARE & AUTONOMOUS AGENT APPLICATION WITH DIRECT BACK NAVIGATION */}
+      {activeLiveSoftware && (
+        <LiveSoftwareApp
+          software={activeLiveSoftware}
+          onClose={() => setActiveLiveSoftware(null)}
+          onOpenDetails={() => {
+            const current = activeLiveSoftware;
+            setActiveLiveSoftware(null);
+            setActiveSoftwareDetail(current);
           }}
         />
       )}

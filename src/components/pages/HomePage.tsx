@@ -27,10 +27,11 @@ import { saasProductsData, aiAgentsData } from "../../data";
 interface HomePageProps {
   onNavigate: (page: string) => void;
   onSelectProduct?: (product: any) => void;
+  onOpenSoftware?: (product: any) => void;
   onOpenConsultation?: () => void;
 }
 
-export default function HomePage({ onNavigate, onSelectProduct, onOpenConsultation }: HomePageProps) {
+export default function HomePage({ onNavigate, onSelectProduct, onOpenSoftware, onOpenConsultation }: HomePageProps) {
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white">
       
