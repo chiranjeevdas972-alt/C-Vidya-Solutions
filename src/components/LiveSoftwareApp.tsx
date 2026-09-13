@@ -107,11 +107,11 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }, 900);
   };
 
-  // Use proxy route for petrol-pump cloud app to bypass X-Frame-Options: SAMEORIGIN
+  // Use embedded static application suite for petrol-pump to work universally on local dev, AI Studio, and deployed production servers
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
-      return "/api/proxy/petrol-pump";
+      return "/software/petrol-pump/index.html";
     }
     return software.externalLink;
   }, [software]);
