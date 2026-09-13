@@ -299,7 +299,137 @@ export const saasProductsData: ProductService[] = [
         { name: "Sat", value: 64 }
       ]
     }
+  },
+  {
+    id: "petrol-pump",
+    num: "08",
+    name: "VIDYA CLOUD-BASED PETROL PUMP SUITE",
+    tagline: "Automated Fuel Dispenser Meters, Dip Tank Reconciliation & Daily Shift Settlement",
+    badge: "Fuel & Energy SaaS",
+    categoryType: "saas",
+    description: "Enterprise petrol pump and fuel station automation software to manage fuel dispenser nozzles, underground dip stock reconciliation, lube inventory, credit customer ledgers, daily shift closures, and automated GST billing.",
+    externalLink: "https://c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev/",
+    imageUrl: municipalImg,
+    features: [
+      "Nozzle meter reading sync & density-calibrated underground dip stock reconciliation",
+      "Shift-wise cashier cash, UPI & card terminal payment settlement",
+      "Vehicle fleet credit accounts with monthly computerized invoice ledgers",
+      "CNG, lube oils, and lubricants inventory tracking with low-stock alerts",
+      "Instant thermal receipt printing and compliant GST tax invoice generation"
+    ],
+    mockData: {
+      title: "Vidya Cloud Petrol Pump Station Operations Suite",
+      metrics: [
+        { label: "Daily Fuel Dispensed", value: "18,450 L", change: "+12% vs last week", isPositive: true },
+        { label: "Shift Sales Revenue", value: "₹16.8L", change: "4 Shifts reconciled", isPositive: true },
+        { label: "Underground Dip Stock", value: "32,000 L", change: "Adequate reserve", isPositive: true },
+        { label: "Fleet Credit Dues", value: "₹1.4L", change: "x8 Corporate fleets", isPositive: false }
+      ],
+      recentActivity: [
+        "Shift #2 settlement closed: Dispenser Nozzle 3 & 4 reconciled by Operator Rajesh",
+        "Underground Tank A dip test logged: 14,200L High-Speed Diesel (HSD)",
+        "Fleet credit invoice #PP-7718 generated for Apex Logistics (₹48,500)",
+        "Daily density calibration test verified with automated state rate board sync"
+      ],
+      chartData: [
+        { name: "Mon", value: 162 },
+        { name: "Tue", value: 178 },
+        { name: "Wed", value: 184 },
+        { name: "Thu", value: 195 },
+        { name: "Fri", value: 210 },
+        { name: "Sat", value: 228 }
+      ]
+    }
+  },
+  {
+    id: "care-plus",
+    num: "09",
+    name: "CARE PLUS HEALTHCARE SYSTEM",
+    tagline: "Integrated Hospital OPD/IPD, Electronic Health Records & Pharmacy Invoicing",
+    badge: "Healthcare SaaS",
+    categoryType: "saas",
+    description: "Comprehensive clinical and healthcare ERP software for modern hospitals, specialty clinics, and diagnostic labs to streamline patient admissions, doctor appointment queues, digital prescriptions, lab test reports, and pharmacy POS.",
+    externalLink: "https://care-plus.cvidyasolutions.workers.dev/",
+    imageUrl: institutesImg,
+    features: [
+      "Paperless OPD/IPD patient registration and real-time bed occupancy tracker",
+      "Specialist doctor appointment scheduling with digital token queue displays",
+      "Electronic Health Records (EHR), diagnostic lab test sync & e-prescriptions",
+      "In-hospital pharmacy POS with batch expiry alerts and inventory reorders",
+      "Medical insurance TPA claims assistance and transparent treatment billing"
+    ],
+    mockData: {
+      title: "Care Plus Healthcare System Clinical Console",
+      metrics: [
+        { label: "Active OPD Registrations", value: "284 Patients", change: "+32 today", isPositive: true },
+        { label: "Occupied IPD Beds", value: "48 / 60 Beds", change: "80% occupancy", isPositive: true },
+        { label: "Consultations Completed", value: "192", change: "Across 8 specialties", isPositive: true },
+        { label: "Pharmacy Sales Today", value: "₹2.1L", change: "+14% dispensations", isPositive: true }
+      ],
+      recentActivity: [
+        "Patient #CP-4029 admitted to IPD Deluxe Ward 204 under Dr. S. K. Sharma",
+        "Diagnostic Pathology report compiled: Full Blood Count & Lipid Panel approved",
+        "Pharmacy counter processed prescription #RX-8841 with auto-insurance deduction",
+        "Emergency triage bed allocated with instant vitals telemetry sync"
+      ],
+      chartData: [
+        { name: "Mon", value: 190 },
+        { name: "Tue", value: 215 },
+        { name: "Wed", value: 230 },
+        { name: "Thu", value: 245 },
+        { name: "Fri", value: 280 },
+        { name: "Sat", value: 210 }
+      ]
+    }
+  },
+  {
+    id: "pdf-media-tools",
+    num: "10",
+    name: "C VIDYA PDF AND MEDIA TOOL SAAS",
+    tagline: "High-Performance Document Compression, Format Conversion & OCR Engine",
+    badge: "Media & Utilities SaaS",
+    categoryType: "saas",
+    description: "High-speed cloud document and media utilities suite engineered for instant browser-based PDF merging, splitting, lossless compression, OCR text extraction, watermarking, image format conversion, and media optimization.",
+    externalLink: "https://c-vidya-pdf-saas-tools.cvidyasolutions.workers.dev/",
+    imageUrl: crmImg,
+    features: [
+      "Lightning-fast PDF merge, split, page extraction, rotation and re-ordering",
+      "Lossless document and image compression engine saving up to 80% bandwidth",
+      "Optical Character Recognition (OCR) to convert scanned PDFs to editable text",
+      "Watermark generator, digital cryptographic signatures, and PDF security locks",
+      "Batch image format conversion (PNG, JPG, WebP, SVG) and audio/video tools"
+    ],
+    mockData: {
+      title: "C Vidya PDF & Media Tool SaaS Engine",
+      metrics: [
+        { label: "Files Processed Today", value: "24,800 Files", change: "+18% processing load", isPositive: true },
+        { label: "Storage Bandwidth Saved", value: "1.4 TB", change: "68% compression ratio", isPositive: true },
+        { label: "Avg Processing Latency", value: "0.42s", change: "Client-side WASM engine", isPositive: true },
+        { label: "Active Enterprise Users", value: "4,120", change: "+85 new teams", isPositive: true }
+      ],
+      recentActivity: [
+        "Batch compression job completed: 85 Annual Financial PDFs shrunk by 72%",
+        "OCR text extraction pipeline parsed 240 scanned contract pages with 99.4% accuracy",
+        "High-resolution media transcoding converted 400MB RAW graphics to WebP",
+        "Digital certificate timestamp stamped on 18 corporate agreements"
+      ],
+      chartData: [
+        { name: "Mon", value: 380 },
+        { name: "Tue", value: 410 },
+        { name: "Wed", value: 460 },
+        { name: "Thu", value: 510 },
+        { name: "Fri", value: 590 },
+        { name: "Sat", value: 430 }
+      ]
+    }
   }
+];
+
+// Other Services / additional SaaS products
+export const otherServicesData: ProductService[] = [
+  saasProductsData[7],
+  saasProductsData[8],
+  saasProductsData[9]
 ];
 
 // ==========================================

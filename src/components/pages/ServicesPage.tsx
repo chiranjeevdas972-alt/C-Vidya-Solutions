@@ -19,9 +19,13 @@ import {
   ArrowRight,
   ExternalLink,
   CheckCircle2,
-  Lock
+  Lock,
+  Flame,
+  Activity,
+  FileText,
+  Sparkles
 } from "lucide-react";
-import { saasProductsData, aiAgentsData } from "../../data";
+import { saasProductsData, aiAgentsData, otherServicesData } from "../../data";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -755,7 +759,205 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
       </section>
 
 
-      {/* 5. REQUEST A CONSULTATION SECTION */}
+      {/* 5. OTHER SERVICES SECTION */}
+      <section id="other-services" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/80">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-[11px] font-semibold text-blue-700 uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Specialized Cloud Solutions</span>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-950">
+              Other Services
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl mt-1">
+              Explore our additional cloud-based software suites and media tools engineered for automated domain operations, daily reconciliations, and instant document processing.
+            </p>
+          </div>
+        </div>
+
+        {/* 3 Other Services Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* 1. Petrol Pump Suite */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between gap-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
+                  <Flame className="w-6 h-6" />
+                </div>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                  Fuel Station
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-slate-950 tracking-wide">
+                  VIDYA CLOUD-BASED SOFTWARE PETROL PUMP SUITE
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Automated Fuel Dispenser Meters, Dip Tank Reconciliation &amp; Daily Shift Settlement.
+                </p>
+              </div>
+
+              <div className="pt-1">
+                <a 
+                  href={otherServicesData[0].externalLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
+                >
+                  <span>{otherServicesData[0].externalLink}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button 
+                type="button"
+                onClick={() => onSelectProduct(otherServicesData[0])}
+                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                View more
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(otherServicesData[0]);
+                  } else {
+                    onSelectProduct(otherServicesData[0]);
+                  }
+                }}
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+              >
+                Click here
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Care Plus Healthcare System */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between gap-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  Healthcare
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-slate-950 tracking-wide">
+                  CARE PLUS HEALTHCARE SYSTEM
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Integrated Hospital OPD/IPD, Electronic Health Records &amp; Pharmacy Invoicing.
+                </p>
+              </div>
+
+              <div className="pt-1">
+                <a 
+                  href={otherServicesData[1].externalLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
+                >
+                  <span>{otherServicesData[1].externalLink}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button 
+                type="button"
+                onClick={() => onSelectProduct(otherServicesData[1])}
+                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                View more
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(otherServicesData[1]);
+                  } else {
+                    onSelectProduct(otherServicesData[1]);
+                  }
+                }}
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+              >
+                Click here
+              </button>
+            </div>
+          </div>
+
+          {/* 3. C Vidya PDF and Media Tool SaaS */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between gap-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-indigo-100/80 text-indigo-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  Media &amp; PDF
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="font-bold text-sm sm:text-base text-slate-950 tracking-wide">
+                  C VIDYA PDF AND MEDIA TOOL SAAS
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  High-Speed Browser Document Processing, Media Compression &amp; PDF Automation.
+                </p>
+              </div>
+
+              <div className="pt-1">
+                <a 
+                  href={otherServicesData[2].externalLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
+                >
+                  <span>{otherServicesData[2].externalLink}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button 
+                type="button"
+                onClick={() => onSelectProduct(otherServicesData[2])}
+                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+              >
+                View more
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onOpenSoftware) {
+                    onOpenSoftware(otherServicesData[2]);
+                  } else {
+                    onSelectProduct(otherServicesData[2]);
+                  }
+                }}
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+              >
+                Click here
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* 6. REQUEST A CONSULTATION SECTION */}
       <section className="pt-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="bg-[#071739] text-white rounded-3xl p-8 sm:p-12 shadow-xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">

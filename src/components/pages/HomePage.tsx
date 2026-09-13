@@ -19,7 +19,10 @@ import {
   Cpu, 
   CheckCircle2, 
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Flame,
+  Activity,
+  FileText
 } from "lucide-react";
 import Logo from "../Logo";
 import { saasProductsData, aiAgentsData } from "../../data";
@@ -202,6 +205,30 @@ export default function HomePage({ onNavigate, onSelectProduct, onOpenSoftware, 
                     <div>
                       <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Enterprise CRM</div>
                       <div className="text-xs text-slate-500">Manage Sales, Partners &amp; Leads Across All Modules</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3.5 group cursor-pointer" onClick={() => onNavigate("services")}>
+                    <Flame className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Petrol Pump Suite</div>
+                      <div className="text-xs text-slate-500">Dispenser Meters, Dip Tank Stock &amp; Shift Settlement</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3.5 group cursor-pointer" onClick={() => onNavigate("services")}>
+                    <Activity className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Care Plus Healthcare</div>
+                      <div className="text-xs text-slate-500">Hospital OPD/IPD, Electronic Records &amp; Pharmacy Invoicing</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3.5 group cursor-pointer" onClick={() => onNavigate("services")}>
+                    <FileText className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">PDF &amp; Media SaaS Tools</div>
+                      <div className="text-xs text-slate-500">Browser Compression, Conversion &amp; Document Automation</div>
                     </div>
                   </div>
 

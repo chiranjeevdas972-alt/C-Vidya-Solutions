@@ -74,6 +74,9 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
       case "farming": return <Sprout className={cssClass} />;
       case "members": return <Gem className={cssClass} />;
       case "crm": return <Briefcase className={cssClass} />;
+      case "petrol-pump": return <Flame className={cssClass} />;
+      case "care-plus": return <Activity className={cssClass} />;
+      case "pdf-media-tools": return <Layers className={cssClass} />;
       
       // AI Agent products
       case "ai-social": return <Sparkles className={cssClass} />;

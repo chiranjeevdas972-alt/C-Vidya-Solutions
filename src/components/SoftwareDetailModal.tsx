@@ -91,6 +91,9 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
       case "ai-omr": return <ShieldCheck className="w-8 h-8 text-[#42A5F5]" />;
       case "farming": return <Sprout className="w-8 h-8 text-brand-gold-400" />;
       case "members": return <Gem className="w-8 h-8 text-brand-gold-400" />;
+      case "petrol-pump": return <Flame className="w-8 h-8 text-brand-gold-400" />;
+      case "care-plus": return <Activity className="w-8 h-8 text-brand-gold-400" />;
+      case "pdf-media-tools": return <Layers className="w-8 h-8 text-brand-gold-400" />;
       default: return <Laptop className="w-8 h-8 text-brand-gold-400" />;
     }
   };
