@@ -763,10 +763,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
       <section id="other-services" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/80">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-[11px] font-semibold text-blue-700 uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Specialized Cloud Solutions</span>
-            </div>
             <h2 className="text-2xl font-bold text-slate-950">
               Other Services
             </h2>
@@ -798,18 +794,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 <p className="text-xs text-slate-500 leading-relaxed">
                   Automated Fuel Dispenser Meters, Dip Tank Reconciliation &amp; Daily Shift Settlement.
                 </p>
-              </div>
-
-              <div className="pt-1">
-                <a 
-                  href={otherServicesData[0].externalLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
-                >
-                  <span>{otherServicesData[0].externalLink}</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </a>
               </div>
             </div>
 
@@ -857,18 +841,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   Integrated Hospital OPD/IPD, Electronic Health Records &amp; Pharmacy Invoicing.
                 </p>
               </div>
-
-              <div className="pt-1">
-                <a 
-                  href={otherServicesData[1].externalLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
-                >
-                  <span>{otherServicesData[1].externalLink}</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </a>
-              </div>
             </div>
 
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -914,18 +886,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 <p className="text-xs text-slate-500 leading-relaxed">
                   High-Speed Browser Document Processing, Media Compression &amp; PDF Automation.
                 </p>
-              </div>
-
-              <div className="pt-1">
-                <a 
-                  href={otherServicesData[2].externalLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-blue-600 hover:text-blue-700 hover:underline break-all"
-                >
-                  <span>{otherServicesData[2].externalLink}</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </a>
               </div>
             </div>
 

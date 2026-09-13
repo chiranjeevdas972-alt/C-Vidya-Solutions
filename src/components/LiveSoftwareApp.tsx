@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ProductService } from "../types";
 import { 
   ArrowRight, 
@@ -107,6 +107,15 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }, 900);
   };
 
+  // Use proxy route for petrol-pump cloud app to bypass X-Frame-Options: SAMEORIGIN
+  const effectiveIframeSrc = useMemo(() => {
+    if (!software?.externalLink) return "";
+    if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
+      return "/api/proxy/petrol-pump";
+    }
+    return software.externalLink;
+  }, [software]);
+
   return (
     <div className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
       {/* Top Application Header Bar with Back Button */}
@@ -116,7 +125,7 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
             type="button"
             onClick={onClose}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md cursor-pointer border-none"
-            title="Return to previous page"
+            title="Return to Cvidya Solutions landing page"
           >
             <ArrowRight className="w-4 h-4 rotate-180 text-white stroke-[2.5]" />
             <span>Back</span>
@@ -125,6 +134,17 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
           <span className="font-bold text-xs sm:text-sm md:text-base text-white tracking-wide truncate max-w-xs sm:max-w-md md:max-w-xl">
             {software.name}
           </span>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            title="Close software view"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
       </header>
 
@@ -140,9 +160,33 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
               </div>
             )}
 
+            {/* Error / Fallback Card */}
+            {iframeError && (
+              <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center z-20">
+                <div className="max-w-md space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center mx-auto">
+                    <ExternalLink className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Live Application Ready</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    This cloud software suite is hosted on a secure production worker environment.
+                  </p>
+                  <a
+                    href={software.externalLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all"
+                  >
+                    <span>Launch {software.name}</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* Embedded Live Web Application */}
             <iframe
-              src={software.externalLink}
+              src={effectiveIframeSrc}
               title={software.name}
               onLoad={() => setIframeLoaded(true)}
               onError={() => {

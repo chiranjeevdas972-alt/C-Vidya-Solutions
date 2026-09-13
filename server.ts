@@ -603,6 +603,54 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
+// Proxy for Petrol Pump cloud software to bypass X-Frame-Options: SAMEORIGIN header
+app.get("/api/proxy/petrol-pump", async (req, res) => {
+  try {
+    const upstream = await fetch("https://c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev/", {
+      headers: {
+        "User-Agent": (req.headers["user-agent"] as string) || "Mozilla/5.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      }
+    });
+    if (!upstream.ok) {
+      return res.status(upstream.status).send("Upstream error loading petrol pump application");
+    }
+    let html = await upstream.text();
+    // Rewrite asset references so that scripts and stylesheets load through our CORS & iframe-enabled proxy
+    html = html.replace(/src="\/assets\//g, 'src="/api/proxy/petrol-pump/assets/');
+    html = html.replace(/href="\/assets\//g, 'href="/api/proxy/petrol-pump/assets/');
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.removeHeader("X-Frame-Options");
+    res.setHeader("Content-Security-Policy", "frame-ancestors *;");
+    return res.send(html);
+  } catch (err: any) {
+    console.error("Error proxying petrol-pump application:", err);
+    return res.status(500).send("Error loading petrol pump app: " + err.message);
+  }
+});
+
+app.get("/api/proxy/petrol-pump/assets/:file", async (req, res) => {
+  try {
+    const filename = req.params.file;
+    const upstream = await fetch(`https://c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev/assets/${filename}`);
+    if (!upstream.ok) {
+      return res.status(upstream.status).send("Asset not found");
+    }
+    const contentType = 
+      upstream.headers.get("content-type") || 
+      (filename.endsWith(".js") ? "text/javascript" : filename.endsWith(".css") ? "text/css" : "application/octet-stream");
+      
+    res.setHeader("Content-Type", contentType);
+    res.removeHeader("X-Frame-Options");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const buffer = await upstream.arrayBuffer();
+    return res.send(Buffer.from(buffer));
+  } catch (err: any) {
+    return res.status(500).send("Error loading asset: " + err.message);
+  }
+});
+
 // API: Submit Inquiry (With Input Sanitization & Rate Limiting)
 app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
   const { name, email, phone, service, message } = req.body;
