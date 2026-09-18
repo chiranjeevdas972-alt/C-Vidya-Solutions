@@ -165,7 +165,25 @@ LANGUAGE RULES:
    - Description: Autonomous inbound demand gen engine: AI keyword research, competitor content gap analysis, automated high-ranking SEO articles, LinkedIn thought leadership copy, lead magnet generator, and CAC / MQL velocity attribution.
 
 ==================================================
-3. CLOUD ARCHITECTURE & SECURITY
+3. OTHER SPECIALIZED SERVICES & SUITES (3 PLATFORMS)
+==================================================
+
+1. C Vidya Cloud-Based Software Petrol Pump Site
+   - Live Worker URL: https://c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev/
+   - Description: Comprehensive fueling station ERP for retail petrol/diesel dealerships (IOCL, BPCL, HPCL, Nayara, Shell, Reliance).
+   - Core Features: Shift opening/closing totalizer meter readings with automated nozzle sales reconciliation, physical dip measurement vs electronic meter sales with automatic temperature/density variance audits, transport fleet credit khata (indent / slip / challan billing) with automated WhatsApp balance reminders, lubricant & DEF/AdBlue stock tracking with re-order alerts, cashier collection registers, and instant GST-compliant fuel bills.
+
+2. Care Plus Healthcare System
+   - Description: Integrated Hospital Information System (HIS) & Clinical Practice ERP for hospitals, nursing homes, clinics, and diagnostic centers.
+   - Core Features: Outpatient (OPD) queue token management & Inpatient (IPD) admissions, doctor appointment scheduling and roster, digital prescription (EHR/EMR) generator with drug dosage and allergy warnings, in-house pharmacy inventory management with batch expiry tracking and retail POS, pathology & radiology diagnostic lab test booking with barcode sample tracking and automated report generation, IPD bed/ward/ICU allocation, and consolidated hospitalization billing with insurance TPA & Ayushman Bharat claim support.
+
+3. C Vidya PDF and Media Tools SaaS
+   - Live Worker URL: https://c-vidya-pdf-saas-tools.cvidyasolutions.workers.dev/
+   - Description: High-speed browser-edge & cloud digital document transformation and multimedia processing platform.
+   - Core Features: High-fidelity Word to PDF conversion with preserved typography, XML paragraph extraction, and WinAnsi encoding sanitization; comprehensive PDF utilities including Merge PDF, Split PDF, Compress PDF without quality loss, Watermark & Branding, Page Rotation, Password Protect & Unlock; image and multimedia converters; client-side edge processing ensuring zero data retention and maximum privacy; built-in cloud inventory and conversion telemetry.
+
+==================================================
+4. CLOUD ARCHITECTURE & SECURITY
 ==================================================
 - Edge Deployment: Hosted on Cloudflare Workers edge nodes globally (<50ms latency, 99.99% uptime).
 - Database Security: Google Cloud & Firebase Firestore with bank-grade TLS 1.3 encryption and automated backups.
@@ -173,7 +191,7 @@ LANGUAGE RULES:
 - Compliance: Certified under Software Technology Parks of India (STPI Sindri, BIT Sindri Campus).
 
 ==================================================
-4. DEMO & PRICING CONVERSATION FLOWS
+5. DEMO & PRICING CONVERSATION FLOWS
 ==================================================
 - Free Demos: Collect Full Name, Business/Institute Name, Phone Number, Email, Interested Product, and City/State.
 - Pricing: Explain modular pay-as-you-grow plans (Starter, Professional, Enterprise Custom). Never invent fixed arbitrary prices.
@@ -350,6 +368,43 @@ A: Depending on the selected modules, AgriFusion may support poultry farming, go
 
 Q: Who can use AgriFusion?
 A: AgriFusion may be useful for individual farmers, farm owners, poultry businesses, mixed farms, agriculture businesses, and organizations managing multiple farming operations.
+
+Q: What is C Vidya Jewelers Management?
+A: C Vidya Jewelers Management is a specialized bullion and retail jewelry enterprise ERP. It provides live 24K, 22K, and 18K gold and silver market rate sync, gross/net/stone/wastage weight calculations, Karigar (artisan) metal casting and scrap logs, custom bespoke bridal design order books, and GST barcode billing.
+
+Q: Who can use C Vidya Jewelers Management?
+A: It is designed for jewelry showroom owners, bullion traders, goldsmiths, and jewelry manufacturing workshops.
+
+Q: What is C Vidya Enterprises CRM?
+A: C Vidya Enterprises CRM is a modern sales execution and customer relationship management platform featuring drag-and-drop Kanban pipelines, automated follow-up cadences, VoIP call logs, instant quote/proposal PDF builders, and revenue velocity metrics.
+
+Q: What are the 4 Autonomous AI Agents developed by C Vidya Solutions?
+A: The 4 Autonomous AI Agents are:
+1. C Vidya Social Media Agent (viral trend discovery, automated content scheduling, and comment sentiment nurturing across LinkedIn, X, Instagram, Facebook).
+2. C Vidya AI Customer Support Agent (24/7 RAG support, sub-second query resolution, omnichannel widgets, and human escalation).
+3. C Vidya Business Sales Flow AI Agent (autonomous B2B prospect discovery, personalized cold outreach across email/LinkedIn/WhatsApp, BANT qualification, and direct calendar demo booking).
+4. C Vidya AI Marketing for B2B SaaS Companies (autonomous inbound demand generation, SEO keyword clustering, technical blogs, LinkedIn thought leadership, and CAC/MQL attribution).
+
+Q: What is C Vidya Cloud-Based Software Petrol Pump Site?
+A: It is an advanced cloud fuel station management ERP designed for petrol pumps, diesel dealerships, and retail fueling stations (IOCL, BPCL, HPCL, Nayara, Shell, Reliance). It manages nozzle meter readings, underground tank dip-to-sale variance audits, fleet credit khata (indent / slip billing) with automated WhatsApp reminders, lube stock inventory, and GST invoicing.
+
+Q: How does C Vidya Petrol Pump software handle fuel dips and variance?
+A: The software records physical opening and closing dips from underground storage tanks and automatically compares them against cumulative nozzle meter sales to calculate daily evaporation, temperature, and stock variances, ensuring leak detection and zero fuel pilferage.
+
+Q: Can C Vidya Petrol Pump software manage credit accounts (Credit Khata)?
+A: Yes. It offers comprehensive fleet credit khata management for transport fleets, bus operators, and local corporate accounts. It records fuel slips/challans with vehicle numbers and driver signatures, and sends automated WhatsApp payment reminders and statements.
+
+Q: What is Care Plus Healthcare System?
+A: Care Plus Healthcare System is an integrated Hospital Information System (HIS) and clinical practice management software for hospitals, clinics, nursing homes, and diagnostic centers.
+
+Q: What features are included in Care Plus Healthcare System?
+A: Key modules include OPD queue tokens, IPD admissions and bed/ward allocation, doctor appointment scheduling, digital prescription generator (EMR/EHR) with drug dosage and allergy templates, in-house pharmacy POS with batch expiry tracking, pathology/radiology lab test booking with barcode sample tracking and report printing, and consolidated hospitalization billing with insurance TPA & Ayushman Bharat support.
+
+Q: What is C Vidya PDF and Media Tools SaaS?
+A: C Vidya PDF and Media Tools SaaS is a high-speed browser-edge & cloud digital document and multimedia transformation suite. It provides Word to PDF conversion with preserved typography, XML paragraph extraction, and WinAnsi sanitization; comprehensive PDF utilities including Merge, Split, Compress, Watermark, Rotate, and Protect; and media/image format converters.
+
+Q: Are files uploaded to C Vidya PDF and Media Tools secure?
+A: Yes. All file processing happens either on the secure client-side browser edge or encrypted transient pipelines with zero persistent file retention, ensuring strict data privacy and security.
 
 Q: How can C Vidya Solutions help my business?
 A: C Vidya Solutions can help reduce manual work, organize important records, improve operational efficiency, centralize business information, and support better decision-making through digital software solutions.
@@ -608,6 +663,133 @@ app.get("/api/proxy/petrol-pump", (req, res) => {
   res.redirect(302, "/software/petrol-pump/index.html");
 });
 
+// PDF & Media Tool SaaS Backend APIs (Session, Inventory, Telemetry, Usage)
+const pdfToolInventory: Array<any> = [];
+let pdfToolDailyConversions = 0;
+
+app.get("/api/auth/me", (req, res) => {
+  res.json({
+    user: {
+      id: "user_free",
+      name: "Demo Professional",
+      email: "demo@cvidyasolutions.com",
+      role: "user",
+      plan: "free",
+      dailyConversionsUsed: pdfToolDailyConversions,
+      dailyLimit: 25,
+      storageUsedBytes: 12450000,
+      storageLimitBytes: 104857600,
+      createdAt: new Date().toISOString()
+    }
+  });
+});
+
+app.post("/api/auth/login", (req, res) => {
+  res.json({
+    success: true,
+    user: {
+      id: req.body?.switchUserId || "user_pro",
+      name: "C Vidya Member",
+      email: req.body?.email || "member@cvidyasolutions.com",
+      role: "user",
+      plan: "pro",
+      dailyConversionsUsed: 0,
+      dailyLimit: 100,
+      storageUsedBytes: 25000000,
+      storageLimitBytes: 1073741824,
+      createdAt: new Date().toISOString()
+    }
+  });
+});
+
+app.get("/api/inventory", (req, res) => {
+  res.json({
+    items: pdfToolInventory,
+    storageUsedBytes: pdfToolInventory.reduce((acc, item) => acc + (item.sizeBytes || 0), 0)
+  });
+});
+
+app.post("/api/inventory", (req, res) => {
+  const item = {
+    id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    ...req.body,
+    createdAt: new Date().toISOString()
+  };
+  pdfToolInventory.unshift(item);
+  res.json({ success: true, item });
+});
+
+app.delete("/api/inventory/:id", (req, res) => {
+  const index = pdfToolInventory.findIndex((item) => item.id === req.params.id);
+  if (index !== -1) {
+    pdfToolInventory.splice(index, 1);
+  }
+  res.json({ success: true });
+});
+
+app.post("/api/inventory/batch-delete", (req, res) => {
+  const ids: string[] = req.body?.ids || [];
+  for (let i = pdfToolInventory.length - 1; i >= 0; i--) {
+    if (ids.includes(pdfToolInventory[i].id)) {
+      pdfToolInventory.splice(i, 1);
+    }
+  }
+  res.json({ success: true });
+});
+
+app.get("/api/analytics", (req, res) => {
+  res.json({
+    analytics: {
+      totalConversions: 184 + pdfToolDailyConversions,
+      activeUsers: 24,
+      storageSavedBytes: 145000000,
+      conversionHistory: [
+        { date: "Mon", count: 18 },
+        { date: "Tue", count: 24 },
+        { date: "Wed", count: 32 },
+        { date: "Thu", count: 29 },
+        { date: "Fri", count: 41 },
+        { date: "Sat", count: 25 },
+        { date: "Sun", count: 15 }
+      ]
+    }
+  });
+});
+
+app.post("/api/user/increment-usage", (req, res) => {
+  pdfToolDailyConversions++;
+  res.json({
+    success: true,
+    dailyConversionsUsed: pdfToolDailyConversions
+  });
+});
+
+app.post("/api/user/reset-usage", (req, res) => {
+  pdfToolDailyConversions = 0;
+  res.json({
+    success: true,
+    dailyConversionsUsed: 0
+  });
+});
+
+app.post("/api/user/subscribe", (req, res) => {
+  res.json({
+    success: true,
+    user: {
+      id: "user_pro",
+      name: "Subscribed User",
+      email: "subscriber@cvidyasolutions.com",
+      role: "user",
+      plan: req.body?.plan || "pro",
+      dailyConversionsUsed: 0,
+      dailyLimit: 200,
+      storageUsedBytes: 0,
+      storageLimitBytes: 5368709120,
+      createdAt: new Date().toISOString()
+    }
+  });
+});
+
 // API: Submit Inquiry (With Input Sanitization & Rate Limiting)
 app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
   const { name, email, phone, service, message } = req.body;
@@ -851,7 +1033,7 @@ async function callGeminiWithRetry(client: GoogleGenAI, formattedContents: any[]
   for (let i = 0; i <= retries; i++) {
     try {
       const response = await client.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: formattedContents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,

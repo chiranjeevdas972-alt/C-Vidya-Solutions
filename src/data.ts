@@ -484,7 +484,7 @@ export const aiAgentsData: ProductService[] = [
     name: "C VIDYA AI CUSTOMER SUPPORT AGENT",
     tagline: "24/7 Omnichannel RAG, Automated Ticketing & Multi-Channel Resolution",
     badge: "Autonomous AI Agent",
-    aiModel: "Neural RAG + Flash 2.5",
+    aiModel: "Neural RAG + Gemini Flash 3.8",
     categoryType: "ai-agent",
     description: "Next-generation AI-powered autonomous customer support agent for instant query resolution, smart ticket routing, enterprise knowledge-base RAG search, and human agent handoff.",
     externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",

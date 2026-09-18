@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <base href="/software/library/">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C Vidya Management - Professional Management System</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <script>
+      (function() {
+        window.addEventListener('error', function(event) {
+          console.error('Early bootstrap error captured:', event.error || event.message);
+          showEarlyFallback(event.error || event.message);
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+          console.error('Early unhandled promise rejection:', event.reason);
+          showEarlyFallback(event.reason);
+        });
+        
+        function showEarlyFallback(err) {
+          var root = document.getElementById('root');
+          if (root && (!root.innerHTML || root.innerHTML.trim() === '')) {
+            var errorText = String(err && err.stack ? err.stack : err);
+            root.innerHTML = `
+              <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #f8fafc; padding: 24px; font-family: system-ui, -apple-system, sans-serif;">
+                <div style="max-width: 480px; width: 100%; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); padding: 32px; text-align: center; border: 1px solid #e2e8f0;">
+                  <div style="width: 64px; height: 64px; background-color: #fee2e2; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px auto;">
+                    <svg style="width: 32px; height: 32px; color: #ef4444;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">System Bootstrap Recovery</h1>
+                  <p style="font-size: 14px; color: #475569; margin-bottom: 24px; line-height: 1.5;">
+                    The application encountered a fatal initialization error during startup. Let's recover the application automatically.
+                  </p>
+                  <div style="margin-bottom: 24px; text-align: left; background-color: #f1f5f9; border-radius: 8px; padding: 16px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; color: #b91c1c; overflow-x: auto; max-height: 150px; white-space: pre-wrap;">
+                    ${errorText}
+                  </div>
+                  <button onclick="window.location.reload()" style="cursor: pointer; display: inline-block; width: 100%; background-color: #4f46e5; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-weight: 600; font-size: 14px; transition: background-color 0.2s;">
+                    Force Reload & Recover
+                  </button>
+                  <div style="margin-top: 16px; font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                    Production Safe Guard Active • C Vidya
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-DqU-GHXn.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-qqRAAbNB.css">
+  
+    <script>
+      (function() {
+        function notifyParent() {
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'CV_ROUTE_CHANGED',
+                pathname: window.location.pathname,
+                search: window.location.search,
+                href: window.location.href,
+                canGoBack: window.history.length > 1
+              }, '*');
+            }
+          } catch(e) {}
+        }
+        window.addEventListener('message', function(e) {
+          if (!e.data) return;
+          if (e.data.type === 'CV_GO_BACK') {
+            if (window.location.pathname !== '/' && window.location.pathname !== '/home') {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = '/';
+              }
+            } else {
+              // already at root
+              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+            }
+          } else if (e.data.type === 'CV_GO_HOME') {
+            window.location.href = '/';
+          } else if (e.data.type === 'CV_NAVIGATE') {
+            window.location.href = e.data.path || '/';
+          }
+        });
+        window.addEventListener('popstate', notifyParent);
+        const origPush = history.pushState;
+        history.pushState = function() {
+          origPush.apply(this, arguments);
+          notifyParent();
+        };
+        const origReplace = history.replaceState;
+        history.replaceState = function() {
+          origReplace.apply(this, arguments);
+          notifyParent();
+        };
+        window.addEventListener('DOMContentLoaded', notifyParent);
+        window.addEventListener('load', notifyParent);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+
