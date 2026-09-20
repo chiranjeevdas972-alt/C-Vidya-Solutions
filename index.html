@@ -12,30 +12,37 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://cvidyasolutions.com" />
 
-    <!-- Favicons & App Icons -->
-    <link rel="icon" href="/favicon.ico" />
+    <!-- Favicons & App Icons (Optimized for Google Search, Mobile, and Desktop Browsers) -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0B57D0" />
     <meta name="msapplication-TileColor" content="#0B57D0" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
 
-    <!-- Open Graph (Facebook / LinkedIn) -->
-    <meta property="og:title" content="C Vidya Solutions" />
+    <!-- Open Graph (Facebook / LinkedIn / WhatsApp) -->
+    <meta property="og:title" content="C Vidya Solutions - Architecting the Digital Future" />
     <meta property="og:site_name" content="C Vidya Solutions" />
-    <meta property="og:image" content="https://cvidyasolutions.com/logo.png" />
+    <meta property="og:image" content="https://cvidyasolutions.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://cvidyasolutions.com" />
-    <meta property="og:description" content="Software Company providing modern management solutions." />
+    <meta property="og:description" content="Premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, automated civic pipelines, and OMR models." />
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="C Vidya Solutions" />
-    <meta name="twitter:description" content="Software Company providing modern management solutions." />
-    <meta name="twitter:image" content="https://cvidyasolutions.com/logo.png" />
+    <meta name="twitter:title" content="C Vidya Solutions - Architecting the Digital Future" />
+    <meta name="twitter:description" content="Premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, automated civic pipelines, and OMR models." />
+    <meta name="twitter:image" content="https://cvidyasolutions.com/og-image.png" />
 
     <!-- Structured Data: JSON-LD Schemas -->
     <script type="application/ld+json">
@@ -48,8 +55,13 @@
             "name": "C Vidya Solutions",
             "alternateName": "C Vidya",
             "url": "https://cvidyasolutions.com",
-            "logo": "https://cvidyasolutions.com/logo.png",
-            "image": "https://cvidyasolutions.com/logo.png",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://cvidyasolutions.com/logo.png",
+              "width": 512,
+              "height": 512
+            },
+            "image": "https://cvidyasolutions.com/og-image.png",
             "description": "C Vidya Solutions is a premier software company providing modern institutional and enterprise management solutions, multitenant SaaS suites, automated civic pipelines, and OMR models.",
             "foundingDate": "2025",
             "founder": {
