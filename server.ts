@@ -13,6 +13,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+// Trust reverse proxies (Google Cloud Run / Cloudflare) for accurate IP resolution
+app.set("trust proxy", true);
+
 // Middleware - allow up to 15mb payload for PDF resume attachments
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
@@ -572,7 +575,7 @@ app.use((req, res, next) => {
     "img-src 'self' data: https:; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "connect-src 'self' https: wss: ws:; " +
-    "frame-ancestors 'self' https://*.studio https://ai.studio https://*.google.com https://*.google.dev;"
+    "frame-ancestors 'self' https://*.studio https://ai.studio https://*.google.com https://*.google.dev https://*.run.app https://cvidyasolutions.com https://*.cvidyasolutions.com;"
   );
   next();
 });
@@ -587,13 +590,13 @@ function cleanOldTimestamps(timestamps: number[], windowMs: number): number[] {
   return timestamps.filter(t => now - t < windowMs);
 }
 
-// Global API limit (100 requests per minute)
-app.use((req, res, next) => {
+// API endpoint rate limit (100 API requests per minute per IP - never throttle static assets or frontend JS)
+app.use("/api/", (req, res, next) => {
   const ip = req.ip || (req.headers["x-forwarded-for"] as string) || "unknown";
   let ts = ipRequestCounts.get(ip) || [];
   ts = cleanOldTimestamps(ts, 60000);
   if (ts.length >= 100) {
-    return res.status(429).json({ error: "Rate limit exceeded. Maximum 100 requests per minute. Please wait and try again." });
+    return res.status(429).json({ error: "Rate limit exceeded. Maximum 100 API requests per minute. Please wait and try again." });
   }
   ts.push(Date.now());
   ipRequestCounts.set(ip, ts);
@@ -1099,14 +1102,6 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Global error handler (Mask internal exceptions and stack traces from clients)
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error("Unhandled Error logged securely on the backend:", err);
-  res.status(500).json({
-    error: "An internal application or database error occurred. System trace is hidden securely."
-  });
-});
-
 // Serve public static assets (including embedded software suites)
 app.use(express.static(path.join(process.cwd(), "public")));
 
@@ -1127,6 +1122,17 @@ async function startServer() {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
+
+  // Global error handler (Mask internal exceptions and stack traces from clients)
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("Unhandled Error logged securely on the backend:", err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    res.status(500).json({
+      error: "An internal application or database error occurred. System trace is hidden securely."
+    });
+  });
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`C Vidya Solutions Server running on http://0.0.0.0:${PORT}`);
