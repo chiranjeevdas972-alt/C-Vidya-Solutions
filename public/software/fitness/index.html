@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <title>C Vidya Fitness Zone</title>
+    <base href="/software/fitness/">
+    <script>
+      // Clean path so React Router matches root properly whether accessed via /software/fitness/ or /software/fitness/index.html
+      (function() {
+        try {
+          if (window.location.pathname.endsWith('index.html')) {
+            var clean = window.location.pathname.replace(/\/index\.html$/, '') || '/';
+            if (!clean.endsWith('/')) clean += '/';
+            window.history.replaceState(null, '', clean + window.location.search + window.location.hash);
+          }
+        } catch(e) {
+          console.warn('URL clean warning:', e);
+        }
+      })();
+    </script>
+    <script>
+      (function() {
+        window.addEventListener('error', function(event) {
+          console.error('Bootstrap error captured in Fitness Zone:', event.error || event.message);
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+          console.error('Unhandled promise rejection in Fitness Zone:', event.reason);
+        });
+
+        function notifyParent() {
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({
+                type: 'CV_ROUTE_CHANGED',
+                pathname: window.location.pathname,
+                search: window.location.search,
+                href: window.location.href,
+                canGoBack: window.history.length > 1
+              }, '*');
+            }
+          } catch(e) {}
+        }
+
+        window.addEventListener('message', function(e) {
+          if (!e.data) return;
+          if (e.data.type === 'CV_GO_BACK') {
+            if (window.location.pathname !== '/' && window.location.pathname !== '/home' && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/software/fitness/' && window.location.pathname !== '/software/fitness') {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = './';
+              }
+            } else {
+              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+            }
+          } else if (e.data.type === 'CV_GO_HOME') {
+            window.location.href = './';
+          } else if (e.data.type === 'CV_NAVIGATE') {
+            window.location.href = e.data.path || './';
+          }
+        });
+
+        window.addEventListener('popstate', notifyParent);
+        const origPush = history.pushState;
+        history.pushState = function() {
+          origPush.apply(this, arguments);
+          notifyParent();
+        };
+        const origReplace = history.replaceState;
+        history.replaceState = function() {
+          origReplace.apply(this, arguments);
+          notifyParent();
+        };
+        window.addEventListener('DOMContentLoaded', notifyParent);
+        window.addEventListener('load', notifyParent);
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-cWgupvWs.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index--Lv4jjzA.css">
+  </head>
+  <body class="bg-black text-white font-sans antialiased">
+    <div id="root"></div>
+  </body>
+</html>

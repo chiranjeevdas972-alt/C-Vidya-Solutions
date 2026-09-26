@@ -1,11 +1,33 @@
-import { Phone, Mail, MapPin, Youtube, Facebook, Instagram, Twitter, Linkedin, ArrowUp } from "lucide-react";
+import { 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Youtube, 
+  Facebook, 
+  Instagram, 
+  Twitter, 
+  Linkedin, 
+  ArrowUp
+} from "lucide-react";
 import Logo from "./Logo";
 
 interface FooterProps {
   onNavigate: (page: string) => void;
+  onOpenArchitecture?: (tab?: "prd" | "trd" | "flow" | "uiux" | "schema" | "plan") => void;
+  isAdminAuthenticated?: boolean;
+  onAdminLoginSuccess?: () => void;
+  onAdminLogout?: () => void;
+  onOpenAdminModal?: () => void;
 }
 
-export default function Footer({ onNavigate }: FooterProps) {
+export default function Footer({ 
+  onNavigate, 
+  onOpenArchitecture: _onOpenArchitecture,
+  isAdminAuthenticated: _isAdminAuthenticated,
+  onAdminLoginSuccess: _onAdminLoginSuccess,
+  onAdminLogout: _onAdminLogout,
+  onOpenAdminModal: _onOpenAdminModal
+}: FooterProps) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -178,7 +200,7 @@ export default function Footer({ onNavigate }: FooterProps) {
         </div>
 
         {/* Bottom Legal & Compliance Strip */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 font-mono text-[11px]">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 font-mono text-[11px] pt-8 border-t border-slate-800/80">
           <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center md:justify-start">
             <span>© 2026 C Vidya Solutions. All rights reserved.</span>
             <span>•</span>

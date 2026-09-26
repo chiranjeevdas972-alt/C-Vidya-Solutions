@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, Menu, X, ArrowRight, Sparkles, MessageSquare } from "lucide-react";
+import { Phone, Mail, MapPin, Menu, X, ArrowRight, MessageSquare } from "lucide-react";
 import Logo from "./Logo";
 
 interface HeaderProps {
@@ -7,9 +7,16 @@ interface HeaderProps {
   onOpenAssistant: () => void;
   onOpenHub: (tab: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq") => void;
   onOpenConsultation?: () => void;
+  onOpenArchitecture?: () => void;
 }
 
-export default function Header({ activePage = "home", onOpenAssistant, onOpenHub, onOpenConsultation }: HeaderProps) {
+export default function Header({ 
+  activePage = "home", 
+  onOpenAssistant, 
+  onOpenHub, 
+  onOpenConsultation,
+  onOpenArchitecture 
+}: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems: { id: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "faq" | "blog"; label: string }[] = [
@@ -91,11 +98,11 @@ export default function Header({ activePage = "home", onOpenAssistant, onOpenHub
             })}
           </nav>
 
-          {/* Right Action Button */}
-          <div className="hidden sm:flex items-center gap-3">
+          {/* Right Action Buttons */}
+          <div className="hidden sm:flex items-center gap-2.5">
             <button
               onClick={onOpenConsultation || (() => onOpenHub("contact"))}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <span>Book a Demo</span>
               <ArrowRight className="w-4 h-4" />
@@ -128,10 +135,8 @@ export default function Header({ activePage = "home", onOpenAssistant, onOpenHub
                       setMobileMenuOpen(false);
                       onOpenHub(item.id);
                     }}
-                    className={`w-full text-left py-3 px-3.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent border-none ${
-                      isActive 
-                        ? "bg-blue-50 text-blue-600 font-bold" 
-                        : "hover:bg-slate-50 text-slate-800"
+                    className={`py-2 px-3 text-left rounded-lg text-sm font-medium ${
+                      isActive ? "bg-blue-50 text-blue-600 font-bold" : "hover:bg-slate-50 text-slate-700"
                     }`}
                   >
                     {item.label}
@@ -140,7 +145,7 @@ export default function Header({ activePage = "home", onOpenAssistant, onOpenHub
               })}
             </nav>
 
-            <div className="pt-2">
+            <div className="pt-2 border-t border-slate-100">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

@@ -127,7 +127,7 @@ export const SOFTWARE_PRODUCTS: SoftwareProduct[] = [
     badge: "Cloud-Based Software",
     icon: Activity,
     image: fitnessImg,
-    link: "https://fitzone.cvidyasolutions.workers.dev/",
+    link: "/software/fitness/index.html",
     description: "Biometric turnstile relays, facial access, and member subscription billing.",
     modules: [
       {

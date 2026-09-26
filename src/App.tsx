@@ -17,6 +17,8 @@ import AiAssistant from "./components/AiAssistant";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
 import CompliancePage from "./components/CompliancePage";
 import InfoHubModal from "./components/InfoHubModal";
+import ArchitectureHubModal from "./components/ArchitectureHubModal";
+import NetworkStatusBanner from "./components/NetworkStatusBanner";
 import Logo from "./components/Logo";
 import { type ProductService } from "./types";
 import { saasProductsData, aiAgentsData } from "./data";
@@ -24,11 +26,7 @@ import {
   Lock, 
   X, 
   Trash2, 
-  Database, 
-  Download, 
-  Search, 
-  Filter,
-  CheckCircle2
+  Search
 } from "lucide-react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebase";
@@ -40,6 +38,10 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<ProductService | null>(null);
   const [activeSoftwareDetail, setActiveSoftwareDetail] = useState<ProductService | null>(null);
   const [activeLiveSoftware, setActiveLiveSoftware] = useState<ProductService | null>(null);
+  const [architectureOpen, setArchitectureOpen] = useState(false);
+  const [architectureTab, setArchitectureTab] = useState<"prd" | "trd" | "flow" | "uiux" | "schema" | "plan">("prd");
+
+
 
   // Active page routing state
   const [activePage, setActivePage] = useState<
@@ -117,11 +119,25 @@ export default function App() {
       portability: {
         title: "Data Portability - C Vidya Solutions",
         description: "Export records and database ledgers under GDPR Article 15 and international portability standards."
+      },
+      architecture: {
+        title: "Architecture & Engineering Center - C Vidya Solutions",
+        description: "Explore the 6 core engineering documents: PRD, TRD, 10-screen App Flow, UI/UX System, DB Schema with ERD, and Build Plan."
       }
     };
 
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
+      if (hash.startsWith("architecture")) {
+        const subTab = hash.split("-")[1] as any;
+        if (["prd", "trd", "flow", "uiux", "schema", "plan"].includes(subTab)) {
+          setArchitectureTab(subTab);
+        } else {
+          setArchitectureTab("prd");
+        }
+        setArchitectureOpen(true);
+        return;
+      }
       const validPages = [
         "home", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
         "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
@@ -202,12 +218,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans overflow-x-clip">
       
+      {/* 0. GLOBAL REAL-TIME NETWORK & EDGE CASE STATUS */}
+      <NetworkStatusBanner />
+
       {/* 1. TOP HEADER & NAVIGATION */}
       <Header 
         activePage={activePage}
         onOpenAssistant={() => setAiOpen(true)} 
         onOpenHub={(tab) => navigateTo(tab)}
         onOpenConsultation={() => navigateTo("contact")}
+        onOpenArchitecture={() => {
+          setArchitectureTab("prd");
+          setArchitectureOpen(true);
+        }}
       />
 
       {/* 2. MAIN PAGE ROUTER SWITCH */}
@@ -295,7 +318,13 @@ export default function App() {
       </main>
 
       {/* 3. FOOTER */}
-      <Footer onNavigate={navigateTo} />
+      <Footer 
+        onNavigate={navigateTo} 
+        onOpenArchitecture={(tab) => {
+          setArchitectureTab(tab || "prd");
+          setArchitectureOpen(true);
+        }}
+      />
 
       {/* 4. FLOATING AI ASSISTANT TRIGGER */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
@@ -489,6 +518,15 @@ export default function App() {
       <AiAssistant 
         isOpen={aiOpen} 
         onClose={() => setAiOpen(false)} 
+      />
+
+
+
+      {/* 9. ARCHITECTURE & SPECIFICATIONS CENTER (6 PILLARS) */}
+      <ArchitectureHubModal
+        isOpen={architectureOpen}
+        onClose={() => setArchitectureOpen(false)}
+        initialTab={architectureTab}
       />
 
     </div>

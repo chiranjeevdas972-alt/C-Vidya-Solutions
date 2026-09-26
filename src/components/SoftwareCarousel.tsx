@@ -91,7 +91,7 @@ export default function SoftwareCarousel() {
       description: "Full club management system integrated with physical gate relays, digital QR passes, automated diet planners, and membership logs.",
       badge: "Facility Hardware",
       accentColor: "from-amber-400 to-brand-gold-500",
-      externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
+      externalLink: "/software/fitness/index.html",
       imageUrl: fitnessImg,
       metrics: [
         { label: "Face Recognition Speed", value: "0.18s" },

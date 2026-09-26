@@ -666,6 +666,11 @@ app.get("/api/proxy/petrol-pump", (req, res) => {
   res.redirect(302, "/software/petrol-pump/index.html");
 });
 
+// Proxy for Fitness Zone cloud software (redirects to the universal static suite)
+app.get("/api/proxy/fitness", (req, res) => {
+  res.redirect(302, "/software/fitness/index.html");
+});
+
 // PDF & Media Tool SaaS Backend APIs (Session, Inventory, Telemetry, Usage)
 const pdfToolInventory: Array<any> = [];
 let pdfToolDailyConversions = 0;
@@ -1103,6 +1108,9 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // Serve public static assets (including embedded software suites)
+app.get("/software/fitness", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
+});
 app.use(express.static(path.join(process.cwd(), "public")));
 
 // Vite / static file serving integration

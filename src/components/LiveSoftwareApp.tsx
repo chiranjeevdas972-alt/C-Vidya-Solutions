@@ -59,9 +59,12 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     return software.id === "institutes" || software.name.toLowerCase().includes("institute");
   }, [software]);
 
-  // Use embedded static application suite for petrol-pump and pdf-media-tools to work universally on local dev, AI Studio, and deployed production servers
+  // Use embedded static application suite for fitness, petrol-pump and pdf-media-tools to work universally on local dev, AI Studio, and deployed production servers
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
+    if (software.id === "fitness" || software.externalLink.includes("fitzone.cvidyasolutions.workers.dev")) {
+      return "/software/fitness/index.html";
+    }
     if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
     }

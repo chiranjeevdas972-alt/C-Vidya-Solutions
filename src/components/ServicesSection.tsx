@@ -474,7 +474,15 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
 
               <iframe
                 key={frameKey}
-                src={liveAppViewing.externalLink}
+                src={
+                  liveAppViewing.id === "fitness" || liveAppViewing.externalLink?.includes("fitzone.cvidyasolutions.workers.dev")
+                    ? "/software/fitness/index.html"
+                    : liveAppViewing.id === "petrol-pump" || liveAppViewing.externalLink?.includes("c-vidya-cloud-petrol-pump")
+                    ? "/software/petrol-pump/index.html"
+                    : liveAppViewing.id === "pdf-media-tools" || liveAppViewing.id === "pdf-tools" || liveAppViewing.externalLink?.includes("c-vidya-pdf-saas-tools")
+                    ? "/software/pdf-media-tools/index.html"
+                    : liveAppViewing.externalLink
+                }
                 title={liveAppViewing.name}
                 onLoad={() => setFrameLoading(false)}
                 className="w-full h-full border-none bg-white"
