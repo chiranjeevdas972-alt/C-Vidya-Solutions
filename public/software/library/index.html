@@ -11,14 +11,27 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <script>
+      // Clean path so React Router matches root properly whether accessed via /software/library/ or /software/library/index.html
+      (function() {
+        try {
+          if (window.location.pathname.endsWith('index.html')) {
+            var clean = window.location.pathname.replace(/\/index\.html$/, '') || '/';
+            if (!clean.endsWith('/')) clean += '/';
+            window.history.replaceState(null, '', clean + window.location.search + window.location.hash);
+          }
+        } catch(e) {
+          console.warn('URL clean warning:', e);
+        }
+      })();
+    </script>
+    <script>
       (function() {
         window.addEventListener('error', function(event) {
           console.error('Early bootstrap error captured:', event.error || event.message);
           showEarlyFallback(event.error || event.message);
         });
         window.addEventListener('unhandledrejection', function(event) {
-          console.error('Early unhandled promise rejection:', event.reason);
-          showEarlyFallback(event.reason);
+          console.warn('Library unhandled promise rejection handled:', event.reason);
         });
         
         function showEarlyFallback(err) {

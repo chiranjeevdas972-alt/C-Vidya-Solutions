@@ -61,7 +61,7 @@ export const saasProductsData: ProductService[] = [
     badge: "Cloud-Based SaaS",
     categoryType: "saas",
     description: "Gym & fitness management software to handle members, plans, attendance, biometric turnstile gates, trainers, and daily workout activities seamlessly.",
-    externalLink: "/software/fitness/index.html",
+    externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
     imageUrl: fitnessImg,
     features: [
       "Biometric finger scan and facial door access turnstile logs",

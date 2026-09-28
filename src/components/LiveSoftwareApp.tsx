@@ -3,15 +3,11 @@ import { ProductService } from "../types";
 import institutesImg from "../assets/images/institutes_software_dashboard_1784909550776.jpg";
 import institutesComingSoonImg from "../assets/images/institutes_coming_soon_1789758787152.jpg";
 import { 
+  ArrowLeft,
   ArrowRight, 
   X, 
   RefreshCw, 
-  Maximize2, 
-  ShieldCheck, 
   Sparkles, 
-  Layers, 
-  Send,
-  MessageSquare,
   TrendingUp,
   Headphones,
   Megaphone,
@@ -24,7 +20,17 @@ import {
   Bus,
   Smartphone,
   Calendar,
-  Bell
+  Bell,
+  Dumbbell,
+  BookOpen,
+  Award,
+  Sprout,
+  Gem,
+  Target,
+  Fuel,
+  HeartPulse,
+  FileText,
+  BarChart3
 } from "lucide-react";
 
 interface LiveSoftwareAppProps {
@@ -36,11 +42,7 @@ interface LiveSoftwareAppProps {
 export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: LiveSoftwareAppProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
-  const [activeTab, setActiveTab] = useState<"live" | "console">("live");
 
-  // Track navigation depth inside the software iframe
-  const [hasNavigatedInside, setHasNavigatedInside] = useState(false);
-  const [currentRoute, setCurrentRoute] = useState<string>("landing");
   const [iframeKey, setIframeKey] = useState(1);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -49,17 +51,21 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
   const [waitlistEmail, setWaitlistEmail] = useState("");
   const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
 
-  // Simulation states for interactive backup
-  const [userInput, setUserInput] = useState("");
-  const [simLogs, setSimLogs] = useState<Array<{ sender: "user" | "agent"; text: string; time: string }>>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-
   const isInstitutes = useMemo(() => {
     if (!software) return false;
     return software.id === "institutes" || software.name.toLowerCase().includes("institute");
   }, [software]);
 
-  // Use embedded static application suite for fitness, petrol-pump and pdf-media-tools to work universally on local dev, AI Studio, and deployed production servers
+  const isFitness = useMemo(() => {
+    if (!software) return false;
+    return (
+      software.id === "fitness" ||
+      software.name.toLowerCase().includes("fitness") ||
+      Boolean(software.externalLink && software.externalLink.includes("fitzone"))
+    );
+  }, [software]);
+
+  // Use embedded static application suite for fitness, petrol-pump, library and pdf-media-tools to work universally on local dev, AI Studio, and deployed production servers
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     if (software.id === "fitness" || software.externalLink.includes("fitzone.cvidyasolutions.workers.dev")) {
@@ -67,6 +73,9 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }
     if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
+    }
+    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions.workers.dev")) {
+      return "/software/library/index.html";
     }
     if (software.id === "pdf-media-tools" || software.id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools")) {
       return "/software/pdf-media-tools/index.html";
@@ -79,32 +88,7 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
       document.body.style.overflow = "hidden";
       setIframeLoaded(false);
       setIframeError(false);
-      setHasNavigatedInside(false);
-      setCurrentRoute("landing");
       setIframeKey((k) => k + 1);
-
-      // Seed initial simulation log
-      if (software.id === "ai-social") {
-        setSimLogs([
-          { sender: "agent", text: "Welcome to C Vidya AI Social Media Agent. Connecting to LinkedIn, X, Instagram & Facebook. Ready to generate viral posts & automate multi-channel campaigns.", time: "Just now" }
-        ]);
-      } else if (software.id === "ai-support") {
-        setSimLogs([
-          { sender: "agent", text: "C Vidya AI Customer Support Agent is active. 24/7 Neural RAG knowledge base connected. How can I assist you or your customers today?", time: "Just now" }
-        ]);
-      } else if (software.id === "ai-salesflow") {
-        setSimLogs([
-          { sender: "agent", text: "C Vidya SalesFlow AI Agent initialized. Prospecting verified B2B leads & generating high-converting multi-touch sales sequences.", time: "Just now" }
-        ]);
-      } else if (software.id === "ai-marketing") {
-        setSimLogs([
-          { sender: "agent", text: "C Vidya B2B SaaS Growth & Marketing AI Agent is live. Inbound demand generation, SEO topic clustering & multi-channel ROI tracker active.", time: "Just now" }
-        ]);
-      } else {
-        setSimLogs([
-          { sender: "agent", text: `Connected to ${software.name} live production environment. All cloud nodes and local caching are operational.`, time: "Just now" }
-        ]);
-      }
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -119,93 +103,495 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }
   }, [software, onClose]);
 
-  // Listen to postMessage navigation bridge from embedded software
+  // Listen to exit message bridge from embedded software
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (!event.data) return;
-      if (event.data.type === "CV_ROUTE_CHANGED") {
-        const path = event.data.pathname || "";
-        if (path === "/" || path === "/home" || path === "" || path.endsWith("index.html")) {
-          setHasNavigatedInside(false);
-          setCurrentRoute("landing");
-        } else {
-          setHasNavigatedInside(true);
-          if (path.includes("login")) setCurrentRoute("login");
-          else if (path.includes("dashboard")) setCurrentRoute("dashboard");
-          else setCurrentRoute(path.replace(/^\//, ""));
-        }
-      } else if (event.data.type === "CV_EXIT_SOFTWARE") {
+      if (event.data?.type === "CV_EXIT_SOFTWARE") {
         onClose();
       }
     };
 
-    // When the user clicks into the iframe, register that interaction
-    const handleWindowBlur = () => {
-      // User focused inside the iframe
-      setHasNavigatedInside(true);
-    };
-
     window.addEventListener("message", handleMessage);
-    window.addEventListener("blur", handleWindowBlur);
     return () => {
       window.removeEventListener("message", handleMessage);
-      window.removeEventListener("blur", handleWindowBlur);
     };
   }, [onClose]);
 
   if (!software) return null;
 
-  // Navigate iframe directly to the Software's own Landing Page
-  const goToSoftwareLanding = () => {
-    try {
-      iframeRef.current?.contentWindow?.postMessage({ type: "CV_GO_HOME" }, "*");
-      iframeRef.current?.contentWindow?.postMessage({ type: "CV_NAVIGATE", path: "/" }, "*");
-    } catch (e) {}
-
-    try {
-      if (iframeRef.current?.contentWindow?.location) {
-        iframeRef.current.contentWindow.location.href = effectiveIframeSrc;
-      }
-    } catch (e) {}
-
-    // Reload clean root landing URL
-    setIframeKey((prev) => prev + 1);
-    setHasNavigatedInside(false);
-    setCurrentRoute("landing");
-    setIframeLoaded(false);
-    setIframeError(false);
-  };
-
-  // Smart Back Handler:
-  // 1. If user is inside software (login/dashboard/subpages): navigate back to Software Landing Page!
-  // 2. If user is already on Software Landing Page: return to C Vidya Solutions portal!
+  // Back Handler: Directly and reliably returns to previous page in C Vidya Solutions
   const handleBack = () => {
-    if (isInstitutes) {
-      onClose();
-      return;
-    }
-
-    if (hasNavigatedInside || currentRoute !== "landing") {
-      // Try iframe history back first if supported
-      try {
-        iframeRef.current?.contentWindow?.postMessage({ type: "CV_GO_BACK" }, "*");
-        if (iframeRef.current?.contentWindow?.history && iframeRef.current.contentWindow.history.length > 1) {
-          iframeRef.current.contentWindow.history.back();
-          setHasNavigatedInside(false);
-          setCurrentRoute("landing");
-          return;
-        }
-      } catch (e) {
-        // Cross-origin: history is restricted
-      }
-
-      // Seamlessly navigate back to the software's root landing page
-      goToSoftwareLanding();
-    } else {
-      // User is already on the software's landing page, return to C Vidya Solutions landing page
-      onClose();
-    }
+    onClose();
   };
+
+  // Define dynamic metadata, branding colors, typography and navigation features for every software
+  interface SoftwareConfig {
+    shortName: string;
+    icon: React.ElementType;
+    badgeBg: string;
+    badgeShadow: string;
+    backBtnBg: string;
+    backBtnHover: string;
+    titleGradient: string;
+    navHoverText: string;
+    primaryBtnBg: string;
+    primaryBtnHover: string;
+    primaryBtnLabel: string;
+    headerBg: string;
+    headerBorder: string;
+    navLinks: Array<{ label: string; target: string }>;
+  }
+
+  const getSoftwareConfig = (sw: ProductService | null): SoftwareConfig => {
+    if (!sw) {
+      return {
+        shortName: "C Vidya Software",
+        icon: Sparkles,
+        badgeBg: "bg-blue-600",
+        badgeShadow: "shadow-blue-600/30",
+        backBtnBg: "bg-blue-600",
+        backBtnHover: "hover:bg-blue-500",
+        titleGradient: "from-white via-blue-200 to-white",
+        navHoverText: "hover:text-blue-400",
+        primaryBtnBg: "bg-blue-600",
+        primaryBtnHover: "hover:bg-blue-500",
+        primaryBtnLabel: "Get Started",
+        headerBg: "bg-[#071739]",
+        headerBorder: "border-blue-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Features", target: "#features" },
+          { label: "Overview", target: "#overview" },
+          { label: "Pricing", target: "#pricing" },
+          { label: "Connect", target: "#connect" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    const id = sw.id.toLowerCase();
+    const name = sw.name.toLowerCase();
+
+    // 1. Fitness Zone
+    if (id === "fitness" || id.includes("fit") || name.includes("fitness")) {
+      return {
+        shortName: "C Vidya Fitness Zone",
+        icon: Dumbbell,
+        badgeBg: "bg-red-600",
+        badgeShadow: "shadow-red-600/30",
+        backBtnBg: "bg-red-600",
+        backBtnHover: "hover:bg-red-500",
+        titleGradient: "from-white via-red-200 to-white",
+        navHoverText: "hover:text-red-400",
+        primaryBtnBg: "bg-red-600",
+        primaryBtnHover: "hover:bg-red-500",
+        primaryBtnLabel: "Get Started",
+        headerBg: "bg-[#0f0406]",
+        headerBorder: "border-red-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Features", target: "#features" },
+          { label: "Shop", target: "#shop" },
+          { label: "Tips", target: "#tips" },
+          { label: "Price", target: "#pricing" },
+          { label: "Connect", target: "#partner-inquiry" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 2. Petrol Pump Suite
+    if (id === "petrol-pump" || id.includes("petrol") || id.includes("fuel") || name.includes("petrol")) {
+      return {
+        shortName: "Vidya Petrol Pump Suite",
+        icon: Fuel,
+        badgeBg: "bg-orange-600",
+        badgeShadow: "shadow-orange-600/30",
+        backBtnBg: "bg-orange-600",
+        backBtnHover: "hover:bg-orange-500",
+        titleGradient: "from-white via-orange-200 to-white",
+        navHoverText: "hover:text-orange-400",
+        primaryBtnBg: "bg-orange-600",
+        primaryBtnHover: "hover:bg-orange-500",
+        primaryBtnLabel: "Shift Console",
+        headerBg: "bg-[#140802]",
+        headerBorder: "border-orange-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Dispensers", target: "#dispensers" },
+          { label: "Dip Tanks", target: "#tanks" },
+          { label: "Shift Settlement", target: "#shifts" },
+          { label: "Fleet Ledger", target: "#fleet" },
+          { label: "GST Billing", target: "#billing" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 3. Library Management
+    if (id === "library" || id.includes("book") || name.includes("library")) {
+      return {
+        shortName: "C Vidya Library Management",
+        icon: BookOpen,
+        badgeBg: "bg-emerald-600",
+        badgeShadow: "shadow-emerald-600/30",
+        backBtnBg: "bg-emerald-600",
+        backBtnHover: "hover:bg-emerald-500",
+        titleGradient: "from-white via-emerald-200 to-white",
+        navHoverText: "hover:text-emerald-400",
+        primaryBtnBg: "bg-emerald-600",
+        primaryBtnHover: "hover:bg-emerald-500",
+        primaryBtnLabel: "Access Catalog",
+        headerBg: "bg-[#03130a]",
+        headerBorder: "border-emerald-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Catalog", target: "#catalog" },
+          { label: "Members", target: "#members" },
+          { label: "Circulation", target: "#circulation" },
+          { label: "QR Passes", target: "#passes" },
+          { label: "Overdue", target: "#overdue" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 4. Institutes Management
+    if (id === "institutes" || id.includes("institute") || id.includes("school") || name.includes("institute")) {
+      return {
+        shortName: "C Vidya Institutes Management",
+        icon: GraduationCap,
+        badgeBg: "bg-blue-600",
+        badgeShadow: "shadow-blue-600/30",
+        backBtnBg: "bg-blue-600",
+        backBtnHover: "hover:bg-blue-500",
+        titleGradient: "from-white via-blue-200 to-white",
+        navHoverText: "hover:text-blue-400",
+        primaryBtnBg: "bg-blue-600",
+        primaryBtnHover: "hover:bg-blue-500",
+        primaryBtnLabel: "Join Waitlist",
+        headerBg: "bg-[#071329]",
+        headerBorder: "border-blue-900/60",
+        navLinks: [
+          { label: "Overview", target: "#overview" },
+          { label: "Admissions", target: "#admissions" },
+          { label: "Fees Ledger", target: "#fees" },
+          { label: "Gradebook", target: "#gradebook" },
+          { label: "Bus GPS", target: "#bus" },
+          { label: "Parent Portal", target: "#parents" },
+          { label: "Roadmap", target: "#roadmap" }
+        ]
+      };
+    }
+
+    // 5. Coaching Management
+    if (id === "coaching" || id.includes("coach") || id.includes("academy") || name.includes("coaching")) {
+      return {
+        shortName: "C Vidya Coaching Management",
+        icon: Award,
+        badgeBg: "bg-purple-600",
+        badgeShadow: "shadow-purple-600/30",
+        backBtnBg: "bg-purple-600",
+        backBtnHover: "hover:bg-purple-500",
+        titleGradient: "from-white via-purple-200 to-white",
+        navHoverText: "hover:text-purple-400",
+        primaryBtnBg: "bg-purple-600",
+        primaryBtnHover: "hover:bg-purple-500",
+        primaryBtnLabel: "Enrollment Demo",
+        headerBg: "bg-[#0f051a]",
+        headerBorder: "border-purple-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Batches", target: "#batches" },
+          { label: "Students", target: "#students" },
+          { label: "OMR Mock Tests", target: "#omr" },
+          { label: "SMS Broadcasts", target: "#sms" },
+          { label: "Timetables", target: "#schedules" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 6. AgriFusion (Farming)
+    if (id === "farming" || id.includes("agri") || id.includes("farm") || name.includes("agri")) {
+      return {
+        shortName: "AgriFusion Platform",
+        icon: Sprout,
+        badgeBg: "bg-green-600",
+        badgeShadow: "shadow-green-600/30",
+        backBtnBg: "bg-green-600",
+        backBtnHover: "hover:bg-green-500",
+        titleGradient: "from-white via-green-200 to-white",
+        navHoverText: "hover:text-green-400",
+        primaryBtnBg: "bg-green-600",
+        primaryBtnHover: "hover:bg-green-500",
+        primaryBtnLabel: "Launch Farm ERP",
+        headerBg: "bg-[#051409]",
+        headerBorder: "border-green-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Livestock", target: "#livestock" },
+          { label: "Fishery Ponds", target: "#fishery" },
+          { label: "POS Billing", target: "#pos" },
+          { label: "Feed Inventory", target: "#inventory" },
+          { label: "Soil IoT", target: "#iot" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 7. Jewelry Management
+    if (id === "members" || id.includes("jewel") || id.includes("gold") || name.includes("jewelry")) {
+      return {
+        shortName: "C Vidya Jewelry Management",
+        icon: Gem,
+        badgeBg: "bg-amber-600",
+        badgeShadow: "shadow-amber-600/30",
+        backBtnBg: "bg-amber-600",
+        backBtnHover: "hover:bg-amber-500",
+        titleGradient: "from-white via-amber-200 to-white",
+        navHoverText: "hover:text-amber-400",
+        primaryBtnBg: "bg-amber-600",
+        primaryBtnHover: "hover:bg-amber-500",
+        primaryBtnLabel: "Access Ledger",
+        headerBg: "bg-[#160e02]",
+        headerBorder: "border-amber-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Bullion Rates", target: "#rates" },
+          { label: "Inventory Weight", target: "#inventory" },
+          { label: "Karigar Orders", target: "#karigar" },
+          { label: "GST Invoicing", target: "#gst" },
+          { label: "Catalog", target: "#catalog" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 8. Enterprise CRM
+    if (id === "crm" || id.includes("crm") || name.includes("crm")) {
+      return {
+        shortName: "C Vidya Enterprise CRM",
+        icon: Target,
+        badgeBg: "bg-cyan-600",
+        badgeShadow: "shadow-cyan-600/30",
+        backBtnBg: "bg-cyan-600",
+        backBtnHover: "hover:bg-cyan-500",
+        titleGradient: "from-white via-cyan-200 to-white",
+        navHoverText: "hover:text-cyan-400",
+        primaryBtnBg: "bg-cyan-600",
+        primaryBtnHover: "hover:bg-cyan-500",
+        primaryBtnLabel: "Start Free Trial",
+        headerBg: "bg-[#041217]",
+        headerBorder: "border-cyan-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Pipeline", target: "#pipeline" },
+          { label: "Leads", target: "#leads" },
+          { label: "Deals Funnel", target: "#deals" },
+          { label: "VoIP Logs", target: "#voip" },
+          { label: "Quotes", target: "#quotes" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 9. Care Plus Healthcare
+    if (id === "care-plus" || id.includes("health") || id.includes("care") || name.includes("healthcare") || name.includes("care")) {
+      return {
+        shortName: "Care Plus Healthcare",
+        icon: HeartPulse,
+        badgeBg: "bg-rose-600",
+        badgeShadow: "shadow-rose-600/30",
+        backBtnBg: "bg-rose-600",
+        backBtnHover: "hover:bg-rose-500",
+        titleGradient: "from-white via-rose-200 to-white",
+        navHoverText: "hover:text-rose-400",
+        primaryBtnBg: "bg-rose-600",
+        primaryBtnHover: "hover:bg-rose-500",
+        primaryBtnLabel: "Patient Desk",
+        headerBg: "bg-[#120407]",
+        headerBorder: "border-rose-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "OPD/IPD", target: "#opd" },
+          { label: "Doctor Roster", target: "#doctors" },
+          { label: "EHR Prescriptions", target: "#ehr" },
+          { label: "Pharmacy POS", target: "#pharmacy" },
+          { label: "Lab Diagnostic", target: "#lab" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 10. PDF & Media Tools
+    if (id === "pdf-media-tools" || id === "pdf-tools" || id.includes("pdf") || name.includes("pdf")) {
+      return {
+        shortName: "C Vidya PDF & Media Tools",
+        icon: FileText,
+        badgeBg: "bg-indigo-600",
+        badgeShadow: "shadow-indigo-600/30",
+        backBtnBg: "bg-indigo-600",
+        backBtnHover: "hover:bg-indigo-500",
+        titleGradient: "from-white via-indigo-200 to-white",
+        navHoverText: "hover:text-indigo-400",
+        primaryBtnBg: "bg-indigo-600",
+        primaryBtnHover: "hover:bg-indigo-500",
+        primaryBtnLabel: "Launch Web Tools",
+        headerBg: "bg-[#080a18]",
+        headerBorder: "border-indigo-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Merge PDF", target: "#merge" },
+          { label: "Compress", target: "#compress" },
+          { label: "OCR Scanner", target: "#ocr" },
+          { label: "Watermark", target: "#watermark" },
+          { label: "Media Convert", target: "#convert" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 11. AI Social Media Agent
+    if (id === "ai-social" || id.includes("social") || name.includes("social")) {
+      return {
+        shortName: "C Vidya AI Social Agent",
+        icon: Megaphone,
+        badgeBg: "bg-fuchsia-600",
+        badgeShadow: "shadow-fuchsia-600/30",
+        backBtnBg: "bg-fuchsia-600",
+        backBtnHover: "hover:bg-fuchsia-500",
+        titleGradient: "from-white via-fuchsia-200 to-white",
+        navHoverText: "hover:text-fuchsia-400",
+        primaryBtnBg: "bg-fuchsia-600",
+        primaryBtnHover: "hover:bg-fuchsia-500",
+        primaryBtnLabel: "Launch AI Agent",
+        headerBg: "bg-[#140416]",
+        headerBorder: "border-fuchsia-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Content Studio", target: "#studio" },
+          { label: "Multi-Post", target: "#post" },
+          { label: "Viral Trends", target: "#trends" },
+          { label: "Auto DMs", target: "#dms" },
+          { label: "Analytics", target: "#analytics" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 12. AI Support Agent
+    if (id === "ai-support" || id.includes("support") || name.includes("support")) {
+      return {
+        shortName: "C Vidya AI Support Agent",
+        icon: Headphones,
+        badgeBg: "bg-sky-600",
+        badgeShadow: "shadow-sky-600/30",
+        backBtnBg: "bg-sky-600",
+        backBtnHover: "hover:bg-sky-500",
+        titleGradient: "from-white via-sky-200 to-white",
+        navHoverText: "hover:text-sky-400",
+        primaryBtnBg: "bg-sky-600",
+        primaryBtnHover: "hover:bg-sky-500",
+        primaryBtnLabel: "Start AI Session",
+        headerBg: "bg-[#04121d]",
+        headerBorder: "border-sky-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "Neural RAG", target: "#rag" },
+          { label: "Live Queue", target: "#queue" },
+          { label: "Knowledge Base", target: "#kb" },
+          { label: "Omnichannel", target: "#omnichannel" },
+          { label: "CSAT Scores", target: "#csat" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 13. AI SalesFlow Agent
+    if (id === "ai-salesflow" || id.includes("salesflow") || name.includes("salesflow")) {
+      return {
+        shortName: "C Vidya SalesFlow AI",
+        icon: TrendingUp,
+        badgeBg: "bg-emerald-600",
+        badgeShadow: "shadow-emerald-600/30",
+        backBtnBg: "bg-emerald-600",
+        backBtnHover: "hover:bg-emerald-500",
+        titleGradient: "from-white via-emerald-200 to-white",
+        navHoverText: "hover:text-emerald-400",
+        primaryBtnBg: "bg-emerald-600",
+        primaryBtnHover: "hover:bg-emerald-500",
+        primaryBtnLabel: "Run Sales SDR",
+        headerBg: "bg-[#03140b]",
+        headerBorder: "border-emerald-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "B2B Leads", target: "#leads" },
+          { label: "Sequences", target: "#sequences" },
+          { label: "Intent Score", target: "#intent" },
+          { label: "Book Demos", target: "#demos" },
+          { label: "CRM Sync", target: "#crm" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // 14. AI Marketing Agent
+    if (id === "ai-marketing" || id.includes("market") || name.includes("marketing")) {
+      return {
+        shortName: "C Vidya AI Marketing",
+        icon: Sparkles,
+        badgeBg: "bg-violet-600",
+        badgeShadow: "shadow-violet-600/30",
+        backBtnBg: "bg-violet-600",
+        backBtnHover: "hover:bg-violet-500",
+        titleGradient: "from-white via-violet-200 to-white",
+        navHoverText: "hover:text-violet-400",
+        primaryBtnBg: "bg-violet-600",
+        primaryBtnHover: "hover:bg-violet-500",
+        primaryBtnLabel: "Growth Engine",
+        headerBg: "bg-[#0d051c]",
+        headerBorder: "border-violet-900/60",
+        navLinks: [
+          { label: "Home", target: "/" },
+          { label: "SEO Clusters", target: "#seo" },
+          { label: "Inbound Funnels", target: "#funnels" },
+          { label: "Campaigns", target: "#campaigns" },
+          { label: "A/B Copy", target: "#copy" },
+          { label: "CAC Metrics", target: "#metrics" },
+          { label: "About", target: "#about" }
+        ]
+      };
+    }
+
+    // Default configuration for any other software or service
+    return {
+      shortName: sw.name,
+      icon: Sparkles,
+      badgeBg: "bg-blue-600",
+      badgeShadow: "shadow-blue-600/30",
+      backBtnBg: "bg-blue-600",
+      backBtnHover: "hover:bg-blue-500",
+      titleGradient: "from-white via-blue-200 to-white",
+      navHoverText: "hover:text-blue-400",
+      primaryBtnBg: "bg-blue-600",
+      primaryBtnHover: "hover:bg-blue-500",
+      primaryBtnLabel: "Get Started",
+      headerBg: "bg-[#071739]",
+      headerBorder: "border-blue-900/60",
+      navLinks: [
+        { label: "Home", target: "/" },
+        { label: "Features", target: "#features" },
+        { label: "Overview", target: "#overview" },
+        { label: "Pricing", target: "#pricing" },
+        { label: "Connect", target: "#connect" },
+        { label: "About", target: "#about" }
+      ]
+    };
+  };
+
+  const currentConfig = useMemo(() => getSoftwareConfig(software), [software]);
+  const BrandIcon = currentConfig.icon;
 
   const handleReloadSoftware = () => {
     setIframeKey((prev) => prev + 1);
@@ -234,76 +620,39 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }
   ];
 
-  const handleSimulateAction = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!userInput.trim() || isProcessing) return;
-
-    const query = userInput.trim();
-    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    setSimLogs((prev) => [...prev, { sender: "user", text: query, time: timeNow }]);
-    setUserInput("");
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      let reply = "";
-      if (software.id === "ai-social") {
-        reply = `✨ Generated viral post for LinkedIn & X: "🚀 Excited to announce our new automated workflow! Here are 3 key takeaways that doubled our team efficiency: 1️⃣ Zero manual latency 2️⃣ Multi-channel auto-scheduling 3️⃣ Real-time engagement analytics. #Growth #AI #Automation"`;
-      } else if (software.id === "ai-support") {
-        reply = `🤖 Neural RAG resolved query with 99.4% confidence: "Your subscription details and active seats have been verified. Invoices are dispatched to your registered billing email."`;
-      } else if (software.id === "ai-salesflow") {
-        reply = `🎯 SalesFlow AI identified 14 verified B2B decision makers matching "${query}". Auto-generated customized outreach sequence & booked follow-up cadences.`;
-      } else if (software.id === "ai-marketing") {
-        reply = `📊 B2B Marketing Agent launched high-intent organic campaign. SEO cluster built for "${query}" with projected 3.4x inbound MQL growth.`;
-      } else {
-        reply = `✅ ${software.name} processed transaction for "${query}". Cloud sync logged with zero conflict.`;
-      }
-
-      setSimLogs((prev) => [...prev, { sender: "agent", text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-      setIsProcessing(false);
-    }, 900);
-  };
-
   return (
     <div className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
-      {/* Top Application Header Bar with Clean Back Button and Title */}
-      <header className="h-16 bg-[#071739] border-b border-blue-900/60 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-lg z-30">
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Main Back Icon Button */}
-          <button
-            type="button"
-            onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md cursor-pointer border-none"
-            title="Back"
-          >
-            <ArrowRight className="w-4 h-4 rotate-180 text-white stroke-[2.5]" />
-            <span>Back</span>
-          </button>
+      {/* Auto-Adjusting Sleek Arrow Back Button (Icon Only - Words Removed to never hide content) */}
+      <div className="fixed top-2.5 left-2.5 sm:top-3 sm:left-3 md:top-3.5 md:left-4 z-[9999] pointer-events-auto">
+        <button
+          type="button"
+          onClick={handleBack}
+          className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 ${currentConfig.backBtnBg} ${currentConfig.backBtnHover} active:scale-90 text-white rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105`}
+          title="Back to Portal"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
+        </button>
+      </div>
 
-          <span className="font-bold text-xs sm:text-sm md:text-base text-white tracking-wide truncate max-w-xs sm:max-w-md md:max-w-xl">
-            {software.name}
-          </span>
-        </div>
+      {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
+      <div className="fixed top-2.5 right-2.5 sm:top-3 sm:right-3 md:top-3.5 md:right-4 z-[9999] pointer-events-auto">
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-white bg-slate-950/80 hover:bg-slate-900 active:scale-90 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105"
+          title="Close software view"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </div>
 
-        {/* Right Header Actions */}
-        <div className="flex items-center gap-2.5">
-          {/* Close Software Viewer Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title="Close software view"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
-
-      {/* Main Software Canvas Area */}
-      <main className="flex-1 w-full h-[calc(100vh-64px)] relative bg-slate-950 overflow-y-auto flex flex-col">
+      {/* Main Software Canvas Area: Full Screen with No Second Header */}
+      <main className="flex-1 w-full h-full relative bg-slate-950 overflow-y-auto flex flex-col">
         {isInstitutes ? (
           /* Advanced High-Fidelity Coming Soon UI with Pictures & Feature Roadmap */
-          <div className="w-full flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col gap-8">
+          <div className="w-full flex-1 pt-16 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col gap-8">
             
             {/* Top Announcement Banner */}
             <div className="flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto pt-2">
@@ -505,7 +854,7 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
             </div>
 
             {/* VIP Early Access Priority Form */}
-            <div className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 border border-blue-900/50 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+            <div id="vip-waitlist-section" className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 border border-blue-900/50 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
               <div className="space-y-2 max-w-xl text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 uppercase tracking-wider">
                   <Bell className="w-3.5 h-3.5" />
@@ -562,7 +911,7 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
             </div>
 
           </div>
-        ) : activeTab === "live" && software.externalLink ? (
+        ) : software.externalLink ? (
           <div className="w-full h-full relative flex flex-col">
             {/* Loading Indicator */}
             {!iframeLoaded && !iframeError && (
@@ -613,83 +962,36 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
             />
           </div>
         ) : (
-          /* High Fidelity Interactive Simulator Console */
-          <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 overflow-hidden">
-            <div className="bg-slate-900 border border-blue-900/40 rounded-2xl flex-1 flex flex-col overflow-hidden shadow-2xl">
-              {/* Console Header */}
-              <div className="bg-slate-950/90 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                  <span className="text-xs font-mono text-slate-400 ml-2 font-semibold">
-                    {software.id}-agent-daemon: active-session
-                  </span>
-                </div>
-                <span className="text-xs font-mono text-blue-400 font-bold">
-                  {software.categoryType === "ai-agent" ? "Autonomous AI Agent Engine" : "Cloud Platform"}
-                </span>
+          /* Clean Production Fallback when externalLink is absent or loading */
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="max-w-md space-y-4">
+              <div className={`w-16 h-16 rounded-2xl ${currentConfig.badgeBg} flex items-center justify-center mx-auto shadow-lg ${currentConfig.badgeShadow}`}>
+                <BrandIcon className="w-8 h-8 text-white" />
               </div>
-
-              {/* Console Logs / Dialogue */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-950/60 font-sans">
-                {simLogs.map((log, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex flex-col ${log.sender === "user" ? "items-end" : "items-start"} space-y-1`}
-                  >
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-                      <span>{log.sender === "user" ? "You (Client Admin)" : software.name}</span>
-                      <span>•</span>
-                      <span>{log.time}</span>
-                    </div>
-                    <div 
-                      className={`max-w-2xl rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed ${
-                        log.sender === "user" 
-                          ? "bg-blue-600 text-white rounded-br-none" 
-                          : "bg-slate-800 text-slate-100 border border-slate-700/60 rounded-bl-none shadow-md"
-                      }`}
-                    >
-                      {log.text}
-                    </div>
-                  </div>
-                ))}
-                {isProcessing && (
-                  <div className="flex items-center gap-2 text-xs text-blue-400 font-mono animate-pulse">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Agent reasoning &amp; orchestrating live tasks...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Console Command Input Bar */}
-              <form onSubmit={handleSimulateAction} className="bg-slate-950 p-3 sm:p-4 border-t border-slate-800 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder={
-                    software.id === "ai-social" 
-                      ? "Enter topic, campaign goal, or target audience (e.g., 'SaaS growth tips for Twitter')..." 
-                      : software.id === "ai-support" 
-                      ? "Ask any customer support inquiry or policy question..." 
-                      : software.id === "ai-salesflow"
-                      ? "Enter target B2B sector or company size (e.g., 'Logistics CTOs in India')..."
-                      : software.id === "ai-marketing"
-                      ? "Enter marketing initiative or SEO keyword cluster..."
-                      : "Type a command or test query..."
-                  }
-                  className="flex-1 bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
-                />
-                <button
-                  type="submit"
-                  disabled={!userInput.trim() || isProcessing}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+              <h3 className="text-xl font-bold text-white">{software.name}</h3>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                {software.description}
+              </p>
+              {software.externalLink ? (
+                <a
+                  href={software.externalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-2 px-6 py-3 ${currentConfig.primaryBtnBg} ${currentConfig.primaryBtnHover} text-white rounded-xl text-xs font-bold shadow-lg transition-all`}
                 >
-                  <span>Execute</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span>Launch {software.name}</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Return to Products</span>
                 </button>
-              </form>
+              )}
             </div>
           </div>
         )}
