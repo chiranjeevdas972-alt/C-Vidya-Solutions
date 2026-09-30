@@ -71,6 +71,27 @@
   
     <script>
       (function() {
+        function isLibraryRoot() {
+          var p = window.location.pathname.replace(/\/+$/, '');
+          var h = window.location.hash;
+          var hasInnerHash = h && h !== '#' && h !== '#/' && h !== '#home';
+          var isRoot = (
+            p === '' ||
+            p === '/' ||
+            p === '/home' ||
+            p === '/software/library' ||
+            p.endsWith('/software/library/index.html') ||
+            p === '/software/library/home'
+          );
+          return isRoot && !hasInnerHash;
+        }
+
+        function getLibraryRootUrl() {
+          return window.location.pathname.startsWith('/software/library')
+            ? '/software/library/'
+            : './';
+        }
+
         function notifyParent() {
           try {
             if (window.parent && window.parent !== window) {
@@ -79,28 +100,78 @@
                 pathname: window.location.pathname,
                 search: window.location.search,
                 href: window.location.href,
-                canGoBack: window.history.length > 1
+                isRoot: isLibraryRoot(),
+                canGoBack: !isLibraryRoot()
               }, '*');
             }
           } catch(e) {}
         }
+
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            if (window.location.pathname !== '/' && window.location.pathname !== '/home') {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.location.href = '/';
-              }
-            } else {
-              // already at root
-              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+            // 1. Feature subpages -> go back to dashboard
+            var isSubpage = (
+              p.indexOf('/students') !== -1 ||
+              p.indexOf('/billing') !== -1 ||
+              p.indexOf('/seats') !== -1 ||
+              p.indexOf('/books') !== -1 ||
+              p.indexOf('/book-issues') !== -1 ||
+              p.indexOf('/reports') !== -1 ||
+              p.indexOf('/transactions') !== -1 ||
+              p.indexOf('/fines') !== -1 ||
+              p.indexOf('/settings') !== -1 ||
+              p.indexOf('/audit') !== -1 ||
+              p.indexOf('/profile') !== -1 ||
+              p.indexOf('/subscription') !== -1 ||
+              p.indexOf('/advanced-analytics') !== -1 ||
+              p.indexOf('/student-analytics') !== -1 ||
+              p.indexOf('/upcoming-payments') !== -1 ||
+              p.indexOf('/multi-branch') !== -1 ||
+              p.indexOf('/branding') !== -1 ||
+              p.indexOf('/api-access') !== -1 ||
+              p.indexOf('/ai-assistant') !== -1 ||
+              p.indexOf('/accounting') !== -1
+            );
+            if (isSubpage) {
+              window.history.back();
+              setTimeout(function() {
+                if (window.location.pathname.indexOf('/dashboard') === -1) {
+                  window.location.href = getLibraryRootUrl() + 'dashboard';
+                }
+              }, 200);
+              return;
             }
+
+            // 2. Dashboard -> go back to login
+            if (p.endsWith('/dashboard')) {
+              window.history.back();
+              setTimeout(function() {
+                if (window.location.pathname.indexOf('/login') === -1) {
+                  window.location.href = getLibraryRootUrl() + 'login';
+                }
+              }, 200);
+              return;
+            }
+
+            // 3. Login or register or otp -> go to C Vidya Library Management landing page
+            if (p.endsWith('/login') || p.endsWith('/register') || p.endsWith('/verify-otp') || p.indexOf('/login') !== -1 || p.indexOf('/register') !== -1) {
+              window.location.href = getLibraryRootUrl();
+              return;
+            }
+
+            // 4. Software Landing Page -> go to View More / Preview Page (Software Details Modal)
+            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
-            window.location.href = '/';
+            window.location.href = getLibraryRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
-            window.location.href = e.data.path || '/';
+            var target = e.data.path || getLibraryRootUrl();
+            if (target === '/') {
+              window.location.href = getLibraryRootUrl();
+            } else {
+              window.location.href = target;
+            }
           }
         });
         window.addEventListener('popstate', notifyParent);

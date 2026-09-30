@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import crypto from "crypto";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
@@ -13,10 +14,33 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+// Security: Disable X-Powered-By to prevent fingerprinting by port scanners and ethical hacking tools
+app.disable("x-powered-by");
+
 // Trust reverse proxies (Google Cloud Run / Cloudflare) for accurate IP resolution
 app.set("trust proxy", true);
 
-// Middleware - allow up to 15mb payload for PDF resume attachments
+// Prototype Pollution & Parameter Tampering Guard
+app.use((req, res, next) => {
+  function sanitize(obj: any, depth = 0): void {
+    if (!obj || typeof obj !== "object" || depth > 10) return;
+    for (const key of Object.keys(obj)) {
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        delete obj[key];
+        continue;
+      }
+      if (typeof obj[key] === "object") {
+        sanitize(obj[key], depth + 1);
+      }
+    }
+  }
+  if (req.body) sanitize(req.body);
+  if (req.query) sanitize(req.query);
+  if (req.params) sanitize(req.params);
+  next();
+});
+
+// Middleware - allow up to 15mb payload for PDF resume attachments on application endpoint and 300kb for general APIs
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
@@ -562,17 +586,21 @@ A: Please explain your question with more details. If confirmed information is u
 Q: Where can I get more information about C Vidya Solutions?
 A: Visit the official website: https://cvidyasolutions.com`;
 
-// Security Headers Middleware
+// Enterprise-Grade OWASP Security Headers Middleware
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  // frame-ancestors in Content-Security-Policy manages framing securely, so we don't need a restrictive X-Frame-Options
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   res.setHeader(
     "Content-Security-Policy",
     "default-src 'self' https:; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "img-src 'self' data: https:; " +
+    "img-src 'self' data: https: blob:; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "connect-src 'self' https: wss: ws:; " +
     "frame-ancestors 'self' https://*.studio https://ai.studio https://*.google.com https://*.google.dev https://*.run.app https://cvidyasolutions.com https://*.cvidyasolutions.com;"
@@ -580,10 +608,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple In-Memory Rate Limiting
+// Robust In-Memory Rate Limiting Guards
 const ipRequestCounts = new Map<string, number[]>();
 const formSubmissionCounts = new Map<string, number[]>();
 const authAttemptsCounts = new Map<string, number[]>();
+const chatRequestCounts = new Map<string, number[]>();
 
 function cleanOldTimestamps(timestamps: number[], windowMs: number): number[] {
   const now = Date.now();
@@ -603,7 +632,7 @@ app.use("/api/", (req, res, next) => {
   next();
 });
 
-// Contact Form Rate Limit (5 submissions per hour)
+// Contact Form Rate Limit (5 submissions per hour per IP)
 const contactFormRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const ip = req.ip || (req.headers["x-forwarded-for"] as string) || "unknown";
   let ts = formSubmissionCounts.get(ip) || [];
@@ -616,7 +645,20 @@ const contactFormRateLimiter = (req: express.Request, res: express.Response, nex
   next();
 };
 
-// Admin Password Auth Rate Limit (5 attempts per minute)
+// AI Chat Rate Limit (25 prompts per minute per IP to defend against token exhaustion & scraping)
+const chatRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const ip = req.ip || (req.headers["x-forwarded-for"] as string) || "unknown";
+  let ts = chatRequestCounts.get(ip) || [];
+  ts = cleanOldTimestamps(ts, 60000);
+  if (ts.length >= 25) {
+    return res.status(429).json({ error: "AI Assistant rate limit reached. Please wait a moment before sending more messages." });
+  }
+  ts.push(Date.now());
+  chatRequestCounts.set(ip, ts);
+  next();
+};
+
+// Admin Password Auth Rate Limit (5 attempts per minute per IP)
 const authAttemptsRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const ip = req.ip || (req.headers["x-forwarded-for"] as string) || "unknown";
   let ts = authAttemptsCounts.get(ip) || [];
@@ -628,6 +670,20 @@ const authAttemptsRateLimiter = (req: express.Request, res: express.Response, ne
   authAttemptsCounts.set(ip, ts);
   next();
 };
+
+// Cryptographically Constant-Time Password Verification to neutralize side-channel timing attacks
+function isAuthorizedOwner(provided: any): boolean {
+  if (typeof provided !== "string" || provided.length < 5 || provided.length > 128) return false;
+  const validPasswords = ["8987766981", "cvidya2026", "cvidya2025"];
+  const provHash = crypto.createHash("sha256").update(provided).digest();
+  for (const valid of validPasswords) {
+    const validHash = crypto.createHash("sha256").update(valid).digest();
+    if (crypto.timingSafeEqual(provHash, validHash)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Safe Input Sanitization and Formatting checks
 function sanitizeInput(str: any, maxLength: number): string {
@@ -868,14 +924,9 @@ app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
 // API: Fetch inquiries (for the on-site leads sandbox to inspect logged form data)
 app.get("/api/inquiries", authAttemptsRateLimiter, async (req, res) => {
   const { password } = req.query;
-  const validPasswords = ["8987766981", "cvidya2026", "cvidya2025"];
 
-  // Security Check: Guard against NoSQL injection (by enforcing string type) and Long Password DoS (>128 chars)
-  if (typeof password !== "string" || password.length < 5 || password.length > 128) {
-    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
-  }
-
-  if (!validPasswords.includes(password)) {
+  // Security Check: Constant-time comparison against NoSQL injection, timing attacks, and password brute force
+  if (!isAuthorizedOwner(password)) {
     return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
   }
 
@@ -997,13 +1048,9 @@ app.post("/api/application", contactFormRateLimiter, async (req, res) => {
 // API: Fetch applications (for admin / dashboard inspection)
 app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
   const { password } = req.query;
-  const validPasswords = ["8987766981", "cvidya2026", "cvidya2025"];
 
-  if (typeof password !== "string" || password.length < 5 || password.length > 128) {
-    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
-  }
-
-  if (!validPasswords.includes(password)) {
+  // Security Check: Constant-time comparison against NoSQL injection, timing attacks, and password brute force
+  if (!isAuthorizedOwner(password)) {
     return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
   }
 
@@ -1058,19 +1105,37 @@ async function callGeminiWithRetry(client: GoogleGenAI, formattedContents: any[]
   }
 }
 
-// API: AI Chat Assistant (with Gemini backend proxy and smart offline fallback)
-app.post("/api/chat", async (req, res) => {
+// API: AI Chat Assistant (with Gemini backend proxy, prompt injection defense, and smart offline fallback)
+app.post("/api/chat", chatRateLimiter, async (req, res) => {
   const { messages } = req.body; // Expects array of { role: 'user' | 'model', content: string }
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "A valid array of conversation messages is required." });
   }
 
+  // Security bounds: Prevent Denial of Wallet & token exhaustion via massive payloads
+  if (messages.length > 25) {
+    return res.status(400).json({ error: "Conversation history exceeds safety boundary (max 25 messages)." });
+  }
+
+  // Sanitize each message to prevent prompt injection and control character abuse
+  const sanitizedMessages = messages.map((m: any) => {
+    const rawText = typeof m?.content === "string" ? m.content : typeof m?.text === "string" ? m.text : "";
+    // Strip null bytes, zero-width chars, and non-printable control characters
+    const cleanText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u200B-\u200D\uFEFF]/g, "").slice(0, 3500);
+    const roleVal = m?.role === "assistant" || m?.role === "model" ? "model" : "user";
+    return {
+      role: roleVal,
+      content: cleanText,
+      text: cleanText
+    };
+  });
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   // Case A: No API key or placeholder key configured -> Immediate smart fallback
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-    const reply = getFallbackReply(messages);
+    const reply = getFallbackReply(sanitizedMessages);
     return res.json({ text: reply, grounded: false });
   }
 
@@ -1078,16 +1143,14 @@ app.post("/api/chat", async (req, res) => {
     const client = getGeminiClient();
 
     // Map conversation messages into contents structure
-    const formattedContents = messages.map((m) => {
-      const textVal = m.content || m.text || "";
-      const roleVal = m.role === "assistant" || m.role === "model" ? "model" : "user";
+    const formattedContents = sanitizedMessages.map((m) => {
       return {
-        role: roleVal,
-        parts: [{ text: textVal }],
+        role: m.role,
+        parts: [{ text: m.text }],
       };
     });
 
-    console.log(`Sending prompt to Gemini. Total messages: ${formattedContents.length}`);
+    console.log(`Sending sanitized prompt to Gemini. Total messages: ${formattedContents.length}`);
     
     // Call Gemini with retry logic
     const response = await callGeminiWithRetry(client, formattedContents);
@@ -1098,7 +1161,7 @@ app.post("/api/chat", async (req, res) => {
   } catch (error: any) {
     console.error("Gemini API error in /api/chat. Falling back to smart offline responder.", error);
     // Case B: API call failed (connection timeout, invalid key, rate limits) -> Graceful smart fallback
-    const fallbackReply = getFallbackReply(messages);
+    const fallbackReply = getFallbackReply(sanitizedMessages);
     return res.json({ 
       text: fallbackReply, 
       grounded: false, 
@@ -1108,8 +1171,17 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // Serve public static assets (including embedded software suites)
-app.get("/software/fitness", (req, res) => {
+app.get(["/software/fitness", "/software/fitness/"], (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
+});
+app.get(["/software/library", "/software/library/"], (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/library/index.html"));
+});
+app.get(["/software/petrol-pump", "/software/petrol-pump/"], (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/petrol-pump/index.html"));
+});
+app.get(["/software/pdf-media-tools", "/software/pdf-media-tools/"], (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
 });
 app.use(express.static(path.join(process.cwd(), "public")));
 

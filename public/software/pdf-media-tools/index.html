@@ -19,6 +19,26 @@
     
     <script>
       (function() {
+        function isPdfRoot() {
+          var p = window.location.pathname.replace(/\/+$/, '');
+          var h = window.location.hash;
+          var hasInnerHash = h && h !== '#' && h !== '#/' && h !== '#home';
+          var isRoot = (
+            p === '' ||
+            p === '/' ||
+            p === '/home' ||
+            p === '/software/pdf-media-tools' ||
+            p.endsWith('/software/pdf-media-tools/index.html')
+          );
+          return isRoot && !hasInnerHash;
+        }
+
+        function getPdfRootUrl() {
+          return window.location.pathname.startsWith('/software/pdf-media-tools')
+            ? '/software/pdf-media-tools/'
+            : './index.html';
+        }
+
         function notifyParent() {
           try {
             if (window.parent && window.parent !== window) {
@@ -27,7 +47,8 @@
                 pathname: window.location.pathname,
                 search: window.location.search,
                 href: window.location.href,
-                canGoBack: window.history.length > 1
+                isRoot: isPdfRoot(),
+                canGoBack: !isPdfRoot()
               }, '*');
             }
           } catch(e) {}
@@ -35,19 +56,28 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            if (window.location.pathname !== '/' && window.location.pathname !== '/home' && !window.location.pathname.endsWith('index.html')) {
+            if (!isPdfRoot()) {
+              var oldHref = window.location.href;
               if (window.history.length > 1) {
                 window.history.back();
-              } else {
-                window.location.href = './index.html';
               }
+              setTimeout(function() {
+                if (window.location.href === oldHref && !isPdfRoot()) {
+                  window.location.href = getPdfRootUrl();
+                }
+              }, 200);
             } else {
-              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
             }
           } else if (e.data.type === 'CV_GO_HOME') {
-            window.location.href = './index.html';
+            window.location.href = getPdfRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
-            window.location.href = e.data.path || './index.html';
+            var target = e.data.path || getPdfRootUrl();
+            if (target === '/') {
+              window.location.href = getPdfRootUrl();
+            } else {
+              window.location.href = target;
+            }
           }
         });
         window.addEventListener('popstate', notifyParent);

@@ -2,41 +2,75 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper to validate inquiry structure
+    // Global security helpers
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "chiranjeevdas972@gmail.com" ||
+        request.auth.token.email == "cvidyasolutions@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Strict validation for inquiry payloads to protect against malicious injections
     function isValidInquiry(data) {
       return data != null
-        && 'name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 150
-        && 'email' in data && data.email is string && data.email.size() > 0 && data.email.size() <= 200
-        && 'phone' in data && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50;
+        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && (!('service' in data) || (data.service is string && data.service.size() <= 200))
+        && (!('message' in data) || (data.message is string && data.message.size() <= 5000))
+        && (!('status' in data) || (data.status is string && data.status.size() <= 100));
     }
 
-    // Helper to validate job application structure
+    // Strict validation for job application submissions
     function isValidApplication(data) {
       return data != null
-        && 'name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 150
-        && 'email' in data && data.email is string && data.email.size() > 0 && data.email.size() <= 200
-        && 'phone' in data && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50
-        && 'jobTitle' in data && data.jobTitle is string && data.jobTitle.size() > 0 && data.jobTitle.size() <= 200;
+        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'jobTitle' in data && data.jobTitle is string && data.jobTitle.size() > 0 && data.jobTitle.size() <= 200
+        && (!('experience' in data) || (data.experience is string && data.experience.size() <= 100))
+        && (!('message' in data) || (data.message is string && data.message.size() <= 5000))
+        && (!('jobCategory' in data) || (data.jobCategory is string && data.jobCategory.size() <= 100))
+        && (!('jobLocation' in data) || (data.jobLocation is string && data.jobLocation.size() <= 150))
+        && (!('roleType' in data) || (data.roleType is string && data.roleType.size() <= 50))
+        && (!('resumeFileName' in data) || (data.resumeFileName is string && data.resumeFileName.size() <= 250))
+        && (!('resumeFileSize' in data) || (data.resumeFileSize is string && data.resumeFileSize.size() <= 50))
+        && (!('resumeUrl' in data) || (data.resumeUrl is string && data.resumeUrl.size() <= 2000))
+        && (!('resumeData' in data) || (data.resumeData is string && data.resumeData.size() <= 800000));
     }
 
-    // Default deny
+    // Global Default-Deny Catch-All
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Inquiries collection for customer callback submissions
-    match /inquiries/{inquiryId} {
-      allow create: if isValidInquiry(request.resource.data);
-      allow read: if true;
-      allow update, delete: if false;
+    // Admins registry collection
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
-    // Job applications collection for careers submissions
+    // Inquiries collection: Public can submit verified leads, ONLY authenticated admins can read (PII Isolation)
+    match /inquiries/{inquiryId} {
+      allow create: if isValidId(inquiryId) && isValidInquiry(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Job applications collection: Public can submit application, ONLY authenticated admins can read applicant data
     match /job_applications/{jobApplicationId} {
-      allow create: if isValidApplication(request.resource.data);
-      allow read: if true;
-      allow update, delete: if false;
+      allow create: if isValidId(jobApplicationId) && isValidApplication(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
     }
   }
 }
-

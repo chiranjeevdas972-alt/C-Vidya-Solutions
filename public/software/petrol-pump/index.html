@@ -14,6 +14,26 @@
     <base href="/software/petrol-pump/">
     <script>
       (function() {
+        function isPetrolRoot() {
+          var p = window.location.pathname.replace(/\/+$/, '');
+          var h = window.location.hash;
+          var hasInnerHash = h && h !== '#' && h !== '#/' && h !== '#home';
+          var isRoot = (
+            p === '' ||
+            p === '/' ||
+            p === '/home' ||
+            p === '/software/petrol-pump' ||
+            p.endsWith('/software/petrol-pump/index.html')
+          );
+          return isRoot && !hasInnerHash;
+        }
+
+        function getPetrolRootUrl() {
+          return window.location.pathname.startsWith('/software/petrol-pump')
+            ? '/software/petrol-pump/'
+            : './';
+        }
+
         function notifyParent() {
           try {
             if (window.parent && window.parent !== window) {
@@ -22,7 +42,8 @@
                 pathname: window.location.pathname,
                 search: window.location.search,
                 href: window.location.href,
-                canGoBack: window.history.length > 1
+                isRoot: isPetrolRoot(),
+                canGoBack: !isPetrolRoot()
               }, '*');
             }
           } catch(e) {}
@@ -30,19 +51,33 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            if (window.location.pathname !== '/' && window.location.pathname !== '/home' && !window.location.pathname.endsWith('index.html')) {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.location.href = './';
-              }
-            } else {
-              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+            if (p.includes('/billing') || p.includes('/tanks') || p.includes('/reports')) {
+              window.location.href = getPetrolRootUrl() + 'dashboard';
+              return;
             }
+            if (p.endsWith('/dashboard')) {
+              window.location.href = getPetrolRootUrl() + 'login';
+              return;
+            }
+            if (p.endsWith('/login') || p.includes('/login')) {
+              window.location.href = getPetrolRootUrl();
+              return;
+            }
+            if (isPetrolRoot()) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+              return;
+            }
+            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
-            window.location.href = './';
+            window.location.href = getPetrolRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
-            window.location.href = e.data.path || './';
+            var target = e.data.path || getPetrolRootUrl();
+            if (target === '/') {
+              window.location.href = getPetrolRootUrl();
+            } else {
+              window.location.href = target;
+            }
           }
         });
         window.addEventListener('popstate', notifyParent);

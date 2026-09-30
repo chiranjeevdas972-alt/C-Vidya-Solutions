@@ -103,11 +103,42 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     }
   }, [software, onClose]);
 
-  // Listen to exit message bridge from embedded software
+  // Track iframe navigation state and route depth
+  const navigationDepthRef = useRef(0);
+  const lastRecordedPathRef = useRef("");
+  const [canGoBackState, setCanGoBackState] = useState(false);
+
+  useEffect(() => {
+    navigationDepthRef.current = 0;
+    lastRecordedPathRef.current = "";
+    setCanGoBackState(false);
+  }, [software]);
+
+  // Listen to exit message bridge and route changes from embedded software with strict schema validation
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "CV_EXIT_SOFTWARE") {
+      if (!event.data || typeof event.data !== "object") return;
+      const allowedTypes = ["CV_CLOSE_PORTAL", "CV_GO_TO_PREVIEW", "CV_EXIT_SOFTWARE", "CV_ROUTE_CHANGED"];
+      if (!allowedTypes.includes(event.data.type)) return;
+
+      if (event.data.type === "CV_CLOSE_PORTAL") {
         onClose();
+      } else if (event.data.type === "CV_GO_TO_PREVIEW" || event.data.type === "CV_EXIT_SOFTWARE") {
+        if (onOpenDetails) {
+          onOpenDetails();
+        } else {
+          onClose();
+        }
+      } else if (event.data.type === "CV_ROUTE_CHANGED") {
+        const { pathname, isRoot, canGoBack } = event.data;
+        if (typeof pathname === "string") {
+          const cleanPath = pathname.replace(/\/+$/, "").slice(0, 500) || "/";
+          if (lastRecordedPathRef.current && lastRecordedPathRef.current !== cleanPath) {
+            navigationDepthRef.current += 1;
+          }
+          lastRecordedPathRef.current = cleanPath;
+        }
+        setCanGoBackState(Boolean(canGoBack || isRoot === false));
       }
     };
 
@@ -115,13 +146,223 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [onClose]);
+  }, [onClose, onOpenDetails]);
 
   if (!software) return null;
 
-  // Back Handler: Directly and reliably returns to previous page in C Vidya Solutions
+  // Step-by-Step Back Navigation Handler:
+  // Step 1: Feature subpages (students, billing, books, seats, etc.) -> Dashboard
+  // Step 2: Dashboard -> Login page
+  // Step 3: Login page (or register/otp) -> Software Landing Page
+  // Step 4: Software Landing Page -> Preview Page (SoftwareDetailModal)
+  // Step 5: Preview Page -> C Vidya Solutions Website
   const handleBack = () => {
-    onClose();
+    const returnToPreview = () => {
+      if (onOpenDetails) {
+        onOpenDetails();
+      } else {
+        onClose();
+      }
+    };
+
+    const iframe = iframeRef.current;
+    if (iframe && iframe.contentWindow) {
+      try {
+        const cw = iframe.contentWindow;
+        let currentPath = "";
+        try {
+          currentPath = (cw.location.pathname || "").replace(/\/+$/, "") || "/";
+        } catch (_) {}
+        const recordedPath = (lastRecordedPathRef.current || "").replace(/\/+$/, "") || "";
+        const effectivePath = currentPath || recordedPath || "";
+
+        // 1. LIBRARY MANAGEMENT STEP-BY-STEP
+        if (effectivePath.includes("/software/library")) {
+          const isLibrarySubpage = (
+            effectivePath.includes("/students") ||
+            effectivePath.includes("/billing") ||
+            effectivePath.includes("/seats") ||
+            effectivePath.includes("/books") ||
+            effectivePath.includes("/book-issues") ||
+            effectivePath.includes("/reports") ||
+            effectivePath.includes("/transactions") ||
+            effectivePath.includes("/fines") ||
+            effectivePath.includes("/settings") ||
+            effectivePath.includes("/audit") ||
+            effectivePath.includes("/profile") ||
+            effectivePath.includes("/subscription") ||
+            effectivePath.includes("/advanced-analytics") ||
+            effectivePath.includes("/student-analytics") ||
+            effectivePath.includes("/upcoming-payments") ||
+            effectivePath.includes("/multi-branch") ||
+            effectivePath.includes("/branding") ||
+            effectivePath.includes("/api-access") ||
+            effectivePath.includes("/ai-assistant") ||
+            effectivePath.includes("/accounting")
+          );
+
+          if (isLibrarySubpage) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.includes("/software/library") &&
+                    !cw.location.pathname.endsWith("/dashboard") &&
+                    !cw.location.pathname.endsWith("/login")) {
+                  cw.location.href = "/software/library/dashboard";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          if (effectivePath.endsWith("/dashboard")) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.endsWith("/dashboard")) {
+                  cw.location.href = "/software/library/login";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          if (
+            effectivePath.endsWith("/login") ||
+            effectivePath.endsWith("/register") ||
+            effectivePath.endsWith("/verify-otp") ||
+            effectivePath.includes("/login") ||
+            effectivePath.includes("/register")
+          ) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.includes("/login") ||
+                    cw.location.pathname.includes("/register") ||
+                    cw.location.pathname.includes("/verify-otp")) {
+                  cw.location.href = "/software/library/";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          // At software landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
+          returnToPreview();
+          return;
+        }
+
+        // 2. FITNESS ZONE STEP-BY-STEP
+        if (effectivePath.includes("/software/fitness")) {
+          const isFitnessSubpage = (
+            effectivePath.includes("/members") ||
+            effectivePath.includes("/trainers") ||
+            effectivePath.includes("/plans") ||
+            effectivePath.includes("/payments") ||
+            effectivePath.includes("/attendance") ||
+            effectivePath.includes("/inventory") ||
+            effectivePath.includes("/announcements") ||
+            effectivePath.includes("/shop") ||
+            effectivePath.includes("/ai-zone") ||
+            effectivePath.includes("/reports-crm") ||
+            effectivePath.includes("/settings")
+          );
+
+          if (isFitnessSubpage) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.includes("/software/fitness") &&
+                    !cw.location.pathname.endsWith("/dashboard") &&
+                    !cw.location.pathname.endsWith("/login")) {
+                  cw.location.href = "/software/fitness/dashboard";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          if (effectivePath.endsWith("/dashboard")) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.endsWith("/dashboard")) {
+                  cw.location.href = "/software/fitness/login";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          if (
+            effectivePath.endsWith("/login") ||
+            effectivePath.endsWith("/signup") ||
+            effectivePath.includes("/login") ||
+            effectivePath.includes("/signup")
+          ) {
+            cw.postMessage({ type: "CV_GO_BACK" }, "*");
+            try { cw.history.back(); } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (cw.location.pathname.includes("/login") || cw.location.pathname.includes("/signup")) {
+                  cw.location.href = "/software/fitness/";
+                }
+              } catch (_) {}
+            }, 180);
+            return;
+          }
+
+          // At fitness landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
+          returnToPreview();
+          return;
+        }
+
+        // 3. PETROL PUMP STEP-BY-STEP
+        if (effectivePath.includes("/software/petrol-pump")) {
+          if (effectivePath.includes("/billing") || effectivePath.includes("/tanks") || effectivePath.includes("/reports")) {
+            cw.location.href = "/software/petrol-pump/dashboard";
+            return;
+          }
+          if (effectivePath.endsWith("/dashboard")) {
+            cw.location.href = "/software/petrol-pump/login";
+            return;
+          }
+          if (effectivePath.endsWith("/login") || effectivePath.includes("/login")) {
+            cw.location.href = "/software/petrol-pump/";
+            return;
+          }
+          // At petrol pump landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
+          returnToPreview();
+          return;
+        }
+
+        // 4. PDF MEDIA TOOLS STEP-BY-STEP
+        if (effectivePath.includes("/software/pdf-media-tools")) {
+          returnToPreview();
+          return;
+        }
+
+        // Fallback for any other embedded software view -> Return to Preview Page
+        returnToPreview();
+        return;
+      } catch (err) {
+        returnToPreview();
+        return;
+      }
+    }
+
+    // 5. Non-iframe software (Institutes gallery, Coaching, CRM, AI agents, Other services)
+    if (activePictureIndex > 0) {
+      setActivePictureIndex(0);
+      return;
+    }
+
+    returnToPreview();
   };
 
   // Define dynamic metadata, branding colors, typography and navigation features for every software

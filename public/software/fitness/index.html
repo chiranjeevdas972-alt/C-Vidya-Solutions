@@ -32,6 +32,27 @@
           console.error('Unhandled promise rejection in Fitness Zone:', event.reason);
         });
 
+        function isFitnessRoot() {
+          var p = window.location.pathname.replace(/\/+$/, '');
+          var h = window.location.hash;
+          var hasInnerHash = h && h !== '#' && h !== '#/' && h !== '#home';
+          var isRoot = (
+            p === '' ||
+            p === '/' ||
+            p === '/home' ||
+            p === '/software/fitness' ||
+            p.endsWith('/software/fitness/index.html') ||
+            p === '/software/fitness/home'
+          );
+          return isRoot && !hasInnerHash;
+        }
+
+        function getFitnessRootUrl() {
+          return window.location.pathname.startsWith('/software/fitness')
+            ? '/software/fitness/'
+            : './';
+        }
+
         function notifyParent() {
           try {
             if (window.parent && window.parent !== window) {
@@ -40,7 +61,8 @@
                 pathname: window.location.pathname,
                 search: window.location.search,
                 href: window.location.href,
-                canGoBack: window.history.length > 1
+                isRoot: isFitnessRoot(),
+                canGoBack: !isFitnessRoot()
               }, '*');
             }
           } catch(e) {}
@@ -49,22 +71,55 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            if (window.location.pathname !== '/' && window.location.pathname !== '/home' && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/software/fitness/' && window.location.pathname !== '/software/fitness') {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                window.location.href = './';
-              }
-            } else {
-              window.parent.postMessage({ type: 'CV_EXIT_SOFTWARE' }, '*');
+            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+            var isFitnessSub = (
+              p.indexOf('/members') !== -1 ||
+              p.indexOf('/trainers') !== -1 ||
+              p.indexOf('/plans') !== -1 ||
+              p.indexOf('/payments') !== -1 ||
+              p.indexOf('/attendance') !== -1 ||
+              p.indexOf('/inventory') !== -1 ||
+              p.indexOf('/announcements') !== -1 ||
+              p.indexOf('/shop') !== -1 ||
+              p.indexOf('/ai-zone') !== -1 ||
+              p.indexOf('/reports-crm') !== -1 ||
+              p.indexOf('/settings') !== -1
+            );
+            if (isFitnessSub) {
+              window.history.back();
+              setTimeout(function() {
+                if (window.location.pathname.indexOf('/dashboard') === -1) {
+                  window.location.href = getFitnessRootUrl() + 'dashboard';
+                }
+              }, 200);
+              return;
             }
+
+            if (p.endsWith('/dashboard')) {
+              window.history.back();
+              setTimeout(function() {
+                if (window.location.pathname.indexOf('/login') === -1) {
+                  window.location.href = getFitnessRootUrl() + 'login';
+                }
+              }, 200);
+              return;
+            }
+
+            // 3. Login or signup -> go to C Vidya Fitness Zone landing page
+            if (p.endsWith('/login') || p.endsWith('/signup') || p.indexOf('/login') !== -1 || p.indexOf('/signup') !== -1) {
+              window.location.href = getFitnessRootUrl();
+              return;
+            }
+
+            // 4. Fitness landing page -> go to View More / Preview Page (Software Details Modal)
+            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
-            window.location.href = './';
+            window.location.href = getFitnessRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
-            var target = e.data.path || './';
+            var target = e.data.path || getFitnessRootUrl();
             if (target === '/') {
-              if (window.location.pathname !== '/' && !window.location.pathname.endsWith('index.html') && window.location.pathname !== '/software/fitness/' && window.location.pathname !== '/software/fitness') {
-                window.location.href = './';
+              if (!isFitnessRoot()) {
+                window.location.href = getFitnessRootUrl();
               } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
@@ -81,8 +136,6 @@
             }
           }
         });
-
-        // Native Fitness Zone navbar is kept fully visible with all header features, pricing, and about links
 
         window.addEventListener('popstate', notifyParent);
         const origPush = history.pushState;
