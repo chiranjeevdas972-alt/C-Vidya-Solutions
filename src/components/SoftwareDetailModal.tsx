@@ -10,6 +10,7 @@ import {
   Zap, 
   Layers, 
   ArrowRight,
+  ArrowLeft,
   BookOpen, 
   Flame, 
   GraduationCap, 
@@ -122,8 +123,9 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
         className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-50 overflow-y-auto flex flex-col"
       >
         {/* Sticky Top Full Page Header */}
-        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-4 flex items-center">
+        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-3 flex items-center">
           <button
+            type="button"
             onClick={() => {
               if (activeDetailPage) {
                 setActiveDetailPage(null);
@@ -131,10 +133,11 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
                 onClose();
               }
             }}
-            className="flex items-center gap-2.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 active:scale-90 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:scale-105 cursor-pointer border border-white/20 shrink-0"
+            title={activeDetailPage ? "Back to Overview" : "Back"}
+            aria-label={activeDetailPage ? "Back to Overview" : "Back"}
           >
-            <ArrowRight className="w-4 h-4 rotate-180 text-white stroke-[2.5]" />
-            <span>{activeDetailPage ? "Back to Overview" : "Back"}</span>
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
           </button>
         </div>
 

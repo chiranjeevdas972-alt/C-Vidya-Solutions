@@ -36,10 +36,9 @@ import {
 interface LiveSoftwareAppProps {
   software: ProductService | null;
   onClose: () => void;
-  onOpenDetails?: () => void;
 }
 
-export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: LiveSoftwareAppProps) {
+export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
 
@@ -65,19 +64,19 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     );
   }, [software]);
 
-  // Use live Cloudflare Workers for library and fitness, and static embedded suites for petrol-pump and pdf-media-tools
+  // Use locally hosted embedded suites with bidirectional navigation bridge for instant responsiveness
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
-    if (software.id === "fitness" || software.externalLink.includes("fitzone.cvidyasolutions.workers.dev")) {
-      return "https://fitzone.cvidyasolutions.workers.dev/";
+    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions") || software.externalLink.includes("library")) {
+      return "/software/library/index.html";
     }
-    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions.workers.dev")) {
-      return "https://v.cvidyasolutions.workers.dev/";
+    if (software.id === "fitness" || software.externalLink.includes("fitzone")) {
+      return "/software/fitness/index.html";
     }
-    if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
+    if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump") || software.externalLink.includes("petrol-pump")) {
       return "/software/petrol-pump/index.html";
     }
-    if (software.id === "pdf-media-tools" || software.id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools")) {
+    if (software.id === "pdf-media-tools" || software.id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools") || software.externalLink.includes("pdf-media-tools")) {
       return "/software/pdf-media-tools/index.html";
     }
     return software.externalLink;
@@ -121,14 +120,12 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
       const allowedTypes = ["CV_CLOSE_PORTAL", "CV_GO_TO_PREVIEW", "CV_EXIT_SOFTWARE", "CV_ROUTE_CHANGED"];
       if (!allowedTypes.includes(event.data.type)) return;
 
-      if (event.data.type === "CV_CLOSE_PORTAL") {
+      if (
+        event.data.type === "CV_CLOSE_PORTAL" || 
+        event.data.type === "CV_GO_TO_PREVIEW" || 
+        event.data.type === "CV_EXIT_SOFTWARE"
+      ) {
         onClose();
-      } else if (event.data.type === "CV_GO_TO_PREVIEW" || event.data.type === "CV_EXIT_SOFTWARE") {
-        if (onOpenDetails) {
-          onOpenDetails();
-        } else {
-          onClose();
-        }
       } else if (event.data.type === "CV_ROUTE_CHANGED") {
         const { pathname, isRoot, canGoBack } = event.data;
         if (typeof pathname === "string") {
@@ -146,16 +143,22 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [onClose, onOpenDetails]);
+  }, [onClose]);
 
   if (!software) return null;
 
-  // User Instruction: "When I click the back arrow icon button, open the preview page. Don't go to another page."
   const handleBack = () => {
-    // Direct Preview Page navigation: Immediately open the Preview Page (SoftwareDetailModal)
-    if (onOpenDetails) {
-      onOpenDetails();
-    } else {
+    // If coming-soon overlay or no iframe available, close directly
+    if (isInstitutes || !iframeRef.current?.contentWindow) {
+      onClose();
+      return;
+    }
+
+    // Step-by-step backward navigation: instruct iframe to step back (Dashboard -> Login -> Landing Page -> Exit)
+    try {
+      iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
+    } catch (e) {
+      console.warn("Failed to dispatch CV_GO_BACK to iframe:", e);
       onClose();
     }
   };

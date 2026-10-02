@@ -65,10 +65,10 @@
               return;
             }
             if (isPetrolRoot()) {
-              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+              window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
               return;
             }
-            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getPetrolRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {

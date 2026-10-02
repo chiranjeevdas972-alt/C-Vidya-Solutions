@@ -95,24 +95,31 @@
               return;
             }
 
-            if (p.endsWith('/dashboard')) {
+            if (p.endsWith('/dashboard') || p.indexOf('/dashboard') !== -1) {
               window.history.back();
               setTimeout(function() {
-                if (window.location.pathname.indexOf('/login') === -1) {
+                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+                if (cur.indexOf('/dashboard') !== -1) {
                   window.location.href = getFitnessRootUrl() + 'login';
                 }
-              }, 200);
+              }, 150);
               return;
             }
 
             // 3. Login or signup -> go to C Vidya Fitness Zone landing page
             if (p.endsWith('/login') || p.endsWith('/signup') || p.indexOf('/login') !== -1 || p.indexOf('/signup') !== -1) {
-              window.location.href = getFitnessRootUrl();
+              window.history.back();
+              setTimeout(function() {
+                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+                if (cur.indexOf('/login') !== -1 || cur.indexOf('/signup') !== -1) {
+                  window.location.href = getFitnessRootUrl();
+                }
+              }, 150);
               return;
             }
 
-            // 4. Fitness landing page -> go to View More / Preview Page (Software Details Modal)
-            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            // 4. Fitness landing page -> close portal and return to app
+            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getFitnessRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {

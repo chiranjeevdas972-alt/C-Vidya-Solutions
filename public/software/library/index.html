@@ -145,24 +145,31 @@
             }
 
             // 2. Dashboard -> go back to login
-            if (p.endsWith('/dashboard')) {
+            if (p.endsWith('/dashboard') || p.indexOf('/dashboard') !== -1) {
               window.history.back();
               setTimeout(function() {
-                if (window.location.pathname.indexOf('/login') === -1) {
+                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+                if (cur.indexOf('/dashboard') !== -1) {
                   window.location.href = getLibraryRootUrl() + 'login';
                 }
-              }, 200);
+              }, 150);
               return;
             }
 
             // 3. Login or register or otp -> go to C Vidya Library Management landing page
             if (p.endsWith('/login') || p.endsWith('/register') || p.endsWith('/verify-otp') || p.indexOf('/login') !== -1 || p.indexOf('/register') !== -1) {
-              window.location.href = getLibraryRootUrl();
+              window.history.back();
+              setTimeout(function() {
+                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+                if (cur.indexOf('/login') !== -1 || cur.indexOf('/register') !== -1) {
+                  window.location.href = getLibraryRootUrl();
+                }
+              }, 150);
               return;
             }
 
-            // 4. Software Landing Page -> go to View More / Preview Page (Software Details Modal)
-            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            // 4. Software Landing Page -> close portal and return to app
+            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getLibraryRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {

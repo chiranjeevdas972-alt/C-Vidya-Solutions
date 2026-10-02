@@ -178,6 +178,9 @@ export default function App() {
 
       const newRoute = resolveRoute(window.location.pathname, window.location.hash);
       setRoute(newRoute);
+      setActiveLiveSoftware(null);
+      setActiveSoftwareDetail(null);
+      setSelectedProduct(null);
 
       if (newRoute.type === "page" && ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(newRoute.id)) {
         setComplianceTab(newRoute.id);
@@ -467,11 +470,6 @@ export default function App() {
         <LiveSoftwareApp
           software={activeLiveSoftware}
           onClose={() => setActiveLiveSoftware(null)}
-          onOpenDetails={() => {
-            const current = activeLiveSoftware;
-            setActiveLiveSoftware(null);
-            setActiveSoftwareDetail(current);
-          }}
         />
       )}
 

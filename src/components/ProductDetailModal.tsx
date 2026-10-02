@@ -83,10 +83,11 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            title="Back"
+            aria-label="Back"
           >
-            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-            <span>Back</span>
+            <ArrowRight className="w-4 h-4 rotate-180" />
           </button>
           
           <button 
