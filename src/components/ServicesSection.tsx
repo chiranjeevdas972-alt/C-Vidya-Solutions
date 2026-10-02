@@ -304,7 +304,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                           title={`View details of ${product.name}`}
                         >
                           <Info className="w-3 h-3 text-brand-gold-600" />
-                          <span>See more</span>
+                          <span>View more</span>
                         </button>
 
                         {product.externalLink ? (
@@ -362,7 +362,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                       className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
                     >
                       <Info className="w-3.5 h-3.5 text-brand-gold-400" />
-                      <span>See more</span>
+                      <span>View more</span>
                     </button>
 
                     {selectedService.externalLink && (
@@ -476,7 +476,9 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                 key={frameKey}
                 src={
                   liveAppViewing.id === "fitness" || liveAppViewing.externalLink?.includes("fitzone.cvidyasolutions.workers.dev")
-                    ? "/software/fitness/index.html"
+                    ? "https://fitzone.cvidyasolutions.workers.dev/"
+                    : liveAppViewing.id === "library" || liveAppViewing.externalLink?.includes("v.cvidyasolutions.workers.dev")
+                    ? "https://v.cvidyasolutions.workers.dev/"
                     : liveAppViewing.id === "petrol-pump" || liveAppViewing.externalLink?.includes("c-vidya-cloud-petrol-pump")
                     ? "/software/petrol-pump/index.html"
                     : liveAppViewing.id === "pdf-media-tools" || liveAppViewing.id === "pdf-tools" || liveAppViewing.externalLink?.includes("c-vidya-pdf-saas-tools")

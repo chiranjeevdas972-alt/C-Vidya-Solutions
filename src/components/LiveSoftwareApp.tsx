@@ -65,17 +65,17 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
     );
   }, [software]);
 
-  // Use embedded static application suite for fitness, petrol-pump, library and pdf-media-tools to work universally on local dev, AI Studio, and deployed production servers
+  // Use live Cloudflare Workers for library and fitness, and static embedded suites for petrol-pump and pdf-media-tools
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     if (software.id === "fitness" || software.externalLink.includes("fitzone.cvidyasolutions.workers.dev")) {
-      return "/software/fitness/index.html";
+      return "https://fitzone.cvidyasolutions.workers.dev/";
+    }
+    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions.workers.dev")) {
+      return "https://v.cvidyasolutions.workers.dev/";
     }
     if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
-    }
-    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions.workers.dev")) {
-      return "/software/library/index.html";
     }
     if (software.id === "pdf-media-tools" || software.id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools")) {
       return "/software/pdf-media-tools/index.html";
@@ -150,219 +150,14 @@ export default function LiveSoftwareApp({ software, onClose, onOpenDetails }: Li
 
   if (!software) return null;
 
-  // Step-by-Step Back Navigation Handler:
-  // Step 1: Feature subpages (students, billing, books, seats, etc.) -> Dashboard
-  // Step 2: Dashboard -> Login page
-  // Step 3: Login page (or register/otp) -> Software Landing Page
-  // Step 4: Software Landing Page -> Preview Page (SoftwareDetailModal)
-  // Step 5: Preview Page -> C Vidya Solutions Website
+  // User Instruction: "When I click the back arrow icon button, open the preview page. Don't go to another page."
   const handleBack = () => {
-    const returnToPreview = () => {
-      if (onOpenDetails) {
-        onOpenDetails();
-      } else {
-        onClose();
-      }
-    };
-
-    const iframe = iframeRef.current;
-    if (iframe && iframe.contentWindow) {
-      try {
-        const cw = iframe.contentWindow;
-        let currentPath = "";
-        try {
-          currentPath = (cw.location.pathname || "").replace(/\/+$/, "") || "/";
-        } catch (_) {}
-        const recordedPath = (lastRecordedPathRef.current || "").replace(/\/+$/, "") || "";
-        const effectivePath = currentPath || recordedPath || "";
-
-        // 1. LIBRARY MANAGEMENT STEP-BY-STEP
-        if (effectivePath.includes("/software/library")) {
-          const isLibrarySubpage = (
-            effectivePath.includes("/students") ||
-            effectivePath.includes("/billing") ||
-            effectivePath.includes("/seats") ||
-            effectivePath.includes("/books") ||
-            effectivePath.includes("/book-issues") ||
-            effectivePath.includes("/reports") ||
-            effectivePath.includes("/transactions") ||
-            effectivePath.includes("/fines") ||
-            effectivePath.includes("/settings") ||
-            effectivePath.includes("/audit") ||
-            effectivePath.includes("/profile") ||
-            effectivePath.includes("/subscription") ||
-            effectivePath.includes("/advanced-analytics") ||
-            effectivePath.includes("/student-analytics") ||
-            effectivePath.includes("/upcoming-payments") ||
-            effectivePath.includes("/multi-branch") ||
-            effectivePath.includes("/branding") ||
-            effectivePath.includes("/api-access") ||
-            effectivePath.includes("/ai-assistant") ||
-            effectivePath.includes("/accounting")
-          );
-
-          if (isLibrarySubpage) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.includes("/software/library") &&
-                    !cw.location.pathname.endsWith("/dashboard") &&
-                    !cw.location.pathname.endsWith("/login")) {
-                  cw.location.href = "/software/library/dashboard";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          if (effectivePath.endsWith("/dashboard")) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.endsWith("/dashboard")) {
-                  cw.location.href = "/software/library/login";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          if (
-            effectivePath.endsWith("/login") ||
-            effectivePath.endsWith("/register") ||
-            effectivePath.endsWith("/verify-otp") ||
-            effectivePath.includes("/login") ||
-            effectivePath.includes("/register")
-          ) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.includes("/login") ||
-                    cw.location.pathname.includes("/register") ||
-                    cw.location.pathname.includes("/verify-otp")) {
-                  cw.location.href = "/software/library/";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          // At software landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
-          returnToPreview();
-          return;
-        }
-
-        // 2. FITNESS ZONE STEP-BY-STEP
-        if (effectivePath.includes("/software/fitness")) {
-          const isFitnessSubpage = (
-            effectivePath.includes("/members") ||
-            effectivePath.includes("/trainers") ||
-            effectivePath.includes("/plans") ||
-            effectivePath.includes("/payments") ||
-            effectivePath.includes("/attendance") ||
-            effectivePath.includes("/inventory") ||
-            effectivePath.includes("/announcements") ||
-            effectivePath.includes("/shop") ||
-            effectivePath.includes("/ai-zone") ||
-            effectivePath.includes("/reports-crm") ||
-            effectivePath.includes("/settings")
-          );
-
-          if (isFitnessSubpage) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.includes("/software/fitness") &&
-                    !cw.location.pathname.endsWith("/dashboard") &&
-                    !cw.location.pathname.endsWith("/login")) {
-                  cw.location.href = "/software/fitness/dashboard";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          if (effectivePath.endsWith("/dashboard")) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.endsWith("/dashboard")) {
-                  cw.location.href = "/software/fitness/login";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          if (
-            effectivePath.endsWith("/login") ||
-            effectivePath.endsWith("/signup") ||
-            effectivePath.includes("/login") ||
-            effectivePath.includes("/signup")
-          ) {
-            cw.postMessage({ type: "CV_GO_BACK" }, "*");
-            try { cw.history.back(); } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (cw.location.pathname.includes("/login") || cw.location.pathname.includes("/signup")) {
-                  cw.location.href = "/software/fitness/";
-                }
-              } catch (_) {}
-            }, 180);
-            return;
-          }
-
-          // At fitness landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
-          returnToPreview();
-          return;
-        }
-
-        // 3. PETROL PUMP STEP-BY-STEP
-        if (effectivePath.includes("/software/petrol-pump")) {
-          if (effectivePath.includes("/billing") || effectivePath.includes("/tanks") || effectivePath.includes("/reports")) {
-            cw.location.href = "/software/petrol-pump/dashboard";
-            return;
-          }
-          if (effectivePath.endsWith("/dashboard")) {
-            cw.location.href = "/software/petrol-pump/login";
-            return;
-          }
-          if (effectivePath.endsWith("/login") || effectivePath.includes("/login")) {
-            cw.location.href = "/software/petrol-pump/";
-            return;
-          }
-          // At petrol pump landing page -> Return to Preview Page (View more page / SoftwareDetailModal)!
-          returnToPreview();
-          return;
-        }
-
-        // 4. PDF MEDIA TOOLS STEP-BY-STEP
-        if (effectivePath.includes("/software/pdf-media-tools")) {
-          returnToPreview();
-          return;
-        }
-
-        // Fallback for any other embedded software view -> Return to Preview Page
-        returnToPreview();
-        return;
-      } catch (err) {
-        returnToPreview();
-        return;
-      }
+    // Direct Preview Page navigation: Immediately open the Preview Page (SoftwareDetailModal)
+    if (onOpenDetails) {
+      onOpenDetails();
+    } else {
+      onClose();
     }
-
-    // 5. Non-iframe software (Institutes gallery, Coaching, CRM, AI agents, Other services)
-    if (activePictureIndex > 0) {
-      setActivePictureIndex(0);
-      return;
-    }
-
-    returnToPreview();
   };
 
   // Define dynamic metadata, branding colors, typography and navigation features for every software

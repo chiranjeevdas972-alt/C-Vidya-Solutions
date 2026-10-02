@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -10,6 +10,10 @@ import ContactPage from "./components/pages/ContactPage";
 import CareersPage from "./components/pages/CareersPage";
 import FAQPage from "./components/pages/FAQPage";
 import BlogPage from "./components/pages/BlogPage";
+import SoftwareDirectoryPage from "./components/pages/SoftwareDirectoryPage";
+import AiAgentsDirectoryPage from "./components/pages/AiAgentsDirectoryPage";
+import PricingPage from "./components/pages/PricingPage";
+import ProductLandingPage from "./components/pages/ProductLandingPage";
 import ProductDetailModal from "./components/ProductDetailModal";
 import SoftwareDetailModal from "./components/SoftwareDetailModal";
 import LiveSoftwareApp from "./components/LiveSoftwareApp";
@@ -22,6 +26,7 @@ import NetworkStatusBanner from "./components/NetworkStatusBanner";
 import Logo from "./components/Logo";
 import { type ProductService } from "./types";
 import { saasProductsData, aiAgentsData } from "./data";
+import { PRODUCT_SEO_DATA, CORE_PAGES_SEO } from "./seoData";
 import { 
   Lock, 
   X, 
@@ -30,6 +35,69 @@ import {
 } from "lucide-react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebase";
+
+export type RouteState =
+  | { type: "page"; id: string }
+  | { type: "product"; productKey: string };
+
+function resolveRoute(pathname: string, hash: string): RouteState {
+  // 1. Architecture modal hash check
+  if (hash.startsWith("#architecture")) {
+    return { type: "page", id: "home" };
+  }
+
+  // Normalize path by stripping trailing slashes
+  let cleanPath = pathname.replace(/\/+$/, "");
+  if (!cleanPath || cleanPath === "") {
+    cleanPath = "/";
+  }
+
+  // 2. Handle legacy hash navigation like #about or #software/library-management
+  if (hash && hash.length > 1) {
+    const hashContent = hash.replace(/^#\/?/, "").replace(/\/+$/, "");
+    const corePages = [
+      "home", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
+      "pricing", "software", "ai-agents", "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
+    ];
+    if (corePages.includes(hashContent)) {
+      cleanPath = hashContent === "home" ? "/" : `/${hashContent}`;
+    }
+  }
+
+  // 3. Match against dedicated product landing pages
+  const matchedProduct = Object.values(PRODUCT_SEO_DATA).find(p => {
+    const pUrlClean = p.urlPath.replace(/\/+$/, "");
+    return pUrlClean === cleanPath || 
+      (p.type === "software" && cleanPath === `/software/${p.slug}`) ||
+      (p.type === "ai-agent" && cleanPath === `/ai-agents/${p.slug}`);
+  });
+
+  if (matchedProduct) {
+    return { type: "product", productKey: matchedProduct.id };
+  }
+
+  // 4. Match against directory and core pages
+  if (cleanPath === "/" || cleanPath === "") return { type: "page", id: "home" };
+  if (cleanPath === "/software") return { type: "page", id: "software" };
+  if (cleanPath === "/ai-agents") return { type: "page", id: "ai-agents" };
+  if (cleanPath === "/pricing") return { type: "page", id: "pricing" };
+  if (cleanPath === "/about") return { type: "page", id: "about" };
+  if (cleanPath === "/services") return { type: "page", id: "services" };
+  if (cleanPath === "/portfolio") return { type: "page", id: "portfolio" };
+  if (cleanPath === "/contact") return { type: "page", id: "contact" };
+  if (cleanPath === "/careers") return { type: "page", id: "careers" };
+  if (cleanPath === "/blog") return { type: "page", id: "blog" };
+  if (cleanPath === "/faq") return { type: "page", id: "faq" };
+
+  const compliancePages = ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"];
+  for (const cp of compliancePages) {
+    if (cleanPath === `/${cp}`) {
+      return { type: "page", id: cp };
+    }
+  }
+
+  return { type: "page", id: "home" };
+}
 
 export default function App() {
   const [aiOpen, setAiOpen] = useState(false);
@@ -41,13 +109,13 @@ export default function App() {
   const [architectureOpen, setArchitectureOpen] = useState(false);
   const [architectureTab, setArchitectureTab] = useState<"prd" | "trd" | "flow" | "uiux" | "schema" | "plan">("prd");
 
-
-
-  // Active page routing state
-  const [activePage, setActivePage] = useState<
-    "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq" | 
-    "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability"
-  >("home");
+  // Router State
+  const [route, setRoute] = useState<RouteState>(() => {
+    if (typeof window !== "undefined") {
+      return resolveRoute(window.location.pathname, window.location.hash);
+    }
+    return { type: "page", id: "home" };
+  });
 
   // Onsite Leads Admin Dialog State
   const [leadsModalOpen, setLeadsModalOpen] = useState(false);
@@ -57,78 +125,47 @@ export default function App() {
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
 
-  // Hash-change router listener for separate pages & Dynamic SEO updater
-  useEffect(() => {
-    const pageMetaMap: Record<string, { title: string; description: string }> = {
-      home: {
-        title: "C Vidya Solutions - Architecting the Digital Future",
-        description: "Enterprise software solutions, multitenant SaaS platforms, autonomous AI agents, and technology consulting."
-      },
-      about: {
-        title: "About Us - C Vidya Solutions",
-        description: "Learn about C Vidya Solutions' mission, leadership team, and history of engineering execution."
-      },
-      services: {
-        title: "Services & SaaS Products - C Vidya Solutions",
-        description: "Explore 7 flagship SaaS products, 4 autonomous AI agents, and comprehensive professional technology consulting."
-      },
-      portfolio: {
-        title: "Portfolio & Case Studies - C Vidya Solutions",
-        description: "High-fidelity business solutions and architectural case studies across FinTech, Data Analytics, and Cloud Infrastructure."
-      },
-      contact: {
-        title: "Contact Us & Regional Offices - C Vidya Solutions",
-        description: "Connect with our director desk, schedule a callback requisition, or visit our regional R&D headquarters."
-      },
-      careers: {
-        title: "Careers & Open Positions - C Vidya Solutions",
-        description: "Build the future of enterprise tech. Explore open opportunities across engineering, AI R&D, and product design."
-      },
-      faq: {
-        title: "Frequently Asked Questions - C Vidya Solutions",
-        description: "Answers to common questions regarding our SaaS suites, cloud integration timelines, SLA commitments, and support."
-      },
-      blog: {
-        title: "Industry Insights & Company News - C Vidya Solutions",
-        description: "Articles on cloud-native architecture, zero-trust security frameworks, and enterprise automation."
-      },
-      privacy: {
-        title: "Privacy Policy - C Vidya Solutions",
-        description: "Official Privacy Policy of C Vidya Solutions in compliance with DPDP Act, GDPR, and CCPA."
-      },
-      terms: {
-        title: "Terms of Service - C Vidya Solutions",
-        description: "Master subscription terms and service level agreements of C Vidya Solutions."
-      },
-      billing: {
-        title: "Billing & Invoicing Terms - C Vidya Solutions",
-        description: "GST invoicing, payment schedules, and subscription terms for C Vidya software."
-      },
-      refund: {
-        title: "Refund & Cancellation Policy - C Vidya Solutions",
-        description: "Review our 14-day satisfaction refund policy and service cancellation guidelines."
-      },
-      cookies: {
-        title: "Cookie Policy - C Vidya Solutions",
-        description: "Learn how C Vidya Solutions protects user browsing privacy and manages cookie consent."
-      },
-      disclaimer: {
-        title: "Legal Disclaimer - C Vidya Solutions",
-        description: "Official legal disclaimer and intellectual property notices."
-      },
-      portability: {
-        title: "Data Portability - C Vidya Solutions",
-        description: "Export records and database ledgers under GDPR Article 15 and international portability standards."
-      },
-      architecture: {
-        title: "Architecture & Engineering Center - C Vidya Solutions",
-        description: "Explore the 6 core engineering documents: PRD, TRD, 10-screen App Flow, UI/UX System, DB Schema with ERD, and Build Plan."
+  // Navigation controller with HTML5 History & URL normalization
+  const navigateTo = (target: string) => {
+    // 1. Architecture modal shortcut
+    if (target.startsWith("#architecture") || target.startsWith("architecture")) {
+      const subTab = target.split("-")[1] as any;
+      if (["prd", "trd", "flow", "uiux", "schema", "plan"].includes(subTab)) {
+        setArchitectureTab(subTab);
+      } else {
+        setArchitectureTab("prd");
       }
-    };
+      setArchitectureOpen(true);
+      return;
+    }
 
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash.startsWith("architecture")) {
+    let urlToPush = target;
+    // Normalize simple page names like "services" to "/services/"
+    if (!target.startsWith("/")) {
+      if (target === "home") {
+        urlToPush = "/";
+      } else {
+        urlToPush = `/${target}/`;
+      }
+    }
+    // Ensure trailing slash for directory style URLs
+    if (!urlToPush.endsWith("/") && !urlToPush.includes(".") && !urlToPush.includes("#") && !urlToPush.includes("?")) {
+      urlToPush += "/";
+    }
+
+    if (window.location.pathname !== urlToPush) {
+      window.history.pushState(null, "", urlToPush);
+    }
+    const newRoute = resolveRoute(urlToPush, "");
+    setRoute(newRoute);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // HTML5 History & Popstate event listener
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#architecture")) {
         const subTab = hash.split("-")[1] as any;
         if (["prd", "trd", "flow", "uiux", "schema", "plan"].includes(subTab)) {
           setArchitectureTab(subTab);
@@ -138,43 +175,36 @@ export default function App() {
         setArchitectureOpen(true);
         return;
       }
-      const validPages = [
-        "home", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
-        "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
-      ];
-      let target = "home";
-      if (hash && validPages.includes(hash)) {
-        target = hash;
-      }
-      
-      setActivePage(target as any);
-      if (["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(target)) {
-        setComplianceTab(target);
-      }
 
-      // Update SEO Head dynamically
-      const meta = pageMetaMap[target] || pageMetaMap.home;
-      document.title = meta.title;
-      const descTag = document.querySelector('meta[name="description"]');
-      if (descTag) {
-        descTag.setAttribute("content", meta.description);
-      }
-      const canonicalTag = document.querySelector('link[rel="canonical"]');
-      if (canonicalTag) {
-        canonicalTag.setAttribute("href", `https://cvidyasolutions.com${target === "home" ? "" : "#" + target}`);
+      const newRoute = resolveRoute(window.location.pathname, window.location.hash);
+      setRoute(newRoute);
+
+      if (newRoute.type === "page" && ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(newRoute.id)) {
+        setComplianceTab(newRoute.id);
       }
     };
 
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange();
+    window.addEventListener("popstate", handleLocationChange);
+    window.addEventListener("hashchange", handleLocationChange);
+    handleLocationChange();
 
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("popstate", handleLocationChange);
+      window.removeEventListener("hashchange", handleLocationChange);
+    };
   }, []);
 
-  const navigateTo = (page: string) => {
-    window.location.hash = page;
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Compute active navigation tab for Header styling
+  const headerActivePage = useMemo(() => {
+    if (route.type === "page") {
+      return route.id;
+    }
+    if (route.type === "product") {
+      const p = PRODUCT_SEO_DATA[route.productKey];
+      return p?.type === "software" ? "software" : "ai-agents";
+    }
+    return "home";
+  }, [route]);
 
   // Fetch Firestore Leads for Admin Portal
   const fetchInquiries = async () => {
@@ -185,7 +215,6 @@ export default function App() {
       querySnapshot.forEach((docSnap) => {
         list.push({ id: docSnap.id, ...docSnap.data() });
       });
-      // Sort newest first
       list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
       setInquiriesList(list);
     } catch (err) {
@@ -206,7 +235,6 @@ export default function App() {
 
   const handleLeadsLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default passcodes
     if (leadsPasscode === "9288517027" || leadsPasscode === "8987766981" || leadsPasscode === "admin123" || leadsPasscode === "cvidya2026") {
       setLeadsAuthenticated(true);
       fetchInquiries();
@@ -214,6 +242,28 @@ export default function App() {
       alert("Invalid Passcode. Please enter authorized administrative passcode.");
     }
   };
+
+  // Find product data from dataset
+  const activeProductData = useMemo<ProductService | null>(() => {
+    if (route.type !== "product") return null;
+    const allProducts = [...saasProductsData, ...aiAgentsData];
+    const found = allProducts.find(p => p.id === route.productKey);
+    if (found) return found;
+    const seo = PRODUCT_SEO_DATA[route.productKey];
+    return {
+      id: route.productKey,
+      num: "01",
+      name: seo?.h1Title || "Product",
+      tagline: seo?.category || "Software Suite",
+      description: seo?.metaDescription || "",
+      features: seo?.secondaryKeywords || [],
+      mockData: {
+        title: seo?.h1Title || "Dashboard Overview",
+        metrics: [],
+        recentActivity: []
+      }
+    };
+  }, [route]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans overflow-x-clip">
@@ -223,10 +273,10 @@ export default function App() {
 
       {/* 1. TOP HEADER & NAVIGATION */}
       <Header 
-        activePage={activePage}
+        activePage={headerActivePage}
         onOpenAssistant={() => setAiOpen(true)} 
-        onOpenHub={(tab) => navigateTo(tab)}
-        onOpenConsultation={() => navigateTo("contact")}
+        onOpenHub={(path) => navigateTo(path)}
+        onOpenConsultation={() => navigateTo("/contact/")}
         onOpenArchitecture={() => {
           setArchitectureTab("prd");
           setArchitectureOpen(true);
@@ -237,80 +287,117 @@ export default function App() {
       <main className="flex-grow">
         <AnimatePresence mode="wait">
           <motion.div
-            key={activePage}
-            initial={{ opacity: 0, y: 10 }}
+            key={route.type === "product" ? `product-${route.productKey}` : `page-${route.id}`}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
             {/* 1. HOME PAGE */}
-            {activePage === "home" && (
+            {route.type === "page" && route.id === "home" && (
               <HomePage 
                 onNavigate={navigateTo}
                 onSelectProduct={(product) => setActiveSoftwareDetail(product)}
                 onOpenSoftware={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("contact")}
+                onOpenConsultation={() => navigateTo("/contact/")}
               />
             )}
 
-            {/* 2. ABOUT PAGE */}
-            {activePage === "about" && (
+            {/* 2. SOFTWARE DIRECTORY PAGE */}
+            {route.type === "page" && route.id === "software" && (
+              <SoftwareDirectoryPage 
+                onNavigate={navigateTo}
+                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenConsultation={() => navigateTo("/contact/")}
+              />
+            )}
+
+            {/* 3. AI AGENTS DIRECTORY PAGE */}
+            {route.type === "page" && route.id === "ai-agents" && (
+              <AiAgentsDirectoryPage 
+                onNavigate={navigateTo}
+                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenConsultation={() => navigateTo("/contact/")}
+              />
+            )}
+
+            {/* 4. PRICING PAGE */}
+            {route.type === "page" && route.id === "pricing" && (
+              <PricingPage 
+                onNavigate={navigateTo}
+                onOpenConsultation={() => navigateTo("/contact/")}
+              />
+            )}
+
+            {/* 5. ABOUT PAGE */}
+            {route.type === "page" && route.id === "about" && (
               <AboutPage 
                 onNavigate={navigateTo}
               />
             )}
 
-            {/* 3. SERVICES PAGE */}
-            {activePage === "services" && (
+            {/* 6. SERVICES PAGE */}
+            {route.type === "page" && route.id === "services" && (
               <ServicesPage 
                 onSelectProduct={(product) => setActiveSoftwareDetail(product)}
                 onOpenSoftware={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("contact")}
+                onOpenConsultation={() => navigateTo("/contact/")}
               />
             )}
 
-            {/* 4. PORTFOLIO PAGE */}
-            {activePage === "portfolio" && (
+            {/* 7. PORTFOLIO PAGE */}
+            {route.type === "page" && route.id === "portfolio" && (
               <PortfolioPage 
                 onNavigate={navigateTo}
               />
             )}
 
-            {/* 5. CONTACT US PAGE */}
-            {activePage === "contact" && (
+            {/* 8. CONTACT US PAGE */}
+            {route.type === "page" && route.id === "contact" && (
               <ContactPage 
                 onOpenLeadsModal={() => setLeadsModalOpen(true)}
               />
             )}
 
-            {/* 6. CAREERS PAGE */}
-            {activePage === "careers" && (
+            {/* 9. CAREERS PAGE */}
+            {route.type === "page" && route.id === "careers" && (
               <CareersPage 
                 onNavigate={navigateTo}
               />
             )}
 
-            {/* 7. FAQ PAGE */}
-            {activePage === "faq" && (
+            {/* 10. FAQ PAGE */}
+            {route.type === "page" && route.id === "faq" && (
               <FAQPage 
-                onNavigateContact={() => navigateTo("contact")}
+                onNavigateContact={() => navigateTo("/contact/")}
                 onOpenAssistant={() => setAiOpen(true)}
               />
             )}
 
-            {/* 8. BLOG PAGE */}
-            {activePage === "blog" && (
+            {/* 11. BLOG PAGE */}
+            {route.type === "page" && route.id === "blog" && (
               <BlogPage 
                 onNavigate={navigateTo}
               />
             )}
 
-            {/* 9. SEPARATE COMPLIANCE / LEGAL PAGES */}
-            {["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(activePage) && (
+            {/* 12. DEDICATED PRODUCT & AI AGENT LANDING PAGES */}
+            {route.type === "product" && PRODUCT_SEO_DATA[route.productKey] && activeProductData && (
+              <ProductLandingPage
+                seoInfo={PRODUCT_SEO_DATA[route.productKey]}
+                productData={activeProductData}
+                onNavigate={navigateTo}
+                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenConsultation={() => navigateTo("/contact/")}
+              />
+            )}
+
+            {/* 13. SEPARATE COMPLIANCE / LEGAL PAGES */}
+            {route.type === "page" && ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(route.id) && (
               <CompliancePage 
-                initialTab={activePage as any} 
-                onBackToHome={() => navigateTo("home")}
-                onTabChange={(tab) => navigateTo(tab)}
+                initialTab={route.id as any} 
+                onBackToHome={() => navigateTo("/")}
+                onTabChange={(tab) => navigateTo(`/${tab}/`)}
               />
             )}
           </motion.div>

@@ -1,34 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-label="C Vidya Solutions Logo (White)" title="C Vidya Solutions" desc="Double chevron logo with professional white typography for C Vidya Solutions on dark backgrounds">
   <defs>
-    <linearGradient id="chevron-white-grad" x1="0%" y1="0%" x2="100%" y2="50%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="40%" stop-color="#00E5FF" />
-      <stop offset="70%" stop-color="#2563EB" />
-      <stop offset="100%" stop-color="#1E40AF" />
+    <!-- Vibrant Blue Metallic Gradient for the Chevron Icon (slightly adjusted for dark backgrounds) -->
+    <linearGradient id="logo-grad-white" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00C2FF" />
+      <stop offset="50%" stop-color="#0066FF" />
+      <stop offset="100%" stop-color="#003B99" />
     </linearGradient>
-    <linearGradient id="inner-white-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#2563EB" />
-      <stop offset="50%" stop-color="#38BDF8" />
-      <stop offset="100%" stop-color="#0284C7" />
-    </linearGradient>
-    <filter id="logo-drop-shadow-white" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3" />
+    <!-- Drop Shadow for the Icon to give 3D depth -->
+    <filter id="icon-shadow-white" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3"/>
     </filter>
   </defs>
-
-  <!-- Dynamic Chevron Brand Mark -->
-  <g transform="translate(8, 9) scale(0.172) translate(-312, -90)" filter="url(#logo-drop-shadow-white)">
-    <path
-      d="M 315,90 L 580,280 L 345,450 L 380,395 L 485,280 L 318,160 Z"
-      fill="url(#chevron-white-grad)"
-    />
-    <path
-      d="M 312,320 L 425,240 L 452,268 L 312,415 Z"
-      fill="url(#inner-white-grad)"
-    />
+  <!-- Group containing the Double Chevron Icon -->
+  <g id="Icon" filter="url(#icon-shadow-white)">
+    <!-- Shape 1: Top-Right Chevron Segment -->
+    <path id="ChevronTopRight"
+          d="M 398,116 L 686,336 L 593,397 L 512,335 L 532,311 L 398,212 Z"
+          fill="url(#logo-grad-white)" />
+    <!-- Shape 2: Bottom-Left Chevron Segment -->
+    <path id="ChevronBottomLeft"
+          d="M 398,410 L 480,356 L 561,418 L 398,525 Z"
+          fill="url(#logo-grad-white)" />
   </g>
-
-  <!-- Typography -->
-  <text x="64" y="44" font-family="-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, sans-serif" font-weight="900" font-size="28" letter-spacing="-0.5" fill="#FFFFFF">C VIDYA</text>
-  <text x="66" y="63" font-family="-apple-system, BlinkMacSystemFont, "JetBrains Mono", monospace, sans-serif" font-weight="800" font-size="10.5" letter-spacing="4.5" fill="#60A5FA">SOLUTIONS</text>
+  <!-- Group containing Logo Text: "C VIDYA" (White) -->
+  <text id="Text_CVidya" x="500" y="650" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="900" font-size="78" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">C VIDYA</text>
+  <!-- Group containing Logo Sub-text: "— SOLUTIONS —" (White) -->
+  <g id="Text_Solutions">
+    <!-- Left Decorative Line -->
+    <rect x="200" y="718" width="90" height="4" rx="2" fill="#FFFFFF" />
+    <text x="500" y="728" font-family="Inter, system-ui, -apple-system, sans-serif" font-weight="800" font-size="30" letter-spacing="14" fill="#FFFFFF" text-anchor="middle">SOLUTIONS</text>
+    <!-- Right Decorative Line -->
+    <rect x="710" y="718" width="90" height="4" rx="2" fill="#FFFFFF" />
+  </g>
 </svg>

@@ -1170,20 +1170,28 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   }
 });
 
-// Serve public static assets (including embedded software suites)
-app.get(["/software/fitness", "/software/fitness/"], (req, res) => {
+// Serve embedded software suites when explicitly requesting index.html inside iframes
+app.get("/software/fitness/index.html", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
 });
-app.get(["/software/library", "/software/library/"], (req, res) => {
+app.get("/software/library/index.html", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/library/index.html"));
 });
-app.get(["/software/petrol-pump", "/software/petrol-pump/"], (req, res) => {
+app.get("/software/petrol-pump/index.html", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/petrol-pump/index.html"));
 });
-app.get(["/software/pdf-media-tools", "/software/pdf-media-tools/"], (req, res) => {
+app.get("/software/pdf-media-tools/index.html", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
 });
-app.use(express.static(path.join(process.cwd(), "public")));
+
+// Serve public static assets with index: false, bypassing /software/pdf-media-tools so the SPA landing page loads
+const publicStaticMiddleware = express.static(path.join(process.cwd(), "public"), { index: false });
+app.use((req, res, next) => {
+  if (req.path === "/software/pdf-media-tools" || req.path === "/software/pdf-media-tools/") {
+    return next();
+  }
+  publicStaticMiddleware(req, res, next);
+});
 
 // Vite / static file serving integration
 async function startServer() {

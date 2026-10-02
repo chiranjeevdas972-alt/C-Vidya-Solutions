@@ -1,34 +1,41 @@
-import { useState } from "react";
-import { Phone, Mail, MapPin, Menu, X, ArrowRight, MessageSquare } from "lucide-react";
+import React, { useState } from "react";
+import { Phone, Mail, Menu, X, ArrowRight } from "lucide-react";
 import Logo from "./Logo";
 
 interface HeaderProps {
   activePage?: string;
   onOpenAssistant: () => void;
-  onOpenHub: (tab: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "blog" | "faq") => void;
+  onOpenHub: (path: string) => void;
   onOpenConsultation?: () => void;
   onOpenArchitecture?: () => void;
 }
 
 export default function Header({ 
   activePage = "home", 
-  onOpenAssistant, 
+  onOpenAssistant: _onOpenAssistant, 
   onOpenHub, 
   onOpenConsultation,
-  onOpenArchitecture 
+  onOpenArchitecture: _onOpenArchitecture 
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems: { id: "home" | "about" | "services" | "portfolio" | "contact" | "careers" | "faq" | "blog"; label: string }[] = [
-    { id: "home", label: "Home" },
-    { id: "about", label: "About" },
-    { id: "services", label: "Services" },
-    { id: "portfolio", label: "Portfolio / Case Studies" },
-    { id: "contact", label: "Contact Us" },
-    { id: "careers", label: "Careers" },
-    { id: "faq", label: "FAQ" },
-    { id: "blog", label: "Blog" },
+  const navItems = [
+    { id: "home", path: "/", label: "Home" },
+    { id: "about", path: "/about/", label: "About" },
+    { id: "software", path: "/software/", label: "Software" },
+    { id: "ai-agents", path: "/ai-agents/", label: "AI Agents" },
+    { id: "services", path: "/services/", label: "Services" },
+    { id: "pricing", path: "/pricing/", label: "Pricing" },
+    { id: "portfolio", path: "/portfolio/", label: "Portfolio" },
+    { id: "blog", path: "/blog/", label: "Blog" },
+    { id: "contact", path: "/contact/", label: "Contact Us" }
   ];
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    onOpenHub(path);
+  };
 
   return (
     <div className="sticky top-0 z-50 w-full shadow-xs bg-white/95 backdrop-blur-md border-b border-slate-200/80">
@@ -53,16 +60,14 @@ export default function Header({
 
       {/* Main Header / Navigation */}
       <header id="main-nav" className="w-full">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
           
           {/* Logo Brand Emblem */}
           <a 
-            href="#home" 
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenHub("home");
-            }}
-            className="flex items-center gap-3 group"
+            href="/" 
+            onClick={(e) => handleNavClick(e, "/")}
+            className="flex items-center gap-3 group shrink-0"
+            title="C Vidya Solutions - Home"
           >
             <Logo size={42} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
             <div>
@@ -76,14 +81,17 @@ export default function Header({
           </a>
 
           {/* Desktop Navigation Link Anchors */}
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-sm xl:text-[15px] font-semibold text-slate-700">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-slate-700">
             {navItems.map((item) => {
-              const isActive = activePage === item.id;
+              const isActive = activePage === item.id || 
+                (item.id === "software" && activePage.startsWith("software")) ||
+                (item.id === "ai-agents" && activePage.startsWith("ai-agent"));
               return (
-                <button 
+                <a 
                   key={item.id}
-                  onClick={() => onOpenHub(item.id)}
-                  className={`relative py-1.5 transition-colors cursor-pointer bg-transparent border-none ${
+                  href={item.path}
+                  onClick={(e) => handleNavClick(e, item.path)}
+                  className={`relative py-1.5 transition-colors ${
                     isActive 
                       ? "text-blue-600 font-bold" 
                       : "hover:text-blue-600 text-slate-700"
@@ -93,7 +101,7 @@ export default function Header({
                   {isActive && (
                     <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full" />
                   )}
-                </button>
+                </a>
               );
             })}
           </nav>
@@ -101,8 +109,9 @@ export default function Header({
           {/* Right Action Buttons */}
           <div className="hidden sm:flex items-center gap-2.5">
             <button
-              onClick={onOpenConsultation || (() => onOpenHub("contact"))}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+              type="button"
+              onClick={onOpenConsultation || (() => onOpenHub("/contact/"))}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-md text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <span>Book a Demo</span>
               <ArrowRight className="w-4 h-4" />
@@ -113,6 +122,7 @@ export default function Header({
           <div className="flex lg:hidden items-center gap-2">
             <button
               id="mobile-nav-toggle"
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 hover:bg-slate-100 rounded-lg text-slate-800 cursor-pointer"
               aria-label="Toggle navigation menu"
@@ -129,30 +139,29 @@ export default function Header({
               {navItems.map((item) => {
                 const isActive = activePage === item.id;
                 return (
-                  <button 
+                  <a 
                     key={item.id}
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onOpenHub(item.id);
-                    }}
-                    className={`py-2 px-3 text-left rounded-lg text-sm font-medium ${
+                    href={item.path}
+                    onClick={(e) => handleNavClick(e, item.path)}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium ${
                       isActive ? "bg-blue-50 text-blue-600 font-bold" : "hover:bg-slate-50 text-slate-700"
                     }`}
                   >
                     {item.label}
-                  </button>
+                  </a>
                 );
               })}
             </nav>
 
             <div className="pt-2 border-t border-slate-100">
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   if (onOpenConsultation) onOpenConsultation();
-                  else onOpenHub("contact");
+                  else onOpenHub("/contact/");
                 }}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-xs text-center"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-xs text-center cursor-pointer"
               >
                 Book a Demo
               </button>

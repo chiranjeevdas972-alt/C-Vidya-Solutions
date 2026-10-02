@@ -713,7 +713,7 @@ export default function ArchitectureHubModal({
                         </p>
                         <div className="flex gap-2">
                           <a 
-                            href="/software/fitness/" 
+                            href="https://fitzone.cvidyasolutions.workers.dev/" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold inline-flex items-center gap-1.5"
@@ -1314,7 +1314,7 @@ export default function ArchitectureHubModal({
                       status: "Completed",
                       badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
                       items: [
-                        "C Vidya Fitness Zone standalone micro-app integration under /software/fitness",
+                        "C Vidya Fitness Zone standalone micro-app integration under https://fitzone.cvidyasolutions.workers.dev/",
                         "C Vidya Library Automation standalone micro-app integration under /software/library",
                         "Dynamic router base path resolution and parent-iframe communication channel",
                         "7 Flagship SaaS modal previews and technical specification drawers"

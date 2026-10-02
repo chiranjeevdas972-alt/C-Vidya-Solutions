@@ -7,7 +7,6 @@ import {
   Send, 
   CheckCircle2, 
   Shield, 
-  QrCode, 
   Database,
   ExternalLink,
   GraduationCap
@@ -144,18 +143,6 @@ export default function ContactPage({ onOpenLeadsModal }: ContactPageProps) {
                     </a>
                     <div className="text-[10px] text-slate-500">Director: Chiranjeev Das</div>
                   </div>
-                </div>
-              </div>
-
-              {/* QR / Scan Card */}
-              <div className="p-4 bg-[#071739] text-white rounded-xl flex items-center gap-4 shadow-sm">
-                <div className="w-12 h-12 rounded-lg bg-blue-600/30 border border-blue-400/30 flex items-center justify-center shrink-0">
-                  <QrCode className="w-6 h-6 text-blue-400" />
-                </div>
-                <div className="space-y-0.5">
-                  <div className="text-[10px] font-mono tracking-wider text-blue-400 uppercase font-semibold">SCAN TO VISIT WEBSITE</div>
-                  <div className="text-sm font-bold text-white">Official C Vidya Portal</div>
-                  <div className="text-[11px] text-slate-300">Instant mobile access to solution documents.</div>
                 </div>
               </div>
 

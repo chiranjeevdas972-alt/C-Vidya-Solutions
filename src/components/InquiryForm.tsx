@@ -570,36 +570,6 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                   </div>
                 </div>
 
-                {/* Digital QR Passport */}
-                <div className="p-4 rounded-xl bg-brand-navy-950 text-white border border-brand-gold-500/20 flex gap-3.5 items-center">
-                  <div className="bg-white p-2 rounded-lg shrink-0 border border-brand-gold-500/30">
-                    <div className="w-16 h-16 grid grid-cols-6 grid-rows-6 gap-[1px] p-[1px] bg-white relative">
-                      <div className="col-span-2 row-span-2 bg-brand-navy-900" />
-                      <div className="col-span-2 row-span-2 col-start-5 bg-brand-navy-900" />
-                      <div className="col-span-2 row-span-2 row-start-5 bg-brand-navy-900" />
-                      <div className="col-start-3 row-start-2 bg-brand-navy-900" />
-                      <div className="col-start-4 row-start-3 bg-brand-navy-900" />
-                      <div className="col-start-3 row-start-4 bg-brand-navy-900" />
-                      <div className="col-start-5 row-start-4 bg-brand-navy-900" />
-                      <div className="col-start-4 row-start-5 bg-brand-navy-900" />
-                      <div className="absolute inset-5 bg-brand-gold-500 border border-brand-navy-900 rounded-xs flex items-center justify-center font-mono font-black text-[6px] text-brand-navy-950">
-                        V
-                      </div>
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[9px] font-mono tracking-widest text-brand-gold-400 font-bold uppercase">
-                      SCAN TO VISIT WEBSITE
-                    </div>
-                    <h4 className="font-display font-semibold text-xs text-white mt-0.5 leading-snug">
-                      Official C Vidya Portal
-                    </h4>
-                    <p className="text-[10.5px] text-slate-300 leading-tight mt-1">
-                      Instant mobile access to solution documents.
-                    </p>
-                  </div>
-                </div>
-
               </div>
             </div>
 
