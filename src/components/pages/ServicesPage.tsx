@@ -88,7 +88,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
       setSubmitted(true);
     } catch (err: any) {
-      setFormError("Unable to submit right now. Please email directly at consulting@cvidyasolutions.com");
+      setFormError("Unable to submit right now. Please email directly at cvidyasolutions@gmail.com");
     } finally {
       setSubmitting(false);
     }
@@ -934,12 +934,12 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
               <div className="space-y-4 pt-2 text-xs sm:text-sm text-slate-300">
                 <div className="flex items-center gap-3">
                   <Building2 className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>Global Headquarters, Tech District</span>
+                  <span>Dhanbad, Jharkhand, India</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Headphones className="w-4 h-4 text-blue-400 shrink-0" />
-                  <a href="mailto:consulting@cvidyasolutions.com" className="hover:text-blue-400 underline">
-                    consulting@cvidyasolutions.com
+                  <a href="mailto:cvidyasolutions@gmail.com" className="hover:text-blue-400 underline">
+                    cvidyasolutions@gmail.com
                   </a>
                 </div>
               </div>

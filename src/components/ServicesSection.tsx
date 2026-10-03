@@ -15,7 +15,6 @@ import {
   Sparkles, 
   Bot, 
   Cpu, 
-  ExternalLink, 
   CheckCircle2, 
   Activity, 
   ArrowRight, 
@@ -314,7 +313,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                               e.stopPropagation();
                               handleOpenSoftware(product);
                             }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 text-center whitespace-nowrap ${
                               activeCategory === "saas"
                                 ? "bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 border-brand-gold-600/30"
                                 : "bg-[#42A5F5] hover:bg-blue-600 text-white border-blue-500/40"
@@ -322,7 +321,6 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                             title={`Open ${product.name}`}
                           >
                             <span>Click here</span>
-                            <ExternalLink className="w-3 h-3" />
                           </button>
                         ) : null}
                       </div>
@@ -369,10 +367,9 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                       <button
                         type="button"
                         onClick={() => handleOpenSoftware(selectedService)}
-                        className="px-3.5 py-1.5 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer border-none"
+                        className="px-3.5 py-1.5 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer border-none text-center whitespace-nowrap"
                       >
                         <span>Click here</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>

@@ -2,7 +2,6 @@ import React from "react";
 import { 
   Bot, 
   ArrowRight, 
-  ExternalLink, 
   Sparkles, 
   Share2, 
   Headphones, 
@@ -142,11 +141,10 @@ export default function AiAgentsDirectoryPage({
                           window.open(rawAgent.externalLink, "_blank");
                         }
                       }}
-                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors text-center whitespace-nowrap"
                       title={`Open live agent workspace for ${rawAgent.name}`}
                     >
-                      <span>Click here</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      Click here
                     </button>
                   )}
                 </div>
