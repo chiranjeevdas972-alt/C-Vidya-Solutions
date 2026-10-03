@@ -727,6 +727,38 @@ app.get("/api/proxy/fitness", (req, res) => {
   res.redirect(302, "/software/fitness/index.html");
 });
 
+// Live Software Embed Proxy with Universal Step-by-Step Navigation Bridge
+const softwareWorkerMap: Record<string, string> = {
+  // AI Agents
+  "ai-social": "https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/",
+  "ai-support": "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+  "ai-salesflow": "https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/",
+  "ai-sales": "https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/",
+  "ai-marketing": "https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/",
+  "ai-market": "https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/",
+  
+  // SaaS Products & Services
+  "coaching": "https://coaching.cvidyasolutions.workers.dev/",
+  "farming": "https://fresh.cvidyasolutions.workers.dev/",
+  "fresh": "https://fresh.cvidyasolutions.workers.dev/",
+  "agrifusion": "https://fresh.cvidyasolutions.workers.dev/",
+  "members": "https://jewelry.cvidyasolutions.workers.dev/",
+  "jewelry": "https://jewelry.cvidyasolutions.workers.dev/",
+  "crm": "https://crm.cvidyasolutions.workers.dev/",
+  "care-plus": "https://care-plus.cvidyasolutions.workers.dev/",
+  "hospital": "https://care-plus.cvidyasolutions.workers.dev/",
+  "institutes": "https://institutes.cvidyasolutions.workers.dev/"
+};
+
+app.get("/api/live-software-embed", (req, res) => {
+  const id = String(req.query.id || "").toLowerCase();
+  const workerUrl = softwareWorkerMap[id] || (req.query.url ? String(req.query.url) : null);
+  if (workerUrl) {
+    return res.redirect(302, workerUrl);
+  }
+  return res.status(404).send("Software embed not configured");
+});
+
 // PDF & Media Tool SaaS Backend APIs (Session, Inventory, Telemetry, Usage)
 const pdfToolInventory: Array<any> = [];
 let pdfToolDailyConversions = 0;

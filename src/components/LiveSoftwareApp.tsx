@@ -64,21 +64,23 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     );
   }, [software]);
 
-  // Use locally hosted embedded suites with bidirectional navigation bridge for instant responsiveness
+  // Use locally hosted embedded suites with step-by-step navigation for local apps, and direct worker URLs for all other live apps
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
-    if (software.id === "library" || software.externalLink.includes("v.cvidyasolutions") || software.externalLink.includes("library")) {
+    const id = software.id.toLowerCase();
+    if (id === "library" || software.externalLink.includes("v.cvidyasolutions")) {
       return "/software/library/index.html";
     }
-    if (software.id === "fitness" || software.externalLink.includes("fitzone")) {
+    if (id === "fitness" || software.externalLink.includes("fitzone")) {
       return "/software/fitness/index.html";
     }
-    if (software.id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump") || software.externalLink.includes("petrol-pump")) {
+    if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
     }
-    if (software.id === "pdf-media-tools" || software.id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools") || software.externalLink.includes("pdf-media-tools")) {
+    if (id === "pdf-media-tools" || id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools")) {
       return "/software/pdf-media-tools/index.html";
     }
+    // For all AI agents and other SaaS products, load live software worker link directly without proxy
     return software.externalLink;
   }, [software]);
 
@@ -145,22 +147,45 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     };
   }, [onClose]);
 
-  if (!software) return null;
+  const isLocalSuite = useMemo(() => {
+    if (!software) return false;
+    const id = software.id.toLowerCase();
+    return (
+      id === "library" ||
+      id === "fitness" ||
+      id === "petrol-pump" ||
+      id === "pdf-media-tools" ||
+      id === "pdf-tools"
+    );
+  }, [software]);
 
   const handleBack = () => {
-    // If coming-soon overlay or no iframe available, close directly
+    // 1. If coming-soon overlay (Institutes) or no iframe available, close directly and return to preview page
     if (isInstitutes || !iframeRef.current?.contentWindow) {
       onClose();
       return;
     }
 
-    // Step-by-step backward navigation: instruct iframe to step back (Dashboard -> Login -> Landing Page -> Exit)
+    // 2. For local suites (Library, Fitness, Petrol Pump, PDF Tools), support step-by-step backward navigation
+    if (isLocalSuite) {
+      try {
+        iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
+        // If already on landing page (root), close immediately to return to preview page
+        if (!canGoBackState) {
+          onClose();
+        }
+      } catch (e) {
+        onClose();
+      }
+      return;
+    }
+
+    // 3. For all other live cloud software & AI Agents (Coaching, Agrifusion, Jewelry, CRM, Care Plus, AI Social, AI Support, SalesFlow, Marketing):
+    // Directly close and return to the preview / services page!
     try {
       iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
-    } catch (e) {
-      console.warn("Failed to dispatch CV_GO_BACK to iframe:", e);
-      onClose();
-    }
+    } catch (e) {}
+    onClose();
   };
 
   // Define dynamic metadata, branding colors, typography and navigation features for every software
