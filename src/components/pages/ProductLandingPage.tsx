@@ -5,17 +5,10 @@ import {
   ExternalLink, 
   ArrowRight, 
   ChevronDown, 
-  Sparkles, 
-  ShieldCheck, 
-  Layers, 
   Users, 
   Workflow, 
   TrendingUp, 
-  HelpCircle,
-  Clock,
-  Zap,
-  Building,
-  Activity
+  HelpCircle
 } from "lucide-react";
 import Breadcrumb from "../Breadcrumb";
 import SeoHead from "../SeoHead";
@@ -135,11 +128,6 @@ export default function ProductLandingPage({
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>{seoInfo.category}</span>
-            </div>
-
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight">
               {seoInfo.h1Title}
             </h1>
@@ -182,22 +170,6 @@ export default function ProductLandingPage({
                 <span>Book Architecture Consultation</span>
                 <ArrowRight className="w-4 h-4 text-slate-600" />
               </button>
-            </div>
-
-            {/* Quick Guarantees */}
-            <div className="flex flex-wrap items-center gap-6 pt-3 text-xs text-slate-500 font-medium">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Zero Lock-in Cloud Architecture</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-amber-500" />
-                <span>High-Speed Sub-Second Processing</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-blue-600" />
-                <span>24/7 SLA Technical Support</span>
-              </span>
             </div>
           </div>
 
@@ -249,10 +221,6 @@ export default function ProductLandingPage({
       {/* 2. CORE FEATURES SECTION */}
       <section className="py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-widest text-blue-600 uppercase">
-            <Layers className="w-4 h-4" />
-            <span>ENTERPRISE SPECIFICATIONS</span>
-          </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight">
             Comprehensive Capabilities Built for Real Operations
           </h2>
