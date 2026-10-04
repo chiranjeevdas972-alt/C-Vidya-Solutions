@@ -722,13 +722,17 @@ app.get("/api/proxy/petrol-pump", (req, res) => {
   res.redirect(302, "/software/petrol-pump/index.html");
 });
 
-// Proxy for Fitness Zone cloud software (redirects to the universal static suite)
+// Proxy for Fitness Zone cloud software (redirects to live worker URL)
 app.get("/api/proxy/fitness", (req, res) => {
-  res.redirect(302, "/software/fitness/index.html");
+  res.redirect(302, "https://fitzone.cvidyasolutions.workers.dev/");
 });
 
 // Live Software Embed Proxy with Universal Step-by-Step Navigation Bridge
 const softwareWorkerMap: Record<string, string> = {
+  // Fitness Zone
+  "fitness": "https://fitzone.cvidyasolutions.workers.dev/",
+  "fitzone": "https://fitzone.cvidyasolutions.workers.dev/",
+
   // AI Agents
   "ai-social": "https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/",
   "ai-support": "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
@@ -1202,9 +1206,9 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   }
 });
 
-// Serve embedded software suites when explicitly requesting index.html inside iframes
-app.get("/software/fitness/index.html", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
+// Redirect Fitness Zone requests to live worker application with white modern UI
+app.get(["/software/fitness", "/software/fitness/", "/software/fitness/index.html"], (req, res) => {
+  res.redirect(302, "https://fitzone.cvidyasolutions.workers.dev/");
 });
 app.get("/software/library/index.html", (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/library/index.html"));

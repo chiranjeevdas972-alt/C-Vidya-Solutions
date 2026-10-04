@@ -55,15 +55,6 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     return software.id === "institutes" || software.name.toLowerCase().includes("institute");
   }, [software]);
 
-  const isFitness = useMemo(() => {
-    if (!software) return false;
-    return (
-      software.id === "fitness" ||
-      software.name.toLowerCase().includes("fitness") ||
-      Boolean(software.externalLink && software.externalLink.includes("fitzone"))
-    );
-  }, [software]);
-
   // Use locally hosted embedded suites with step-by-step navigation for local apps, and direct worker URLs for all other live apps
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
@@ -72,7 +63,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       return "/software/library/index.html";
     }
     if (id === "fitness" || software.externalLink.includes("fitzone")) {
-      return "/software/fitness/index.html";
+      return "https://fitzone.cvidyasolutions.workers.dev/";
     }
     if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
@@ -152,14 +143,19 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     const id = software.id.toLowerCase();
     return (
       id === "library" ||
-      id === "fitness" ||
       id === "petrol-pump" ||
       id === "pdf-media-tools" ||
       id === "pdf-tools"
     );
   }, [software]);
 
+  const lastBackClickRef = useRef<number>(0);
+
   const handleBack = () => {
+    const now = Date.now();
+    const timeSinceLastClick = now - lastBackClickRef.current;
+    lastBackClickRef.current = now;
+
     // 1. If coming-soon overlay (Institutes) or no iframe available, close directly and return to preview page
     if (isInstitutes || !iframeRef.current?.contentWindow) {
       onClose();
@@ -168,12 +164,15 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
 
     // 2. For local suites (Library, Fitness, Petrol Pump, PDF Tools), support step-by-step backward navigation
     if (isLocalSuite) {
+      // If user is already on the landing page, or if back was clicked twice in quick succession (< 450ms):
+      // close immediately and return to the preview page!
+      if (!canGoBackState || timeSinceLastClick < 450) {
+        onClose();
+        return;
+      }
+
       try {
         iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
-        // If already on landing page (root), close immediately to return to preview page
-        if (!canGoBackState) {
-          onClose();
-        }
       } catch (e) {
         onClose();
       }
@@ -241,17 +240,17 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       return {
         shortName: "C Vidya Fitness Zone",
         icon: Dumbbell,
-        badgeBg: "bg-red-600",
-        badgeShadow: "shadow-red-600/30",
-        backBtnBg: "bg-red-600",
-        backBtnHover: "hover:bg-red-500",
-        titleGradient: "from-white via-red-200 to-white",
-        navHoverText: "hover:text-red-400",
-        primaryBtnBg: "bg-red-600",
-        primaryBtnHover: "hover:bg-red-500",
+        badgeBg: "bg-blue-600",
+        badgeShadow: "shadow-blue-600/30",
+        backBtnBg: "bg-blue-600",
+        backBtnHover: "hover:bg-blue-500",
+        titleGradient: "from-white via-blue-200 to-white",
+        navHoverText: "hover:text-blue-400",
+        primaryBtnBg: "bg-blue-600",
+        primaryBtnHover: "hover:bg-blue-500",
         primaryBtnLabel: "Get Started",
-        headerBg: "bg-[#0f0406]",
-        headerBorder: "border-red-900/60",
+        headerBg: "bg-white",
+        headerBorder: "border-slate-200",
         navLinks: [
           { label: "Home", target: "/" },
           { label: "Features", target: "#features" },
@@ -685,35 +684,35 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
   ];
 
   return (
-    <div className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
-      {/* Auto-Adjusting Sleek Arrow Back Button (Icon Only - Words Removed to never hide content) */}
-      <div className="fixed top-2.5 left-2.5 sm:top-3 sm:left-3 md:top-3.5 md:left-4 z-[9999] pointer-events-auto">
+    <div className="fixed inset-0 z-[9990] w-full h-full h-[100dvh] w-screen max-w-full bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
+      {/* Auto-Adjusting Sleek Arrow Back Button (Icon Only - Instant Step-by-Step Back Navigation) */}
+      <div className="fixed top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 md:top-4 md:left-4 z-[9999] pointer-events-auto">
         <button
           type="button"
           onClick={handleBack}
-          className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 ${currentConfig.backBtnBg} ${currentConfig.backBtnHover} active:scale-90 text-white rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105`}
-          title="Back to Portal"
-          aria-label="Back"
+          className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 ${currentConfig.backBtnBg} ${currentConfig.backBtnHover} active:scale-90 text-white rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105`}
+          title="Back to Preview Page"
+          aria-label="Back to Preview Page"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
         </button>
       </div>
 
       {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
-      <div className="fixed top-2.5 right-2.5 sm:top-3 sm:right-3 md:top-3.5 md:right-4 z-[9999] pointer-events-auto">
+      <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto">
         <button
           type="button"
           onClick={onClose}
-          className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-white bg-slate-950/80 hover:bg-slate-900 active:scale-90 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105"
+          className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 text-white bg-slate-900/90 hover:bg-slate-800 active:scale-90 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105"
           title="Close software view"
-          aria-label="Close"
+          aria-label="Close software view"
         >
           <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
       {/* Main Software Canvas Area: Full Screen with No Second Header */}
-      <main className="flex-1 w-full h-full relative bg-slate-950 overflow-y-auto flex flex-col">
+      <main className={`flex-1 w-full h-full relative bg-slate-950 flex flex-col min-h-0 min-w-0 ${isInstitutes ? "overflow-y-auto" : "overflow-hidden"}`}>
         {isInstitutes ? (
           /* Advanced High-Fidelity Coming Soon UI with Pictures & Feature Roadmap */
           <div className="w-full flex-1 pt-16 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col gap-8">
@@ -976,7 +975,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
 
           </div>
         ) : software.externalLink ? (
-          <div className="w-full h-full relative flex flex-col">
+          <div className="w-full h-full relative flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
             {/* Loading Indicator */}
             {!iframeLoaded && !iframeError && (
               <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3 z-10">
@@ -1009,7 +1008,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
               </div>
             )}
 
-            {/* Embedded Live Web Application with Full OAuth & Credential Permissions */}
+            {/* Embedded Live Web Application with Full Mobile & Desktop Responsive Support */}
             <iframe
               ref={iframeRef}
               key={iframeKey}
@@ -1022,7 +1021,8 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
               }}
               allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; display-capture; encrypted-media; fullscreen; geolocation; gyroscope; identity-credentials-get; microphone; payment; picture-in-picture; publickey-credentials-get; storage-access; web-share;"
               sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation allow-storage-access-by-user-activation"
-              className="w-full flex-1 border-none bg-slate-950"
+              className="w-full h-full flex-1 border-none bg-slate-950 min-h-0 min-w-0 block"
+              style={{ width: "100%", height: "100%", border: 0 }}
             />
           </div>
         ) : (
