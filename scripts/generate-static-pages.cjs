@@ -338,12 +338,4 @@ for (const r of routes) {
   generatedCount++;
 }
 
-// Ensure Cloudflare Pages / Worker file is placed in dist/
-const workerSrc = path.join(__dirname, "../public/_worker.js");
-const workerDest = path.join(distDir, "_worker.js");
-if (fs.existsSync(workerSrc)) {
-  fs.copyFileSync(workerSrc, workerDest);
-  console.log("✅ Copied public/_worker.js to dist/_worker.js");
-}
-
 console.log(`✅ Generated ${generatedCount} static prerendered HTML pages in dist/ directory.`);
