@@ -21,6 +21,8 @@ export interface ProductSeoInfo {
   operatingSystem: string;
 }
 
+import { ARTICLES_DATA } from "./articleData";
+
 export const BASE_SITE_URL = "https://cvidyasolutions.com";
 
 export const PRODUCT_SEO_DATA: Record<string, ProductSeoInfo> = {
@@ -940,5 +942,245 @@ export const CORE_PAGES_SEO = {
     description: "Comprehensive answers to common questions regarding deployment timelines, cloud hosting security, multi-tenant billing, and technical support SLAs.",
     canonical: "https://cvidyasolutions.com/faq/",
     h1: "Frequently Asked Questions"
+  },
+  privacy: {
+    title: "Privacy Policy | C Vidya Solutions Data Protection",
+    description: "Read the C Vidya Solutions Privacy Policy. Understand how we collect, process, encrypt, and protect your enterprise and institutional data.",
+    canonical: "https://cvidyasolutions.com/privacy/",
+    h1: "Privacy Policy & Data Protection"
+  },
+  terms: {
+    title: "Terms of Service | C Vidya Solutions Software Agreement",
+    description: "Review C Vidya Solutions Terms of Service, licensing conditions, multi-tenant cloud usage policies, and service level commitments.",
+    canonical: "https://cvidyasolutions.com/terms/",
+    h1: "Terms of Service"
+  },
+  billing: {
+    title: "Billing & Subscription Terms | C Vidya Solutions",
+    description: "Transparent billing policies, GST-compliant invoicing, renewal schedules, and modular software payment terms for C Vidya Solutions.",
+    canonical: "https://cvidyasolutions.com/billing/",
+    h1: "Billing & Subscription Terms"
+  },
+  refund: {
+    title: "Refund Policy | C Vidya Solutions Software Licensing",
+    description: "Clear and fair refund policies for C Vidya Solutions SaaS subscriptions, module setup fees, and enterprise onboarding agreements.",
+    canonical: "https://cvidyasolutions.com/refund/",
+    h1: "Refund & Cancellation Policy"
+  },
+  cookies: {
+    title: "Cookie Policy | C Vidya Solutions Web Privacy",
+    description: "Learn about the essential, performance, and analytical cookies utilized across C Vidya Solutions websites and cloud applications.",
+    canonical: "https://cvidyasolutions.com/cookies/",
+    h1: "Cookie Policy & Web Tracking"
+  },
+  disclaimer: {
+    title: "Legal & Regulatory Disclaimer | C Vidya Solutions",
+    description: "Legal disclaimers, liability limitations, intellectual property notices, and regulatory compliance disclosures for C Vidya Solutions.",
+    canonical: "https://cvidyasolutions.com/disclaimer/",
+    h1: "Legal & Regulatory Disclaimer"
+  },
+  portability: {
+    title: "Data Portability & Zero Lock-in Policy | C Vidya Solutions",
+    description: "C Vidya Solutions guarantees zero data lock-in. Export complete relational databases in Excel, CSV, and JSON format at any time.",
+    canonical: "https://cvidyasolutions.com/portability/",
+    h1: "Data Portability & Export Guarantee"
   }
 };
+
+export interface PageSeoResult {
+  title: string;
+  description: string;
+  canonicalUrl: string;
+  h1: string;
+  ogType?: "website" | "article" | "product";
+  ogImage?: string;
+  robots?: string;
+  keywords?: string[];
+  jsonLd?: Record<string, any> | Array<Record<string, any>>;
+}
+
+export function getPageSeo(pathname: string): PageSeoResult {
+  let cleanPath = pathname.replace(/\/+$/, "");
+  if (!cleanPath || cleanPath === "") cleanPath = "/";
+
+  // 1. Homepage
+  if (cleanPath === "/") {
+    return {
+      title: CORE_PAGES_SEO.home.title,
+      description: CORE_PAGES_SEO.home.description,
+      canonicalUrl: CORE_PAGES_SEO.home.canonical,
+      h1: CORE_PAGES_SEO.home.h1,
+      ogType: "website",
+      ogImage: "https://cvidyasolutions.com/og-image.png",
+      robots: "index, follow",
+      keywords: ["C Vidya Solutions", "C Vidya", "Software Company", "SaaS Solutions India", "Cloud Business Software", "Autonomous AI Agents"]
+    };
+  }
+
+  // 2. Product Landing Pages
+  for (const product of Object.values(PRODUCT_SEO_DATA)) {
+    const pPathClean = product.urlPath.replace(/\/+$/, "");
+    if (cleanPath === pPathClean || 
+        (product.type === "software" && cleanPath === `/software/${product.slug}`) ||
+        (product.type === "ai-agent" && cleanPath === `/ai-agents/${product.slug}`)) {
+      return {
+        title: product.metaTitle,
+        description: product.metaDescription,
+        canonicalUrl: product.canonicalUrl,
+        h1: product.h1Title,
+        ogType: "product",
+        ogImage: "https://cvidyasolutions.com/og-image.png",
+        robots: "index, follow",
+        keywords: [product.primaryKeyword, ...product.secondaryKeywords],
+        jsonLd: [
+          {
+            "@context": "https://schema.org",
+            "@type": product.schemaType,
+            "name": product.h1Title,
+            "description": product.metaDescription,
+            "url": product.canonicalUrl,
+            "applicationCategory": product.applicationCategory,
+            "operatingSystem": product.operatingSystem,
+            "provider": {
+              "@type": "Organization",
+              "name": "C Vidya Solutions",
+              "url": "https://cvidyasolutions.com"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "INR"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://cvidyasolutions.com/" },
+              { "@type": "ListItem", "position": 2, "name": product.type === "software" ? "Software" : "AI Agents", "item": product.type === "software" ? "https://cvidyasolutions.com/software/" : "https://cvidyasolutions.com/ai-agents/" },
+              { "@type": "ListItem", "position": 3, "name": product.breadcrumbName, "item": product.canonicalUrl }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": product.faqs.map(f => ({
+              "@type": "Question",
+              "name": f.question,
+              "acceptedAnswer": { "@type": "Answer", "text": f.answer }
+            }))
+          }
+        ]
+      };
+    }
+  }
+
+  // 3. Blog & Topical Authority Articles
+  if (cleanPath.startsWith("/blog/")) {
+    const slug = cleanPath.replace(/^\/blog\//, "").replace(/\/+$/, "");
+    const article = ARTICLES_DATA[slug];
+    if (article) {
+      return {
+        title: article.metaTitle,
+        description: article.metaDescription,
+        canonicalUrl: article.canonicalUrl,
+        h1: article.title,
+        ogType: "article",
+        ogImage: article.image || "https://cvidyasolutions.com/og-image.png",
+        robots: "index, follow",
+        keywords: article.tags,
+        jsonLd: [
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": article.title,
+            "description": article.metaDescription,
+            "image": article.image || "https://cvidyasolutions.com/og-image.png",
+            "author": {
+              "@type": "Person",
+              "name": article.author.name,
+              "jobTitle": article.author.role
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "C Vidya Solutions",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://cvidyasolutions.com/logo.png"
+              }
+            },
+            "datePublished": article.date,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": article.canonicalUrl
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://cvidyasolutions.com/" },
+              { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://cvidyasolutions.com/blog/" },
+              { "@type": "ListItem", "position": 3, "name": article.title, "item": article.canonicalUrl }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": article.faqs.map(f => ({
+              "@type": "Question",
+              "name": f.question,
+              "acceptedAnswer": { "@type": "Answer", "text": f.answer }
+            }))
+          }
+        ]
+      };
+    }
+  }
+
+  // 4. Core Directory & Standard Pages
+  const coreMap: Record<string, keyof typeof CORE_PAGES_SEO> = {
+    "/software": "softwareDirectory",
+    "/ai-agents": "aiAgentsDirectory",
+    "/services": "services",
+    "/about": "about",
+    "/contact": "contact",
+    "/pricing": "pricing",
+    "/blog": "blog",
+    "/portfolio": "portfolio",
+    "/careers": "careers",
+    "/faq": "faq",
+    "/privacy": "privacy",
+    "/terms": "terms",
+    "/billing": "billing",
+    "/refund": "refund",
+    "/cookies": "cookies",
+    "/disclaimer": "disclaimer",
+    "/portability": "portability"
+  };
+
+  if (coreMap[cleanPath]) {
+    const key = coreMap[cleanPath];
+    const data = CORE_PAGES_SEO[key];
+    return {
+      title: data.title,
+      description: data.description,
+      canonicalUrl: data.canonical,
+      h1: data.h1,
+      ogType: "website",
+      ogImage: "https://cvidyasolutions.com/og-image.png",
+      robots: "index, follow"
+    };
+  }
+
+  // Default Fallback
+  return {
+    title: CORE_PAGES_SEO.home.title,
+    description: CORE_PAGES_SEO.home.description,
+    canonicalUrl: `https://cvidyasolutions.com${cleanPath}/`,
+    h1: "C Vidya Solutions",
+    ogType: "website",
+    ogImage: "https://cvidyasolutions.com/og-image.png",
+    robots: "index, follow"
+  };
+}

@@ -6,6 +6,8 @@ export interface SeoHeadProps {
   canonicalUrl: string;
   ogType?: "website" | "article" | "product";
   ogImage?: string;
+  robots?: string;
+  keywords?: string[];
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
@@ -15,6 +17,8 @@ export default function SeoHead({
   canonicalUrl,
   ogType = "website",
   ogImage = "https://cvidyasolutions.com/og-image.png",
+  robots = "index, follow",
+  keywords,
   jsonLd
 }: SeoHeadProps) {
   useEffect(() => {
@@ -33,6 +37,11 @@ export default function SeoHead({
     };
 
     setMeta("name", "description", description);
+    setMeta("name", "robots", robots);
+    if (keywords && keywords.length > 0) {
+      setMeta("name", "keywords", keywords.join(", "));
+    }
+
     setMeta("property", "og:title", title);
     setMeta("property", "og:description", description);
     setMeta("property", "og:url", canonicalUrl);
@@ -68,7 +77,7 @@ export default function SeoHead({
     } else if (scriptTag) {
       scriptTag.remove();
     }
-  }, [title, description, canonicalUrl, ogType, ogImage, jsonLd]);
+  }, [title, description, canonicalUrl, ogType, ogImage, robots, keywords, jsonLd]);
 
   return null;
 }

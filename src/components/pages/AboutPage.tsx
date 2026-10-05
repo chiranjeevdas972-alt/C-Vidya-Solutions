@@ -11,6 +11,8 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 
 interface AboutPageProps {
   onNavigate: (page: string) => void;
@@ -19,6 +21,37 @@ interface AboutPageProps {
 export default function AboutPage({ onNavigate }: AboutPageProps) {
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-20">
+      <SeoHead
+        title={CORE_PAGES_SEO.about.title}
+        description={CORE_PAGES_SEO.about.description}
+        canonicalUrl={CORE_PAGES_SEO.about.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          "name": "About C Vidya Solutions",
+          "url": "https://cvidyasolutions.com/about/",
+          "description": CORE_PAGES_SEO.about.description,
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com",
+            "founder": {
+              "@type": "Person",
+              "name": "Chiranjeev Das",
+              "jobTitle": "Founder & Director"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Surunga, Baliapur",
+              "addressLocality": "Dhanbad",
+              "addressRegion": "Jharkhand",
+              "postalCode": "828115",
+              "addressCountry": "IN"
+            }
+          }
+        }}
+      />
       
       {/* 1. HERO BANNER */}
       <section className="pt-8 pb-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

@@ -5,15 +5,17 @@ import {
   Layers, 
   ShieldCheck, 
   Server, 
-  ExternalLink,
-  CheckCircle2,
-  X,
-  Database,
-  Cpu,
-  Bot,
-  Building2,
-  Sparkles
+  ExternalLink, 
+  CheckCircle2, 
+  X, 
+  Database, 
+  Cpu, 
+  Bot, 
+  Building2, 
+  Sparkles 
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 
 interface PortfolioPageProps {
   onNavigate?: (page: string) => void;
@@ -128,6 +130,24 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-24">
+      <SeoHead
+        title={CORE_PAGES_SEO.portfolio.title}
+        description={CORE_PAGES_SEO.portfolio.description}
+        canonicalUrl={CORE_PAGES_SEO.portfolio.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "C Vidya Solutions Engineering Portfolio",
+          "url": "https://cvidyasolutions.com/portfolio/",
+          "description": CORE_PAGES_SEO.portfolio.description,
+          "provider": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com"
+          }
+        }}
+      />
       
       {/* 1. HERO SECTION */}
       <section className="pt-10 sm:pt-14 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-4">

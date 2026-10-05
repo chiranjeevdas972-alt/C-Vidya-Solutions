@@ -16,15 +16,17 @@ import {
   Layers, 
   BarChart3, 
   ShieldCheck, 
-  ArrowRight,
-  ExternalLink,
-  CheckCircle2,
-  Lock,
-  Flame,
-  Activity,
-  FileText,
-  Sparkles
+  ArrowRight, 
+  ExternalLink, 
+  CheckCircle2, 
+  Lock, 
+  Flame, 
+  Activity, 
+  FileText, 
+  Sparkles 
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 import { saasProductsData, aiAgentsData, otherServicesData } from "../../data";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -96,6 +98,24 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-20">
+      <SeoHead
+        title={CORE_PAGES_SEO.services.title}
+        description={CORE_PAGES_SEO.services.description}
+        canonicalUrl={CORE_PAGES_SEO.services.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "serviceType": "Enterprise Software Engineering & Cloud Solutions",
+          "provider": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com"
+          },
+          "areaServed": "IN",
+          "description": CORE_PAGES_SEO.services.description
+        }}
+      />
       
       {/* 1. HERO SECTION */}
       <section className="pt-12 pb-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-4">

@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
@@ -8,6 +9,7 @@ import { GoogleGenAI } from "@google/genai";
 import { collection, getDocs, setDoc, doc, query, orderBy } from "firebase/firestore";
 import { db, OperationType, handleFirestoreError } from "./src/firebase";
 import { getSmartAssistantResponse } from "./src/utils/aiResponder";
+import { getPageSeo } from "./src/seoData";
 
 // Load environment variables
 dotenv.config();
@@ -1450,6 +1452,31 @@ app.use((req, res, next) => {
   publicStaticMiddleware(req, res, next);
 });
 
+// Server-side Dynamic SEO injector for crawlers and direct visits
+function renderSeoTemplate(rawHtml: string, reqPath: string): string {
+  try {
+    const seo = getPageSeo(reqPath);
+    let html = rawHtml
+      .replace(/<title>.*?<\/title>/i, `<title>${seo.title}</title>`)
+      .replace(/<meta\s+name=["']description["']\s+content=["'].*?["']\s*\/?>/i, `<meta name="description" content="${seo.description}" />`)
+      .replace(/<link\s+rel=["']canonical["']\s+href=["'].*?["']\s*\/?>/i, `<link rel="canonical" href="${seo.canonicalUrl}" />`)
+      .replace(/<meta\s+property=["']og:title["']\s+content=["'].*?["']\s*\/?>/i, `<meta property="og:title" content="${seo.title}" />`)
+      .replace(/<meta\s+property=["']og:description["']\s+content=["'].*?["']\s*\/?>/i, `<meta property="og:description" content="${seo.description}" />`)
+      .replace(/<meta\s+property=["']og:url["']\s+content=["'].*?["']\s*\/?>/i, `<meta property="og:url" content="${seo.canonicalUrl}" />`)
+      .replace(/<meta\s+name=["']twitter:title["']\s+content=["'].*?["']\s*\/?>/i, `<meta name="twitter:title" content="${seo.title}" />`)
+      .replace(/<meta\s+name=["']twitter:description["']\s+content=["'].*?["']\s*\/?>/i, `<meta name="twitter:description" content="${seo.description}" />`);
+
+    if (seo.jsonLd) {
+      const jsonLdTag = `<script id="cv-server-jsonld" type="application/ld+json">${JSON.stringify(seo.jsonLd)}</script>`;
+      html = html.replace("</head>", `${jsonLdTag}\n</head>`);
+    }
+
+    return html;
+  } catch (e) {
+    return rawHtml;
+  }
+}
+
 // Vite / static file serving integration
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
@@ -1460,11 +1487,26 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    console.log("Serving production build from dist/ directory...");
+    console.log("Serving production build from dist/ directory with SEO pre-rendering...");
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      // 1. Check if a pre-rendered static index.html file exists for this route
+      const cleanPath = req.path.replace(/^\/+/, "").replace(/\/+$/, "");
+      const specificFile = path.join(distPath, cleanPath, "index.html");
+      if (cleanPath && fs.existsSync(specificFile)) {
+        return res.sendFile(specificFile);
+      }
+
+      // 2. Otherwise read dist/index.html and dynamically inject page SEO
+      const indexFile = path.join(distPath, "index.html");
+      if (fs.existsSync(indexFile)) {
+        const rawHtml = fs.readFileSync(indexFile, "utf-8");
+        const rendered = renderSeoTemplate(rawHtml, req.path);
+        return res.status(200).set("Content-Type", "text/html; charset=utf-8").send(rendered);
+      }
+
+      res.sendFile(indexFile);
     });
   }
 

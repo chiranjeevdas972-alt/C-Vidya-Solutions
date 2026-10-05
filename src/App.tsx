@@ -14,6 +14,7 @@ import SoftwareDirectoryPage from "./components/pages/SoftwareDirectoryPage";
 import AiAgentsDirectoryPage from "./components/pages/AiAgentsDirectoryPage";
 import PricingPage from "./components/pages/PricingPage";
 import ProductLandingPage from "./components/pages/ProductLandingPage";
+import BlogArticlePage from "./components/pages/BlogArticlePage";
 import ProductDetailModal from "./components/ProductDetailModal";
 import SoftwareDetailModal from "./components/SoftwareDetailModal";
 import LiveSoftwareApp from "./components/LiveSoftwareApp";
@@ -27,6 +28,7 @@ import Logo from "./components/Logo";
 import { type ProductService } from "./types";
 import { saasProductsData, aiAgentsData } from "./data";
 import { PRODUCT_SEO_DATA, CORE_PAGES_SEO } from "./seoData";
+import { ARTICLES_DATA } from "./articleData";
 import { 
   Lock, 
   X, 
@@ -38,7 +40,8 @@ import { db } from "./firebase";
 
 export type RouteState =
   | { type: "page"; id: string }
-  | { type: "product"; productKey: string };
+  | { type: "product"; productKey: string }
+  | { type: "article"; articleSlug: string };
 
 function resolveRoute(pathname: string, hash: string): RouteState {
   // 1. Architecture modal hash check
@@ -74,6 +77,20 @@ function resolveRoute(pathname: string, hash: string): RouteState {
 
   if (matchedProduct) {
     return { type: "product", productKey: matchedProduct.id };
+  }
+
+  // 4. Match against dedicated blog articles
+  if (cleanPath.startsWith("/blog/")) {
+    const slug = cleanPath.replace(/^\/blog\//, "").replace(/\/+$/, "");
+    if (ARTICLES_DATA[slug]) {
+      return { type: "article", articleSlug: slug };
+    }
+  }
+  if (cleanPath.startsWith("/resources/blog/")) {
+    const slug = cleanPath.replace(/^\/resources\/blog\//, "").replace(/\/+$/, "");
+    if (ARTICLES_DATA[slug]) {
+      return { type: "article", articleSlug: slug };
+    }
   }
 
   // 4. Match against directory and core pages
@@ -205,6 +222,9 @@ export default function App() {
     if (route.type === "product") {
       const p = PRODUCT_SEO_DATA[route.productKey];
       return p?.type === "software" ? "software" : "ai-agents";
+    }
+    if (route.type === "article") {
+      return "blog";
     }
     return "home";
   }, [route]);
@@ -381,6 +401,15 @@ export default function App() {
             {route.type === "page" && route.id === "blog" && (
               <BlogPage 
                 onNavigate={navigateTo}
+              />
+            )}
+
+            {/* 11.1 DEDICATED BLOG ARTICLE PAGE */}
+            {route.type === "article" && ARTICLES_DATA[route.articleSlug] && (
+              <BlogArticlePage
+                article={ARTICLES_DATA[route.articleSlug]}
+                onNavigate={navigateTo}
+                onOpenConsultation={() => navigateTo("/contact/")}
               />
             )}
 

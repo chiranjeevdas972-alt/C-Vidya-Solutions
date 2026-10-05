@@ -2,12 +2,16 @@ import { useState } from "react";
 import { 
   ArrowRight, 
   Calendar, 
+  Clock, 
   Tag, 
   X, 
-  Clock, 
-  Share2, 
-  CheckCircle2 
+  Sparkles,
+  BookOpen,
+  Filter
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
+import { ARTICLES_DATA, ArticleSeoInfo } from "../../articleData";
 
 interface BlogPageProps {
   onNavigate?: (page: string) => void;
@@ -15,165 +19,150 @@ interface BlogPageProps {
 
 export default function BlogPage({ onNavigate }: BlogPageProps) {
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
 
-  const mainArticle = {
-    id: "cloud-native",
-    category: "Technology",
-    date: "Oct 24, 2024",
-    readTime: "6 min read",
-    title: "The Future of Enterprise Architecture in a Cloud-Native World",
-    summary: "Exploring how modern enterprises are restructuring their IT foundations to leverage microservices and distributed cloud environments for unprecedented scale.",
-    image: "/assets/images/blog_boardroom_tech_1788168683246.jpg",
-    content: `
-      Enterprise systems are rapidly transitioning from monolithic, hard-to-maintain codebases to cloud-native microservices topologies. In this architectural breakdown, we analyze how distributed event sourcing, idempotent API gateways, and automated CI/CD pipelines enable Fortune 500 enterprises to deploy updates 200x faster with zero scheduled downtime.
+  const allArticlesList = Object.values(ARTICLES_DATA);
 
-      ### Key Takeaways:
-      - **Decoupled Workloads:** Isolating database boundaries prevents cascading outage vectors.
-      - **Edge Telemetry:** Modern observability stacks allow predictive alerting before end-users experience degradation.
-      - **Zero-Trust IAM:** Cryptographic token verification at every hop eliminates perimeter vulnerability.
-    `
-  };
+  const categories = [
+    "All",
+    "Library & Education",
+    "AI Automation",
+    "SaaS & Cloud",
+    "Security & Architecture"
+  ];
 
-  const rightTopArticle = {
-    id: "global-expansion",
-    category: "Company News",
-    date: "Sep 15, 2024",
-    readTime: "4 min read",
-    title: "C Vidya Solutions Expands Global Operations",
-    summary: "Announcing new delivery centers and expanded enterprise consulting partnerships across North America, Europe, and Asia-Pacific.",
-    content: `
-      C Vidya Solutions is pleased to announce our latest milestone in global expansion. With over 150 enterprise implementations completed, our new international delivery pods will provide round-the-clock technical architecture and AI agent deployment capabilities.
-    `
-  };
+  const filteredArticles = activeCategory === "All"
+    ? allArticlesList
+    : allArticlesList.filter(a => a.category === activeCategory);
 
-  const rightBottomArticle = {
-    id: "zero-trust",
-    category: "Security",
-    date: "Aug 29, 2024",
-    readTime: "5 min read",
-    title: "Zero-Trust Architectures Explained",
-    summary: "Why traditional perimeter security fails in multi-cloud environments, and how mutual TLS (mTLS) with continuous verification safeguards sensitive business logic.",
-    image: "/assets/images/datacenter_server_room_1788168670156.jpg",
-    content: `
-      Zero-trust is not a single product; it is an architectural mindset. By assuming breach and verifying every transaction explicitly with ephemeral credentials and least-privilege role boundaries, enterprises eliminate internal lateral movement risks.
-    `
+  const handleArticleClick = (article: ArticleSeoInfo) => {
+    if (onNavigate) {
+      onNavigate(`/blog/${article.slug}/`);
+    } else {
+      setSelectedArticle(article);
+    }
   };
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-20">
       
+      {/* Dynamic SEO Head */}
+      <SeoHead
+        title={CORE_PAGES_SEO.blog.title}
+        description={CORE_PAGES_SEO.blog.description}
+        canonicalUrl={CORE_PAGES_SEO.blog.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "C Vidya Solutions Engineering & Insights Blog",
+          "url": "https://cvidyasolutions.com/blog/",
+          "description": CORE_PAGES_SEO.blog.description,
+          "publisher": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com"
+          }
+        }}
+      />
+
       {/* 1. HERO SECTION */}
       <section className="pt-12 pb-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-mono font-bold rounded-full border border-blue-200 uppercase">
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Engineering Guides &amp; Resources</span>
+        </div>
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-950">
           Industry Insights &amp;{" "}
-          <span className="text-blue-600">Company News</span>
+          <span className="text-blue-600">Topical Guides</span>
         </h1>
         <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Stay updated with the latest trends in technology, professional services, and our corporate milestones.
+          Deep-dive technical articles, campus automation frameworks, AI agent architectures, and enterprise cloud blueprints by C Vidya Solutions.
         </p>
-      </section>
 
-
-      {/* 2. FEATURED ARTICLES GRID */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
-          {/* Main Left Featured Card */}
-          <div 
-            onClick={() => setSelectedArticle(mainArticle)}
-            className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group cursor-pointer flex flex-col justify-between"
-          >
-            {/* Top Boardroom Image */}
-            <div className="relative h-72 sm:h-96 w-full overflow-hidden bg-slate-950">
-              <img 
-                src={mainArticle.image} 
-                alt={mainArticle.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-
-            {/* Bottom Content */}
-            <div className="p-8 space-y-4">
-              <div className="flex items-center gap-3 text-xs font-mono text-slate-500">
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded font-semibold">
-                  {mainArticle.category}
-                </span>
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-950 tracking-tight group-hover:text-blue-600 transition-colors">
-                {mainArticle.title}
-              </h2>
-
-              <p className="text-sm text-slate-600 leading-relaxed">
-                {mainArticle.summary}
-              </p>
-            </div>
-          </div>
-
-
-          {/* Right Column: 2 Stacked Cards */}
-          <div className="lg:col-span-4 space-y-6 flex flex-col justify-between">
-            
-            {/* Right Top: Company News Card (White bordered card) */}
-            <div 
-              onClick={() => setSelectedArticle(rightTopArticle)}
-              className="bg-white border border-blue-200 rounded-2xl p-8 shadow-xs hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between min-h-[220px]"
+        {/* Category Filters */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-6">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
+                activeCategory === cat
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
+              }`}
             >
-              <div className="space-y-3">
-                <span className="inline-block px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-mono font-medium">
-                  {rightTopArticle.category}
-                </span>
-
-                <h3 className="text-xl font-bold text-slate-950 leading-snug">
-                  {rightTopArticle.title}
-                </h3>
-              </div>
-
-              <div className="pt-6">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700">
-                  <span>Read More</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-
-            {/* Right Bottom: Security / Zero-Trust Card (Clean Image on Top, Content Below) */}
-            <div 
-              onClick={() => setSelectedArticle(rightBottomArticle)}
-              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between group"
-            >
-              <div className="relative h-44 w-full overflow-hidden bg-slate-950">
-                <img 
-                  src={rightBottomArticle.image} 
-                  alt={rightBottomArticle.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-
-              <div className="p-6 space-y-3">
-                <span className="inline-block px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[11px] font-mono font-bold">
-                  {rightBottomArticle.category}
-                </span>
-
-                <h3 className="text-lg font-bold text-slate-950 leading-snug group-hover:text-blue-600 transition-colors">
-                  {rightBottomArticle.title}
-                </h3>
-
-                <div className="pt-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 group-hover:text-blue-700">
-                    <span>Read More</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
+              {cat}
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Article Reader Modal */}
+      {/* 2. FEATURED ARTICLES GRID */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredArticles.map((article) => (
+            <div 
+              key={article.id}
+              onClick={() => handleArticleClick(article)}
+              className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all hover:-translate-y-0.5 group cursor-pointer flex flex-col justify-between"
+            >
+              {/* Image banner */}
+              <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                <img 
+                  src={article.image} 
+                  alt={article.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3">
+                  <span className="px-2.5 py-1 bg-white/95 backdrop-blur-xs text-blue-700 text-[11px] font-mono font-bold rounded-md shadow-xs">
+                    {article.category}
+                  </span>
+                </div>
+              </div>
+
+              {/* Content body */}
+              <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {article.date}
+                    </span>
+                    <span>•</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {article.readTime}
+                    </span>
+                  </div>
+
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-950 tracking-tight group-hover:text-blue-600 transition-colors leading-snug">
+                    {article.title}
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-600 line-clamp-3 leading-relaxed">
+                    {article.summary}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                    <span>Read Article</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                  {article.relatedProductName && (
+                    <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                      Software Guide
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Fallback Article Reader Modal if onNavigate is not passed */}
       {selectedArticle && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
@@ -204,7 +193,7 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
 
             <div className="prose prose-slate prose-sm text-slate-700 leading-relaxed space-y-4">
               <p className="font-medium text-slate-900">{selectedArticle.summary}</p>
-              <p className="whitespace-pre-line text-xs sm:text-sm">{selectedArticle.content}</p>
+              <div className="whitespace-pre-line text-xs sm:text-sm">{selectedArticle.content}</div>
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex justify-end">

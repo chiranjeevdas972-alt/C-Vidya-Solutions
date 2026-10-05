@@ -8,10 +8,12 @@ import {
   Briefcase, 
   MapPin, 
   CheckCircle2, 
-  X,
-  Upload,
-  Send
+  X, 
+  Upload, 
+  Send 
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -112,6 +114,24 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-20">
+      <SeoHead
+        title={CORE_PAGES_SEO.careers.title}
+        description={CORE_PAGES_SEO.careers.description}
+        canonicalUrl={CORE_PAGES_SEO.careers.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Careers at C Vidya Solutions",
+          "url": "https://cvidyasolutions.com/careers/",
+          "description": CORE_PAGES_SEO.careers.description,
+          "provider": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com"
+          }
+        }}
+      />
       
       {/* 1. HERO SECTION */}
       <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

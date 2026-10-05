@@ -7,9 +7,11 @@ import {
   Gauge, 
   ChevronDown, 
   MessageSquare, 
-  ArrowRight,
-  Headphones
+  ArrowRight, 
+  Headphones 
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 
 interface FAQPageProps {
   onNavigateContact?: () => void;
@@ -122,6 +124,24 @@ export default function FAQPage({ onNavigateContact, onOpenAssistant }: FAQPageP
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-20">
+      <SeoHead
+        title={CORE_PAGES_SEO.faq.title}
+        description={CORE_PAGES_SEO.faq.description}
+        canonicalUrl={CORE_PAGES_SEO.faq.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqData.flatMap(section => section.items).map(item => ({
+            "@type": "Question",
+            "name": item.question,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": item.answer
+            }
+          }))
+        }}
+      />
       
       {/* 1. HERO SECTION */}
       <section className="pt-12 pb-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-4">

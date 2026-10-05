@@ -7,10 +7,12 @@ import {
   Send, 
   CheckCircle2, 
   Shield, 
-  Database,
-  ExternalLink,
-  GraduationCap
+  Database, 
+  ExternalLink, 
+  GraduationCap 
 } from "lucide-react";
+import SeoHead from "../SeoHead";
+import { CORE_PAGES_SEO } from "../../seoData";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -86,6 +88,34 @@ export default function ContactPage({ onOpenLeadsModal }: ContactPageProps) {
 
   return (
     <div className="w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-blue-600 selection:text-white py-12 px-4 sm:px-6 lg:px-8">
+      <SeoHead
+        title={CORE_PAGES_SEO.contact.title}
+        description={CORE_PAGES_SEO.contact.description}
+        canonicalUrl={CORE_PAGES_SEO.contact.canonical}
+        ogType="website"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "name": "Contact C Vidya Solutions",
+          "url": "https://cvidyasolutions.com/contact/",
+          "description": CORE_PAGES_SEO.contact.description,
+          "mainEntity": {
+            "@type": "Organization",
+            "name": "C Vidya Solutions",
+            "url": "https://cvidyasolutions.com",
+            "telephone": "+91-9288517027",
+            "email": "cvidyasolutions@gmail.com",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Surunga, Baliapur",
+              "addressLocality": "Dhanbad",
+              "addressRegion": "Jharkhand",
+              "postalCode": "828115",
+              "addressCountry": "IN"
+            }
+          }
+        }}
+      />
       <div className="max-w-7xl mx-auto">
         
         {/* 3-Column Equal Architecture Grid */}

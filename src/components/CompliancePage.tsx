@@ -4,6 +4,8 @@ import {
   ShieldCheck, Info, FileText, Scale, Eye, Cookie, Trash2, 
   Download, Check, AlertTriangle, ShieldAlert, ArrowLeft 
 } from "lucide-react";
+import SeoHead from "./SeoHead";
+import { CORE_PAGES_SEO } from "../seoData";
 
 interface CompliancePageProps {
   initialTab: "privacy" | "terms" | "billing" | "refund" | "cookies" | "disclaimer" | "portability";
@@ -106,8 +108,16 @@ export default function CompliancePage({ initialTab, onBackToHome, onTabChange }
     { id: "cookies" as const, label: "Tracking & Cookies", icon: Cookie, desc: "Cookie preference controls & tools" },
   ];
 
+  const currentTabSeo = CORE_PAGES_SEO[activeTab] || CORE_PAGES_SEO.privacy;
+
   return (
     <div className="bg-slate-50 min-h-screen py-8 px-4 sm:px-6 lg:px-8 mt-[74px]">
+      <SeoHead
+        title={currentTabSeo.title}
+        description={currentTabSeo.description}
+        canonicalUrl={currentTabSeo.canonical}
+        ogType="website"
+      />
       <div className="max-w-6xl mx-auto">
         
         {/* Top Back Navigator */}
