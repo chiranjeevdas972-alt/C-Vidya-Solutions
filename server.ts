@@ -7,9 +7,9 @@ import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { collection, getDocs, setDoc, doc, query, orderBy } from "firebase/firestore";
-import { db, OperationType, handleFirestoreError } from "./src/firebase";
-import { getSmartAssistantResponse } from "./src/utils/aiResponder";
-import { getPageSeo } from "./src/seoData";
+import { db, OperationType, handleFirestoreError } from "./src/firebase.ts";
+import { getSmartAssistantResponse } from "./src/utils/aiResponder.ts";
+import { getPageSeo } from "./src/seoData.ts";
 
 // Load environment variables
 dotenv.config();
@@ -104,7 +104,7 @@ This lead was automatically captured by the C Vidya AI Assistant and forwarded t
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Security: Disable X-Powered-By to prevent fingerprinting by port scanners and ethical hacking tools
 app.disable("x-powered-by");
@@ -1479,15 +1479,18 @@ function renderSeoTemplate(rawHtml: string, reqPath: string): string {
 
 // Vite / static file serving integration
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Setting up Vite development middleware...");
+  const distExists = fs.existsSync(path.join(process.cwd(), "dist", "index.html"));
+  const isProduction = process.env.NODE_ENV === "production" || (distExists && process.env.NODE_ENV !== "development");
+
+  if (!isProduction) {
+    console.log(`Setting up Vite development middleware on port ${PORT}...`);
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    console.log("Serving production build from dist/ directory with SEO pre-rendering...");
+    console.log(`Serving production build from dist/ directory with SEO pre-rendering on port ${PORT}...`);
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {

@@ -1,8 +1,9 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
-import { getAnalytics, Analytics } from "firebase/analytics";
-import firebaseConfig from "../firebase-applet-config.json";
+import type { Analytics } from "firebase/analytics";
+import { getAnalytics } from "firebase/analytics";
+import firebaseConfig from "../firebase-applet-config.json" with { type: "json" };
 
 // Initialize Firebase (safely singleton pattern)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -10,14 +11,16 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
+export const OperationType = {
+  CREATE: 'create',
+  UPDATE: 'update',
+  DELETE: 'delete',
+  LIST: 'list',
+  GET: 'get',
+  WRITE: 'write',
+} as const;
+
+export type OperationType = (typeof OperationType)[keyof typeof OperationType];
 
 export interface FirestoreErrorInfo {
   error: string;

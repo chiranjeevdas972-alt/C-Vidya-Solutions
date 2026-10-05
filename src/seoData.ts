@@ -21,7 +21,7 @@ export interface ProductSeoInfo {
   operatingSystem: string;
 }
 
-import { ARTICLES_DATA } from "./articleData";
+import { ARTICLES_DATA } from "./articleData.ts";
 
 export const BASE_SITE_URL = "https://cvidyasolutions.com";
 
