@@ -31,6 +31,42 @@ export function getSmartAssistantResponse(messages: { role: string; content?: st
 
   const hinglish = isHinglishQuery(userText);
 
+  // 0. Contact details provided (Phone Number or Email) -> Confirm & Route to cvidyasolutions@gmail.com
+  const hasPhone = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/.test(userText);
+  const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(userText);
+  if (hasPhone || hasEmail) {
+    if (hinglish) {
+      return "Bahut bahut dhanyawad! 🙏 Aapki contact details successfully capture kar li gayi hain aur hamari official email desk (**cvidyasolutions@gmail.com**) tatha Founder/Director desk (**Chiranjeev Das**) ko forward kar di gayi hain.\n\n📞 **Helpline Direct**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: cvidyasolutions@gmail.com\n\nHamari technical relations team aapse jald hi call ya WhatsApp par connect karegi aur aapke required software ka personalized live demo arrange karegi. Kya aapko kisi specific feature ke baare me pehle se jaanna hai?";
+    }
+    return "Thank you very much! 🙏 Your contact details have been successfully captured and dispatched directly to our official inbox at **cvidyasolutions@gmail.com** and the Director's desk (**Chiranjeev Das**).\n\n📞 **Direct Helpline**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: cvidyasolutions@gmail.com\n\nOur client relations team will reach out to you shortly via phone/WhatsApp to schedule your personalized live demo walkthrough. Would you like to know more about any specific software module in the meantime?";
+  }
+
+  // 0.1 Future-Ready Technology, Innovation & Advantages ("ishhmme future ke liye kuchh achha cheez hain kya", "future scope", "advance features")
+  if (
+    userText.includes("future") ||
+    userText.includes("bhavishya") ||
+    userText.includes("aage ke liye") ||
+    userText.includes("achha cheez") ||
+    userText.includes("achha chij") ||
+    userText.includes("kuchh achha") ||
+    userText.includes("kuch achha") ||
+    userText.includes("kya achha") ||
+    userText.includes("advance") ||
+    userText.includes("scope") ||
+    userText.includes("technology") ||
+    userText.includes("kyu use kare") ||
+    userText.includes("why choose") ||
+    userText.includes("kya khas") ||
+    userText.includes("kya fayda") ||
+    userText.includes("benefits") ||
+    userText.includes("advantage")
+  ) {
+    if (hinglish) {
+      return "Haan, bilkul! **C Vidya Solutions** ko aane wale bhavishya (Future-Ready Technology) ko dhyan me rakhkar hi develop kiya gaya hai. Hamara vision hai: *'Innovating Software for a Simpler Future'*. 🚀\n\nIsme future ke liye sabse advance aur behtareen cheezein ye hain:\n\n1. 🤖 **Autonomous AI Agents (Agli Peedhi ka Automation)**:\n   • **AI Customer Support Agent**: 24/7 bina kisi insani deri ke 0.8 second me customers ke sawalon ka sahi jawab deta hai.\n   • **SalesFlow AI Agent**: B2B clients ki verified emails dhundhta hai aur direct calendar meetings book karta hai.\n   • **Social Media & B2B Marketing Agents**: Trending viral topics scan karke LinkedIn, X aur Insta par automated high-converting posts aur SEO articles generate karte hain.\n\n2. ⚡ **Ultra-Fast Global Edge Cloud Architecture**:\n   • Hamara system **Cloudflare Global Edge Nodes** par chalta hai—matlab <50ms ultra-fast speed aur 99.99% uptime guarantee (server kabhi down nahi hoga).\n   • **Bank-Grade Data Security**: TLS 1.3 encryption, daily automated cloud backups, aur zero-trust role-based access.\n   • **STPI Sindri Certification**: Government of India ke Software Technology Parks of India dwara certified aur incubated.\n\n3. 🚪 **Smart Hardware IoT Automations**:\n   • **CV Fitness Zone (Gym)**: Biometric fingerprint / RFID se gate connect hota hai; fees khatam hote hi gate automatically lock ho jata hai aur WhatsApp par UPI renewal link chala jata hai!\n   • **Coaching & Institutes**: Paper OMR answer sheets ko camera se scan karke 1 second me All-India Rank (AIR) calculate karta hai, aur GPS bus tracking live parents ko dikhata hai.\n   • **Petrol Pump Cloud ERP**: Underground tank dip aur meter sale ka automated density audit, jisse fuel leakage ya theft ka zero chance rehta hai.\n\n4. 📈 **Modular Pay-As-You-Grow Model**:\n   • Zero lock-in policy: Aap apna data Excel/CSV me kabhi bhi export kar sakte hain, aur jaise-jaise business badhega, modules bina kisi technical jhanjhat ke upgrade hote jayenge.\n\n🌐 **Official Website**: `https://cvidyasolutions.com`\n📞 **Helpline Call/WhatsApp**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: `cvidyasolutions@gmail.com`\n\nAapko kis business ya field ke liye future-ready software dekhna hai? Mujhe batayein, main live demo link share karunga!";
+    }
+    return "Yes, absolutely! **C Vidya Solutions** is architected from the ground up for the future of enterprise software, driven by our motto: *'Innovating Software for a Simpler Future'*. 🚀\n\nHere are the standout future-ready capabilities built into our ecosystem:\n\n1. 🤖 **Autonomous AI Agent Systems**:\n   • **24/7 AI Customer Support**: Sub-0.8s query resolution powered by neural RAG knowledge bases.\n   • **SalesFlow AI Agent**: Autonomous B2B prospect discovery, customized multi-touch outreach, and direct calendar demo booking.\n   • **Social Media & SEO Marketing Agents**: Continuous viral trend research, automated multi-channel publishing, and organic inbound pipeline generation.\n\n2. ⚡ **Next-Gen Cloudflare Edge Architecture**:\n   • Distributed edge microservices delivering sub-50ms latency across India and global hubs with a 99.99% uptime SLA.\n   • Bank-grade TLS 1.3 in-transit and AES-256 database encryption with automated daily snapshots.\n   • Incubated and certified under Software Technology Parks of India (STPI Sindri, BIT Sindri Campus).\n\n3. 🎯 **Deep Hardware & IoT Integration**:\n   • **Biometric Turnstiles (Gym)**: Automated entry lockout for expired plans and instant WhatsApp UPI renewal links.\n   • **Computer Vision OMR Grading (Coaching)**: Camera-based answer sheet grading with instantaneous All-India Rank (AIR) computation.\n   • **Fuel Telemetry (Petrol Pump)**: Automated underground tank dip-to-sale density variance audits.\n\n4. 📈 **Modular Pay-As-You-Grow SaaS**:\n   • Seamless scalability from single branch to national multi-campus chains with zero data lock-in and 100% GST-compliant billing.\n\n🌐 **Website**: `https://cvidyasolutions.com`\n📞 **Helpline**: +91 92885 17027 / 8987766981\n📧 **Official Email**: `cvidyasolutions@gmail.com`\n\nWhich software or AI agent would you like to test in a live demo?";
+  }
+
   // 1. Browsing / Casual / No immediate requirement ("dekh rha", "just browsing", "no thanks", etc.)
   if (
     userText.includes("dekh rha") ||

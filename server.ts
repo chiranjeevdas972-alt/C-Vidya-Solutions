@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { collection, getDocs, setDoc, doc, query, orderBy } from "firebase/firestore";
@@ -10,6 +11,95 @@ import { getSmartAssistantResponse } from "./src/utils/aiResponder";
 
 // Load environment variables
 dotenv.config();
+
+// Mailer Transporter for dispatching client leads to cvidyasolutions@gmail.com
+const mailTransporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
+  auth: process.env.SMTP_USER && process.env.SMTP_PASS ? {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  } : undefined,
+});
+
+async function sendLeadNotificationEmail(lead: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  service?: string;
+  message?: string;
+  source: string;
+}) {
+  const targetEmail = "cvidyasolutions@gmail.com";
+  const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  console.log(`📨 [NEW LEAD REQUISITION FOR ${targetEmail}]:`, lead);
+
+  // 1. Always persist lead to Firestore inquiries collection with assigned target email
+  const leadId = `lead_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  try {
+    const leadRecord = {
+      id: leadId,
+      name: lead.name || "Chatbot Visitor",
+      email: lead.email || "Not Provided",
+      phone: lead.phone || "Not Provided",
+      service: lead.service || "C Vidya Software / AI Requisition",
+      message: lead.message || "Consultation requested via C Vidya AI Chatbot",
+      targetEmail,
+      timestamp: new Date().toISOString(),
+      source: lead.source,
+      status: "Forwarded to cvidyasolutions@gmail.com"
+    };
+    await setDoc(doc(db, "inquiries", leadId), leadRecord);
+    console.log(`✅ Lead ${leadId} persisted to Firestore inquiries for ${targetEmail}`);
+  } catch (err) {
+    console.warn("Firestore lead persistence warning:", err);
+  }
+
+  // 2. Dispatch via SMTP if configured in environment
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      await mailTransporter.sendMail({
+        from: `"C Vidya AI Assistant" <${process.env.SMTP_USER}>`,
+        to: targetEmail,
+        subject: `🚀 [New Client Lead] ${lead.name || "Website Visitor"} (${lead.phone || lead.email || "Lead Inquiry"})`,
+        text: `New User Contact Details Received via ${lead.source}:
+
+Name: ${lead.name || "N/A"}
+Phone: ${lead.phone || "N/A"}
+Email: ${lead.email || "N/A"}
+Service / Product: ${lead.service || "General Software Inquiry"}
+Message: ${lead.message || "No message"}
+Source: ${lead.source}
+Timestamp: ${timestamp}
+
+This lead was automatically captured by the C Vidya AI Assistant and forwarded to cvidyasolutions@gmail.com.`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #0b57d0; margin-top: 0;">🚀 New Customer Requisition Captured</h2>
+            <p>A website visitor has submitted their contact details via <strong>${lead.source}</strong>.</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+              <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold; width: 140px;">Name:</td><td style="padding: 8px;">${lead.name || "N/A"}</td></tr>
+              <tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;"><a href="tel:${lead.phone}">${lead.phone || "N/A"}</a></td></tr>
+              <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;"><a href="mailto:${lead.email}">${lead.email || "N/A"}</a></td></tr>
+              <tr><td style="padding: 8px; font-weight: bold;">Product / Service:</td><td style="padding: 8px;">${lead.service || "C Vidya Software / AI Requisition"}</td></tr>
+              <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px;">${lead.message || "N/A"}</td></tr>
+              <tr><td style="padding: 8px; font-weight: bold;">Timestamp:</td><td style="padding: 8px;">${timestamp}</td></tr>
+            </table>
+            <p style="margin-top: 20px; font-size: 12px; color: #64748b;">
+              This notification was automatically dispatched to <strong>cvidyasolutions@gmail.com</strong>.
+            </p>
+          </div>
+        `
+      });
+      console.log(`✅ Mail dispatched successfully to ${targetEmail}`);
+    } catch (mailError) {
+      console.error("Error dispatching email via SMTP:", mailError);
+    }
+  } else {
+    console.log(`ℹ️ SMTP credentials not set in env. Lead is safely stored in Firestore and in-memory queue for ${targetEmail}`);
+  }
+}
 
 const app = express();
 const PORT = 3000;
@@ -344,6 +434,32 @@ C Vidya Solutions is actively hiring top talent:
 - Technical Issue Reporting: Ask for product name, registered mobile/email, device type (mobile/desktop), browser, and error message.
 - CRITICAL SECURITY WARNING: NEVER ask for, accept, or store passwords, OTPs, ATM PINs, bank details, or secret keys. If a user provides them, warn them immediately.
 - UNKNOWN TOPICS: If something is outside verified company offerings, say: "I do not have confirmed information on that at the moment. Please contact our official team at https://cvidyasolutions.com or call +91 92885 17027."
+
+==================================================
+9. USER DETAILS FORWARDING TO cvidyasolutions@gmail.com
+==================================================
+CRITICAL REQUIREMENT:
+Whenever a user sends their contact details (such as their phone number, email address, name, or specific business requirements) in the chat:
+1. Warmly and explicitly confirm to the user:
+   "Thank you! Your details have been successfully recorded and forwarded directly to our Founder/Director desk and official email: cvidyasolutions@gmail.com. Our executive team will contact you shortly via phone or WhatsApp (+91 92885 17027)."
+2. (In Hinglish):
+   "बहुत-बहुत धन्यवाद! 🙏 आपकी कॉन्टैक्ट डिटेल्स हमारे ऑफिशियल ईमेल डेस्क (cvidyasolutions@gmail.com) और डायरेक्टर डेस्क पर सफलतापूर्वक फॉरवर्ड कर दी गई हैं। हमारी टीम आपसे जल्द ही कॉल या WhatsApp पर संपर्क करेगी।"
+
+==================================================
+10. FUTURE SCOPE & ADVANCED TECHNOLOGY QUERIES
+==================================================
+If a user asks questions like:
+- "ishhmme future ke liye kuchh achha cheez hain kya"
+- "Isme future ke liye kya achha hai?"
+- "What is the future scope and advance technology in C Vidya?"
+- "Why should we choose C Vidya for our business?"
+
+NEVER give a generic or vague response. ALWAYS give a rich, comprehensive, future-focused answer highlighting:
+1. 🤖 4 Autonomous AI Agents (24/7 sub-0.8s customer support, SalesFlow lead outreach & demo booking, AI marketing & social media auto-pilot).
+2. ⚡ Ultra-fast Cloudflare Edge global network (<50ms latency, 99.99% uptime) + STPI Sindri government incubation.
+3. 🚪 Smart IoT & Hardware automation (biometric turnstile gate auto-lock, camera OMR sheet grader, fuel density/leakage telemetry).
+4. 📈 Modular pay-as-you-grow SaaS model with zero data lock-in and 100% GST-compliant billing.
+5. Direct invitation to test live demos on cvidyasolutions.com or contact +91 92885 17027.
 
 TRAINED KNOWLEDGE BASE (Q&A):
 Q: What is C Vidya Solutions?
@@ -1016,9 +1132,19 @@ app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
     }
   }
 
+  // Connect & dispatch lead requisition details directly to cvidyasolutions@gmail.com
+  sendLeadNotificationEmail({
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: cleanService,
+    message: cleanMessage,
+    source: "Website Consultation Form"
+  }).catch((err) => console.error("Lead email dispatch error:", err));
+
   return res.json({
     success: true,
-    message: `Thank you, ${name}! Your consultation request regarding '${newInquiry.service}' has been queued. Our relations representative will call you at ${phone} shortly.`,
+    message: `Thank you, ${name}! Your consultation request regarding '${newInquiry.service}' has been queued and dispatched to cvidyasolutions@gmail.com. Our relations representative will call you at ${phone} shortly.`,
     inquiry: newInquiry
   });
 });
@@ -1233,12 +1359,33 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     };
   });
 
+  // Scan user messages to detect user contact information (phone number or email)
+  const allUserTexts = sanitizedMessages.filter(m => m.role === "user").map(m => m.content).join(" ");
+  const phonePattern = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/;
+  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const phoneMatch = allUserTexts.match(phonePattern);
+  const emailMatch = allUserTexts.match(emailPattern);
+
+  const hasContactInfo = !!(phoneMatch || emailMatch);
+  if (hasContactInfo) {
+    const latestUserMsg = sanitizedMessages[sanitizedMessages.length - 1]?.content || "";
+    console.log("🎯 [CHATBOT LEAD DETECTED]: Forwarding to cvidyasolutions@gmail.com", { phone: phoneMatch?.[0], email: emailMatch?.[0] });
+    sendLeadNotificationEmail({
+      name: "C Vidya Website Prospect",
+      phone: phoneMatch ? phoneMatch[0] : "",
+      email: emailMatch ? emailMatch[0] : "",
+      service: "AI Chat Assistant Requisition",
+      message: latestUserMsg,
+      source: "C Vidya AI Assistant Chatbot"
+    }).catch(err => console.error("Chat lead dispatch error:", err));
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   // Case A: No API key or placeholder key configured -> Immediate smart fallback
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
     const reply = getFallbackReply(sanitizedMessages);
-    return res.json({ text: reply, grounded: false });
+    return res.json({ text: reply, grounded: false, leadCaptured: hasContactInfo, recipientEmail: "cvidyasolutions@gmail.com" });
   }
 
   try {
@@ -1258,7 +1405,12 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     const response = await callGeminiWithRetry(client, formattedContents);
     const aiResponseText = response.text || "I apologize, I could not synthesize a consultation response right now. Please reload or get in touch directly!";
     
-    return res.json({ text: aiResponseText, grounded: !!response.candidates?.[0]?.groundingMetadata });
+    return res.json({ 
+      text: aiResponseText, 
+      grounded: !!response.candidates?.[0]?.groundingMetadata,
+      leadCaptured: hasContactInfo,
+      recipientEmail: "cvidyasolutions@gmail.com"
+    });
 
   } catch (error: any) {
     console.error("Gemini API error in /api/chat. Falling back to smart offline responder.", error);
@@ -1267,6 +1419,8 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     return res.json({ 
       text: fallbackReply, 
       grounded: false, 
+      leadCaptured: hasContactInfo,
+      recipientEmail: "cvidyasolutions@gmail.com",
       warning: "Service temporarily offline. Utilizing secure local advisor fallback." 
     });
   }

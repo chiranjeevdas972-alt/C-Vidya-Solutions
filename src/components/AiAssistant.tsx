@@ -8,9 +8,11 @@ import {
   User, 
   ExternalLink,
   PhoneCall,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp
+  Phone,
+  Mail,
+  CheckCircle2, 
+  ChevronDown, 
+  ChevronUp 
 } from "lucide-react";
 import Logo from "./Logo";
 import { ChatMessage } from "../types";
