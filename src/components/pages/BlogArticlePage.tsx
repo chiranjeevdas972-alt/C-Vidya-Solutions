@@ -1,17 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
-  Calendar, 
-  Clock, 
-  User, 
   ArrowLeft, 
   ArrowRight, 
   ChevronDown, 
-  Share2, 
   CheckCircle2, 
-  Tag, 
-  Sparkles,
-  ExternalLink,
-  BookOpen
+  Tag 
 } from "lucide-react";
 import Breadcrumb from "../Breadcrumb";
 import SeoHead from "../SeoHead";
@@ -25,19 +18,9 @@ interface BlogArticlePageProps {
 
 export default function BlogArticlePage({
   article,
-  onNavigate,
-  onOpenConsultation
+  onNavigate
 }: BlogArticlePageProps) {
-  const [copied, setCopied] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(article.canonicalUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const schemaGraph = [
     {
@@ -131,20 +114,6 @@ export default function BlogArticlePage({
       {/* Hero / Article Header */}
       <header className="bg-white border-b border-slate-200 py-10 md:py-14 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-mono font-bold uppercase rounded-md border border-blue-200">
-              {article.category}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              {article.date}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              {article.readTime}
-            </span>
-          </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-950 leading-tight">
             {article.title}
@@ -154,30 +123,19 @@ export default function BlogArticlePage({
             {article.summary}
           </p>
 
-          {/* Author Byline & Social Share */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold font-mono text-sm shadow-xs">
-                {article.author.name.charAt(0)}
+          {/* Author Byline */}
+          <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold font-mono text-sm shadow-xs">
+              {article.author.name.charAt(0)}
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-950 font-sans">
+                {article.author.name}
               </div>
-              <div>
-                <div className="text-sm font-bold text-slate-950 font-sans">
-                  {article.author.name}
-                </div>
-                <div className="text-xs text-slate-500 font-mono">
-                  {article.author.role}
-                </div>
+              <div className="text-xs text-slate-500 font-mono">
+                {article.author.role}
               </div>
             </div>
-
-            <button
-              onClick={handleShare}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs cursor-pointer"
-              title="Share article URL"
-            >
-              <Share2 className="w-3.5 h-3.5 text-slate-500" />
-              <span>{copied ? "Link Copied!" : "Share Link"}</span>
-            </button>
           </div>
 
         </div>
@@ -191,40 +149,6 @@ export default function BlogArticlePage({
           <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-p:text-slate-700 prose-li:text-slate-700 font-sans whitespace-pre-line">
             {article.content}
           </div>
-
-          {/* Related Product Spotlight Box */}
-          {article.relatedProductName && article.relatedProductPath && (
-            <div className="my-8 p-6 sm:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 border border-blue-200 rounded-2xl shadow-xs space-y-4">
-              <div className="flex items-center gap-2 text-xs font-mono font-bold text-blue-700 uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-blue-600" />
-                <span>Related Solution Spotlight</span>
-              </div>
-              <h3 className="text-xl font-bold text-slate-950">
-                Explore {article.relatedProductName}
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Experience full automation, multi-branch cloud sync, and instant live demo access engineered by C Vidya Solutions.
-              </p>
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  onClick={() => onNavigate(article.relatedProductPath!)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                >
-                  <span>View Product Overview</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                {onOpenConsultation && (
-                  <button
-                    onClick={onOpenConsultation}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                  >
-                    <span>Request Live Demo</span>
-                    <ExternalLink className="w-4 h-4 text-slate-500" />
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Frequently Asked Questions */}
           {article.faqs && article.faqs.length > 0 && (

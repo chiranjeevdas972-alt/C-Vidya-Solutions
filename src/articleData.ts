@@ -40,7 +40,7 @@ export const ARTICLES_DATA: Record<string, ArticleSeoInfo> = {
       role: "Founder & Director, C Vidya Solutions"
     },
     summary: "An in-depth guide explaining how cloud-based library management software streamlines cataloging, member subscriptions, seat allocation, and circulation tracking.",
-    image: "/assets/images/blog_boardroom_tech_1788168683246.jpg",
+    image: "/assets/images/library_software_dashboard_1784909434916.jpg",
     relatedProductId: "library",
     relatedProductName: "C Vidya Library Management Software",
     relatedProductPath: "/software/library-management/",
@@ -126,7 +126,7 @@ C Vidya Solutions engineered its Library Management Suite specifically to addres
       role: "Chief Technology Officer, C Vidya Solutions"
     },
     summary: "Explore why educational institutions and private study centers are migrating from offline desktop systems to scalable cloud library management solutions.",
-    image: "/assets/images/portfolio_fintech_dash_1788168637880.jpg",
+    image: "/assets/images/careers_workspace_monitors_1788168702798.jpg",
     relatedProductId: "library",
     relatedProductName: "C Vidya Library Management Software",
     relatedProductPath: "/software/library-management/",
@@ -186,7 +186,7 @@ Offline software appears cheap initially, but hidden costs—server hardware, te
       role: "Founder & Director, C Vidya Solutions"
     },
     summary: "A practical roadmap for reading room founders to eliminate manual entry books, automate monthly fee collections, and optimize desk occupancy rates.",
-    image: "/assets/images/blog_boardroom_tech_1788168683246.jpg",
+    image: "/assets/images/modern_study_library_1791193360633.jpg",
     relatedProductId: "library",
     relatedProductName: "C Vidya Library Management Software",
     relatedProductPath: "/software/library-management/",
@@ -251,7 +251,7 @@ Analytics show which desks and shifts operate at 100% capacity and which have su
       role: "Head of Operations, C Vidya Solutions"
     },
     summary: "Discover how hardware-software biometric turnstile integration prevents unauthorized gym access, eliminates expired subscriptions, and automates WhatsApp renewals.",
-    image: "/assets/images/portfolio_fintech_dash_1788168637880.jpg",
+    image: "/assets/images/gym_biometric_access_1791193376438.jpg",
     relatedProductId: "fitness",
     relatedProductName: "C Vidya Fitness Zone Management Software",
     relatedProductPath: "/software/fitness-zone/",
@@ -307,7 +307,7 @@ By connecting optical fingerprint scanners, facial recognition cameras, or RFID 
       role: "Founder & Director, C Vidya Solutions"
     },
     summary: "Discover how smartphone camera OMR grading eliminates costly specialized hardware while delivering instant diagnostic student rank cards.",
-    image: "/assets/images/blog_boardroom_tech_1788168683246.jpg",
+    image: "/assets/images/coaching_software_dashboard_1784909470078.jpg",
     relatedProductId: "coaching",
     relatedProductName: "C Vidya Coaching Management Software",
     relatedProductPath: "/software/coaching-management/",
@@ -360,7 +360,7 @@ Modern coaching software like **C Vidya Coaching Management** utilizes computer 
       role: "Chief Technology Officer, C Vidya Solutions"
     },
     summary: "A technical and commercial comparison between legacy rigid rule-based chatbots and modern autonomous AI agents powered by neural RAG architectures.",
-    image: "/assets/images/datacenter_server_room_1788168670156.jpg",
+    image: "/assets/images/predictive_ai_network_1788168655936.jpg",
     relatedProductId: "customer-support",
     relatedProductName: "C Vidya AI Customer Support Agent",
     relatedProductPath: "/ai-agents/customer-support/",
@@ -423,7 +423,7 @@ Modern autonomous agents, such as the **C Vidya AI Customer Support Agent**, are
       role: "Chief Executive Officer, C Vidya Solutions"
     },
     summary: "A comprehensive executive overview of Software-as-a-Service (SaaS), multi-tenant cloud economics, security compliance, and operational scalability.",
-    image: "/assets/images/portfolio_fintech_dash_1788168637880.jpg",
+    image: "/assets/images/crm_software_dashboard_1784909507564.jpg",
     relatedProductId: "crm",
     relatedProductName: "C Vidya Enterprise CRM Software",
     relatedProductPath: "/software/enterprise-crm/",
