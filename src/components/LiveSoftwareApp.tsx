@@ -55,15 +55,18 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     return software.id === "institutes" || software.name.toLowerCase().includes("institute");
   }, [software]);
 
-  // Use locally hosted embedded suites with step-by-step navigation for local apps, and direct worker URLs for all other live apps
+  // Use direct live worker URLs for all cloud SaaS apps and AI agents, enabling full native Google OAuth and dashboard access
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     const id = software.id.toLowerCase();
     if (id === "library" || software.externalLink.includes("v.cvidyasolutions")) {
-      return "/software/library/index.html";
+      return "https://v.cvidyasolutions.workers.dev/";
     }
     if (id === "fitness" || software.externalLink.includes("fitzone")) {
       return "https://fitzone.cvidyasolutions.workers.dev/";
+    }
+    if (id === "farming" || id === "agrifusion" || software.externalLink.includes("fresh.cvidyasolutions")) {
+      return "https://fresh.cvidyasolutions.workers.dev/";
     }
     if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
       return "/software/petrol-pump/index.html";
@@ -142,7 +145,6 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     if (!software) return false;
     const id = software.id.toLowerCase();
     return (
-      id === "library" ||
       id === "petrol-pump" ||
       id === "pdf-media-tools" ||
       id === "pdf-tools"
@@ -698,6 +700,20 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
         </button>
       </div>
 
+      {/* Auto-Adjusting Direct Mobile Launch Button (Ensures 100% Google Sign-In & Dashboard Access on Phones) */}
+      <div className="fixed top-2.5 left-13 sm:top-3.5 sm:left-15 md:top-4 md:left-17 z-[9999] pointer-events-auto">
+        <a
+          href={effectiveIframeSrc || software.externalLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="h-9 px-2.5 sm:h-10 sm:px-3 md:h-11 bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-white rounded-xl sm:rounded-2xl flex items-center gap-1.5 transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md text-xs font-semibold"
+          title="Open in mobile browser for seamless Google Sign-In"
+        >
+          <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+          <span className="hidden xs:inline sm:inline">Open in Browser</span>
+        </a>
+      </div>
+
       {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
       <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto">
         <button
@@ -1019,8 +1035,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
                 setIframeLoaded(true);
                 setIframeError(true);
               }}
-              allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; display-capture; encrypted-media; fullscreen; geolocation; gyroscope; identity-credentials-get; microphone; payment; picture-in-picture; publickey-credentials-get; storage-access; web-share;"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation allow-storage-access-by-user-activation"
+              allow="accelerometer; autoplay; camera; clipboard-read; clipboard-write; display-capture; encrypted-media; fullscreen; geolocation; gyroscope; identity-credentials-get; microphone; payment; picture-in-picture; publickey-credentials-get; storage-access; web-share; browsing-topics;"
               className="w-full h-full flex-1 border-none bg-slate-950 min-h-0 min-w-0 block"
               style={{ width: "100%", height: "100%", border: 0 }}
             />

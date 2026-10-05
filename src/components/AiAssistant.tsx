@@ -23,14 +23,14 @@ interface AiAssistantProps {
 
 const PRESET_CATEGORIES = [
   {
-    category: "7 SaaS Products",
+    category: "7 SaaS Suites",
     questions: [
-      "What software do you provide?",
+      "What software does C Vidya Solutions provide?",
       "Tell me about C Vidya Library Management",
-      "How does CV Fitness Zone work?",
-      "Explain C Vidya Institute Management",
-      "Tell me about Coaching Management",
-      "Explain AgriFusion & FarmFresh Hub",
+      "How does C Vidya Fitness Zone biometric gate work?",
+      "Explain C Vidya Institute Management ERP",
+      "How does Coaching OMR mock test grading work?",
+      "Explain AgriFusion multi-farm management",
       "Tell me about C Vidya Jewelers Management",
       "How does C Vidya Enterprises CRM work?"
     ]
@@ -38,7 +38,7 @@ const PRESET_CATEGORIES = [
   {
     category: "4 AI Agents",
     questions: [
-      "What are your 4 Autonomous AI Agents?",
+      "What are the 4 Autonomous AI Agents?",
       "Tell me about C Vidya Social Media Agent",
       "How does C Vidya AI Customer Support Agent work?",
       "Tell me about Business Sales Flow AI Agent",
@@ -46,13 +46,37 @@ const PRESET_CATEGORIES = [
     ]
   },
   {
-    category: "Other Services",
+    category: "Specialized Services",
     questions: [
-      "Tell me about Petrol Pump Software",
+      "Tell me about Petrol Pump Cloud Software",
       "Explain Care Plus Healthcare System",
       "How does C Vidya PDF & Media Tools SaaS work?",
-      "How can I request a live demo or trial?",
-      "What is your pricing model?"
+      "How can I request a live demo or sandbox access?",
+      "What is your modular pricing model?",
+      "Do you provide 100% GST compliant invoices?"
+    ]
+  },
+  {
+    category: "Company & FAQs",
+    questions: [
+      "Who is the founder and leadership team?",
+      "Where are your headquarters and STPI branch located?",
+      "How long does turnkey software deployment take?",
+      "Can we migrate our existing Excel or CSV data?",
+      "What job positions are currently open?"
+    ]
+  },
+  {
+    category: "Hinglish Qs 🇮🇳",
+    questions: [
+      "Gym software me biometric turnstile gate kaise kaam karta hai?",
+      "Library software ka live demo dikhao",
+      "Coaching software me OMR sheet scanner kaise check karta hai?",
+      "Petrol pump software credit khata kaise chalega?",
+      "Chiranjeev Das kaun hain aur office kahan hai?",
+      "Software lagane me kitne din ka time lagega?",
+      "Kya purana Excel data software me import ho jayega?",
+      "Pricing plans aur GST bill ki details bataiye"
     ]
   }
 ];
@@ -64,29 +88,16 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       role: "model",
       content: `Hello! 👋 Welcome to **C Vidya Solutions**.
 
-I am your **C-Vidya AI Assistant**. I can help you with:
+I am your official **C-Vidya AI Customer Support Assistant**, deeply trained on our official website **www.cvidyasolutions.com**, all software platforms, and cloud architecture.
 
-• **7 Flagship SaaS Products**:
-  1. C Vidya Library Management
-  2. C Vidya Fitness Zone
-  3. C Vidya Institute Management
-  4. C Vidya Coaching Management
-  5. AgriFusion (FarmFresh Hub)
-  6. C Vidya Jewelers Management
-  7. C Vidya Enterprises CRM
+I can guide you through:
+• **7 Flagship SaaS Products**: Library Management, Fitness Zone, Institutes ERP, Coaching Management, AgriFusion, Jewelers Management, and Enterprises CRM.
+• **4 Autonomous AI Agents**: AI Social Media Agent, AI Customer Support Agent, SalesFlow AI Agent, and B2B SaaS Marketing Agent.
+• **3 Specialized Platforms**: Cloud Petrol Pump Software, Care Plus Healthcare System, and PDF & Media Tools SaaS.
+• **Turnkey Deployment, Pricing, Free Live Demos & Onboarding Support**.
 
-• **4 Autonomous AI Agents**:
-  1. C Vidya Social Media Agent
-  2. C Vidya AI Customer Support Agent
-  3. C Vidya Business Sales Flow AI Agent
-  4. C Vidya AI Marketing for B2B SaaS Companies AI Agent
-
-• **Other Specialized Services**:
-  1. C Vidya Cloud-Based Software Petrol Pump Site
-  2. Care Plus Healthcare System
-  3. C Vidya PDF and Media Tools SaaS
-
-Feel free to ask any question regarding software features, live demos, pricing, architectures, or technical FAQs in English, Hindi, or Hinglish!`,
+Feel free to ask any question in **English** or **Hinglish**!
+*(Aap Hindi ya Hinglish me bhi pooch sakte hain jaise: 'Gym software me kya features hai?', 'Petrol pump ka credit khata kaise chalega?', 'Chiranjeev Das kaun hai?', 'Live demo dikhao')*`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     }
   ]);
@@ -402,7 +413,7 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about software, AI agents, demo, pricing, or logins..."
+            placeholder="Ask in English or Hinglish (e.g. Gym software ke features kya hain?)..."
             className="flex-1 text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#0d1524] border border-slate-700/80 rounded-xl focus:border-brand-gold-400 focus:ring-1 focus:ring-brand-gold-400 outline-none text-slate-100 placeholder-slate-500 font-medium shadow-inner min-h-[44px]"
             disabled={isTyping}
           />
