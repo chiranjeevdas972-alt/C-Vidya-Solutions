@@ -700,20 +700,6 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
         </button>
       </div>
 
-      {/* Auto-Adjusting Direct Mobile Launch Button (Ensures 100% Google Sign-In & Dashboard Access on Phones) */}
-      <div className="fixed top-2.5 left-13 sm:top-3.5 sm:left-15 md:top-4 md:left-17 z-[9999] pointer-events-auto">
-        <a
-          href={effectiveIframeSrc || software.externalLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="h-9 px-2.5 sm:h-10 sm:px-3 md:h-11 bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-white rounded-xl sm:rounded-2xl flex items-center gap-1.5 transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md text-xs font-semibold"
-          title="Open in mobile browser for seamless Google Sign-In"
-        >
-          <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
-          <span className="hidden xs:inline sm:inline">Open in Browser</span>
-        </a>
-      </div>
-
       {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
       <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto">
         <button
