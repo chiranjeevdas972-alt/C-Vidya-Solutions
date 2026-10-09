@@ -658,7 +658,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
   return (
     <div className="fixed inset-0 z-[9990] w-full h-full h-[100dvh] w-screen max-w-full bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
       {/* Auto-Adjusting Sleek Arrow Back Button (Icon Only - Instant Step-by-Step Back Navigation) */}
-      <div className="fixed top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 md:top-4 md:left-4 z-[9999] pointer-events-auto">
+      <div className="fixed top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 md:top-4 md:left-4 z-[9999] pointer-events-auto mt-[env(safe-area-inset-top,0px)] ml-[env(safe-area-inset-left,0px)]">
         <button
           type="button"
           onClick={handleBack}
@@ -671,7 +671,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       </div>
 
       {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
-      <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto">
+      <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto mt-[env(safe-area-inset-top,0px)] mr-[env(safe-area-inset-right,0px)]">
         <button
           type="button"
           onClick={onClose}

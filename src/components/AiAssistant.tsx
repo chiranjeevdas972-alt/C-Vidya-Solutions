@@ -402,7 +402,7 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
       </div>
 
       {/* Input Message Form Panel */}
-      <div className="p-3 sm:p-4 bg-brand-navy-900 border-t border-brand-gold-500/20 flex flex-col gap-2 shrink-0">
+      <div className="p-3 sm:p-4 bg-brand-navy-900 border-t border-brand-gold-500/20 flex flex-col gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
         <form 
           onSubmit={(e) => {
             e.preventDefault();

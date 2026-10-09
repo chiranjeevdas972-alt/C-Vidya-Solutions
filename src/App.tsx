@@ -447,14 +447,14 @@ export default function App() {
       />
 
       {/* 4. FLOATING AI ASSISTANT TRIGGER */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 mb-[env(safe-area-inset-bottom,0px)] mr-[env(safe-area-inset-right,0px)]">
         <button
           type="button"
           onClick={() => setAiOpen(true)}
-          className="group flex items-center gap-2.5 px-4 py-3 bg-[#071739] text-white rounded-full shadow-2xl hover:bg-slate-900 border border-blue-500/40 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-sans"
+          className="group flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 bg-[#071739] text-white rounded-full shadow-2xl hover:bg-slate-900 border border-blue-500/40 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-sans"
         >
           <div className="relative">
-            <Logo size={28} showText={false} className="shrink-0 animate-bounce" />
+            <Logo size={26} showText={false} className="shrink-0 animate-bounce" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
           </div>
           <span className="text-xs font-bold font-mono tracking-wider uppercase pr-1">

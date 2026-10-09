@@ -122,7 +122,7 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
         className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-50 overflow-y-auto flex flex-col"
       >
         {/* Sticky Top Full Page Header */}
-        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-3 flex items-center">
+        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pl-[max(1rem,env(safe-area-inset-left,1rem))] pr-[max(1rem,env(safe-area-inset-right,1rem))] flex items-center">
           <button
             type="button"
             onClick={() => {

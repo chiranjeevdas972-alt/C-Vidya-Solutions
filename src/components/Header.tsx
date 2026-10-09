@@ -38,7 +38,7 @@ export default function Header({
   };
 
   return (
-    <div className="sticky top-0 z-50 w-full shadow-xs bg-white/95 backdrop-blur-md border-b border-slate-200/80">
+    <div className="sticky top-0 z-50 w-full shadow-xs bg-white/95 backdrop-blur-md border-b border-slate-200/80 pt-[env(safe-area-inset-top,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       
       {/* Top Banner (Corporate bar with phone on left, email shifted to right) */}
       <div id="top-bar" className="bg-[#071739] text-xs text-slate-300 py-1.5 px-4 hidden md:block border-b border-blue-900/40 font-mono">

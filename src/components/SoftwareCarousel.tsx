@@ -208,10 +208,10 @@ export default function SoftwareCarousel() {
         </div>
 
         {/* Middle Screen Section: Left Content, Right Dashboard Visualization */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 py-4 flex-1 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 py-4 flex-1 items-stretch">
           
           {/* Active Product Profile Info (Left side of container) */}
-          <div className="xl:col-span-5 flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               {/* Module Pill & Counter */}
               <div className="flex items-center justify-between">
@@ -308,7 +308,7 @@ export default function SoftwareCarousel() {
           </div>
 
           {/* Interactive Simulated Dashboard Graphic (Right side of container) */}
-          <div className="xl:col-span-7 relative flex items-center justify-center min-h-[220px] md:min-h-[270px]">
+          <div className="lg:col-span-7 relative flex items-center justify-center min-h-[220px] md:min-h-[270px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeIndex}

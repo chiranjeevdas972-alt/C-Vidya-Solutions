@@ -109,7 +109,7 @@ export default function ProductLandingPage({
       />
 
       {/* Top Header Bar with Instant Back Navigation */}
-      <div className="bg-[#071739] text-white px-4 sm:px-8 py-3 flex items-center border-b border-blue-900/50 shadow-md">
+      <div className="bg-[#071739] text-white px-4 sm:px-8 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pl-[max(1rem,env(safe-area-inset-left,1rem))] pr-[max(1rem,env(safe-area-inset-right,1rem))] flex items-center border-b border-blue-900/50 shadow-md">
         <button
           type="button"
           onClick={() => onNavigate(seoInfo.type === "software" ? "/software/" : "/ai-agents/")}
