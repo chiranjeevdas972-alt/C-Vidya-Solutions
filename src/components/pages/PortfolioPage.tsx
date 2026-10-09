@@ -213,21 +213,20 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
                 </div>
               </div>
 
-              {/* Card Footer / Stats */}
-              <div className="p-6 sm:p-7 pt-0 space-y-4">
-                <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  {project.stats.map((s, idx) => (
-                    <div key={idx}>
-                      <div className="text-[10px] font-mono text-slate-400 uppercase truncate">{s.label}</div>
-                      <div className="text-xs sm:text-sm font-bold text-slate-900 font-mono mt-0.5 truncate">{s.value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-blue-600 pt-2 border-t border-slate-100 group-hover:text-blue-700">
-                  <span>Explore Architecture &amp; Telemetry</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
+              {/* Card Footer Action: Retain arrow directions icon button to open details */}
+              <div className="p-6 sm:p-7 pt-0 flex justify-end">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCase(project);
+                  }}
+                  className="w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer group-hover:scale-105 active:scale-95"
+                  title="View Case Details"
+                  aria-label="View Case Details"
+                >
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                </button>
               </div>
             </div>
           ))}
