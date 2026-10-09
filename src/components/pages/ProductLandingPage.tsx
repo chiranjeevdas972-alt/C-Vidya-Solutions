@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { 
   CheckCircle2, 
-  ExternalLink, 
   ArrowRight, 
   ChevronDown, 
   Users, 
@@ -109,6 +108,22 @@ export default function ProductLandingPage({
         jsonLd={schemaGraph}
       />
 
+      {/* Top Header Bar with Instant Back Navigation */}
+      <div className="bg-[#071739] text-white px-4 sm:px-8 py-3 flex items-center border-b border-blue-900/50 shadow-md">
+        <button
+          type="button"
+          onClick={() => onNavigate(seoInfo.type === "software" ? "/software/" : "/ai-agents/")}
+          className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 active:scale-90 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:scale-105 cursor-pointer border border-white/20 shrink-0"
+          title={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Landing Page`}
+          aria-label={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Landing Page`}
+        >
+          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5] rotate-180" />
+        </button>
+        <span className="ml-3.5 text-xs sm:text-sm font-bold font-mono tracking-wider text-slate-200 uppercase truncate">
+          {seoInfo.breadcrumbName}
+        </span>
+      </div>
+
       {/* Breadcrumb Navigation */}
       <div className="bg-white border-b border-slate-200">
         <Breadcrumb 
@@ -144,15 +159,13 @@ export default function ProductLandingPage({
                   onClick={() => {
                     if (onOpenLiveApp) {
                       onOpenLiveApp(productData);
-                    } else if (productData.externalLink) {
-                      window.open(productData.externalLink, "_blank");
                     }
                   }}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
                   title={`Launch live demo of ${productData.name}`}
                 >
                   <span>Launch Live Software Demo</span>
-                  <ExternalLink className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               )}
 
@@ -507,14 +520,12 @@ export default function ProductLandingPage({
                 onClick={() => {
                   if (onOpenLiveApp) {
                     onOpenLiveApp(productData);
-                  } else if (productData.externalLink) {
-                    window.open(productData.externalLink, "_blank");
                   }
                 }}
                 className="px-6 py-3.5 bg-blue-800/80 hover:bg-blue-800 text-white active:scale-95 rounded-xl text-sm font-semibold border border-blue-400/40 transition-all cursor-pointer flex items-center gap-2"
               >
                 <span>Launch Cloud Sandbox</span>
-                <ExternalLink className="w-4 h-4 text-blue-200" />
+                <ArrowRight className="w-4 h-4 text-blue-200" />
               </button>
             )}
           </div>

@@ -338,4 +338,25 @@ for (const r of routes) {
   generatedCount++;
 }
 
+// Generate static entry points for software subroutes (dashboard, login) for Cloudflare CDN edge serving
+const softwareSuites = ["fitness", "library", "petrol-pump", "pdf-media-tools"];
+for (const sw of softwareSuites) {
+  const sourceHtmlPath = path.join(distDir, "software", sw, "index.html");
+  const fallbackSource = path.join(__dirname, "../public/software", sw, "index.html");
+  const actualSource = fs.existsSync(sourceHtmlPath) ? sourceHtmlPath : (fs.existsSync(fallbackSource) ? fallbackSource : null);
+  
+  if (actualSource) {
+    const swHtml = fs.readFileSync(actualSource, "utf-8");
+    const subroutes = ["dashboard", "login", "signup", "register"];
+    for (const sub of subroutes) {
+      const subDir = path.join(distDir, "software", sw, sub);
+      if (!fs.existsSync(subDir)) {
+        fs.mkdirSync(subDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(subDir, "index.html"), swHtml, "utf-8");
+    }
+    console.log(`✅ Pre-rendered static subroutes (dashboard, login) for /software/${sw}/`);
+  }
+}
+
 console.log(`✅ Generated ${generatedCount} static prerendered HTML pages in dist/ directory.`);

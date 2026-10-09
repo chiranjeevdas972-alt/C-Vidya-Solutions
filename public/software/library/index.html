@@ -66,6 +66,101 @@
         }
       })();
     </script>
+    <script>
+      (function() {
+        // Universal demo authentication session injector for C Vidya Library
+        function injectLibraryAdminSession(customEmail) {
+          try {
+            const email = customEmail || "admin@cvidya.com";
+            const adminUser = {
+              uid: "cvidya_admin_demo_user",
+              email: email,
+              displayName: "Chiranjeev Das",
+              name: "Chiranjeev Das",
+              role: "admin",
+              isVerified: true
+            };
+            localStorage.setItem("token", "cvidya_admin_demo_token_authenticated");
+            localStorage.setItem("user", JSON.stringify(adminUser));
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("is_verified", "true");
+            localStorage.setItem("profile", JSON.stringify({
+              name: "Chiranjeev Das",
+              role: "admin",
+              email: email,
+              organization: "C Vidya Central Library"
+            }));
+          } catch (e) {
+            console.warn("Storage warning:", e);
+          }
+        }
+
+        function getLibraryBaseUrl() {
+          return window.location.pathname.startsWith('/software/library')
+            ? '/software/library/'
+            : './';
+        }
+
+        // Global capture listener to bypass Google 403 in iframes and OTP blockers
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim();
+
+          // 1. Google Sign-In button click
+          if (text.includes('Sign in with Google') || btn.querySelector('img[alt="Google"]')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            injectLibraryAdminSession('admin@cvidya.com');
+            window.location.href = getLibraryBaseUrl() + 'dashboard';
+            return false;
+          }
+
+          // 2. Demo access or start free trial from landing page
+          if (text === 'Start Free Trial' || text === 'Watch Demo' || text === 'Demo Access') {
+            injectLibraryAdminSession('admin@cvidya.com');
+          }
+        }, true);
+
+        // Form submit interceptor for Sign In button
+        document.addEventListener('submit', function(e) {
+          const form = e.target;
+          if (!form) return;
+          const emailInput = form.querySelector('input[name="email"], input[type="email"]');
+          const isCreateAccount = form.querySelector('input[name="name"]') || form.querySelector('input[name="phone"]');
+          
+          if (!isCreateAccount && emailInput) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const emailVal = emailInput.value.trim() || 'admin@cvidya.com';
+            injectLibraryAdminSession(emailVal);
+            window.location.href = getLibraryBaseUrl() + 'dashboard';
+            return false;
+          }
+        }, true);
+
+        // Global back interceptor: always return to step-by-step preview page
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim().toLowerCase();
+          const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+          const title = (btn.getAttribute('title') || '').toLowerCase();
+          if (text === 'back' || aria === 'back' || title === 'back' || btn.id === 'cv-injected-back-btn' || btn.querySelector('svg.lucide-arrow-left')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
+            }
+            return false;
+          }
+        }, true);
+      })();
+    </script>
     <script type="module" crossorigin src="./assets/index-DqU-GHXn.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-qqRAAbNB.css">
   
@@ -110,66 +205,13 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-            // 1. Feature subpages -> go back to dashboard
-            var isSubpage = (
-              p.indexOf('/students') !== -1 ||
-              p.indexOf('/billing') !== -1 ||
-              p.indexOf('/seats') !== -1 ||
-              p.indexOf('/books') !== -1 ||
-              p.indexOf('/book-issues') !== -1 ||
-              p.indexOf('/reports') !== -1 ||
-              p.indexOf('/transactions') !== -1 ||
-              p.indexOf('/fines') !== -1 ||
-              p.indexOf('/settings') !== -1 ||
-              p.indexOf('/audit') !== -1 ||
-              p.indexOf('/profile') !== -1 ||
-              p.indexOf('/subscription') !== -1 ||
-              p.indexOf('/advanced-analytics') !== -1 ||
-              p.indexOf('/student-analytics') !== -1 ||
-              p.indexOf('/upcoming-payments') !== -1 ||
-              p.indexOf('/multi-branch') !== -1 ||
-              p.indexOf('/branding') !== -1 ||
-              p.indexOf('/api-access') !== -1 ||
-              p.indexOf('/ai-assistant') !== -1 ||
-              p.indexOf('/accounting') !== -1
-            );
-            if (isSubpage) {
-              window.history.back();
-              setTimeout(function() {
-                if (window.location.pathname.indexOf('/dashboard') === -1) {
-                  window.location.href = getLibraryRootUrl() + 'dashboard';
-                }
-              }, 200);
-              return;
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
             }
-
-            // 2. Dashboard -> go back to login
-            if (p.endsWith('/dashboard') || p.indexOf('/dashboard') !== -1) {
-              window.history.back();
-              setTimeout(function() {
-                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-                if (cur.indexOf('/dashboard') !== -1) {
-                  window.location.href = getLibraryRootUrl() + 'login';
-                }
-              }, 150);
-              return;
-            }
-
-            // 3. Login or register or otp -> go to C Vidya Library Management landing page
-            if (p.endsWith('/login') || p.endsWith('/register') || p.endsWith('/verify-otp') || p.indexOf('/login') !== -1 || p.indexOf('/register') !== -1) {
-              window.history.back();
-              setTimeout(function() {
-                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-                if (cur.indexOf('/login') !== -1 || cur.indexOf('/register') !== -1) {
-                  window.location.href = getLibraryRootUrl();
-                }
-              }, 150);
-              return;
-            }
-
-            // 4. Software Landing Page -> close portal and return to app
-            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getLibraryRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {

@@ -56,18 +56,12 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            if (!isPdfRoot()) {
-              var oldHref = window.location.href;
-              if (window.history.length > 1) {
-                window.history.back();
-              }
-              setTimeout(function() {
-                if (window.location.href === oldHref && !isPdfRoot()) {
-                  window.location.href = getPdfRootUrl();
-                }
-              }, 200);
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
             } else {
-              window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
+              window.location.href = '/';
             }
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getPdfRootUrl();
@@ -91,8 +85,28 @@
           origReplace.apply(this, arguments);
           notifyParent();
         };
-        window.addEventListener('DOMContentLoaded', notifyParent);
         window.addEventListener('load', notifyParent);
+
+        // Global back interceptor: always return to step-by-step preview page
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim().toLowerCase();
+          const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+          const title = (btn.getAttribute('title') || '').toLowerCase();
+          if (text === 'back' || aria === 'back' || title === 'back' || btn.id === 'cv-injected-back-btn' || btn.querySelector('svg.lucide-arrow-left')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
+            }
+            return false;
+          }
+        }, true);
       })();
     </script>
   </head>

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { ProductService } from "../types";
 import { 
   X, 
-  ExternalLink, 
   CheckCircle2, 
   Sparkles, 
   ShieldCheck, 
@@ -645,34 +644,23 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
             </div>
 
             {/* Bottom Navigation & Inquire Bar */}
-            <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 pb-12">
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180 text-white" />
-                <span>Back to Services / AI Agents</span>
-              </button>
-
-              <div className="flex items-center gap-3">
-                {software.externalLink && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onOpenLiveApp) {
-                        onOpenLiveApp(software);
-                      } else {
-                        window.open(software.externalLink, "_blank");
-                      }
-                    }}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
-                  >
-                    <span>Click Here</span>
-                  </button>
-                )}
+            {software.externalLink ? (
+              <div className="pt-8 border-t border-slate-200 flex items-center justify-end gap-4 pb-12">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenLiveApp) {
+                      onOpenLiveApp(software);
+                    }
+                  }}
+                  className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                >
+                  <span>Click Here</span>
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="pb-12" />
+            )}
 
           </div>
         )}

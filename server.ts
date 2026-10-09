@@ -969,19 +969,31 @@ app.get("/api/auth/me", (req, res) => {
 });
 
 app.post("/api/auth/login", (req, res) => {
+  const email = req.body?.email || "admin@cvidya.com";
+  const user = {
+    id: req.body?.switchUserId || "cvidya_admin_demo_user",
+    uid: req.body?.switchUserId || "cvidya_admin_demo_user",
+    name: "Chiranjeev Das",
+    displayName: "Chiranjeev Das",
+    email: email,
+    role: "admin",
+    isVerified: true,
+    plan: "enterprise",
+    subscriptionStatus: "active",
+    subscriptionPlan: "enterprise",
+    dailyConversionsUsed: 0,
+    dailyLimit: 1000,
+    storageUsedBytes: 25000000,
+    storageLimitBytes: 10737418240,
+    createdAt: new Date().toISOString()
+  };
   res.json({
     success: true,
-    user: {
-      id: req.body?.switchUserId || "user_pro",
-      name: "C Vidya Member",
-      email: req.body?.email || "member@cvidyasolutions.com",
-      role: "user",
-      plan: "pro",
-      dailyConversionsUsed: 0,
-      dailyLimit: 100,
-      storageUsedBytes: 25000000,
-      storageLimitBytes: 1073741824,
-      createdAt: new Date().toISOString()
+    token: "cvidya_admin_demo_token_authenticated",
+    user,
+    data: {
+      token: "cvidya_admin_demo_token_authenticated",
+      user
     }
   });
 });
@@ -1428,18 +1440,36 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   }
 });
 
-// Redirect Fitness Zone requests to live worker application with white modern UI
+// Serve Fitness Zone static suite directly for seamless embedding and zero 403 errors
 app.get(["/software/fitness", "/software/fitness/", "/software/fitness/index.html"], (req, res) => {
-  res.redirect(302, "https://fitzone.cvidyasolutions.workers.dev/");
+  res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
 });
-// Redirect Library Management requests to live worker application
+app.get("/software/fitness/*", (req, res, next) => {
+  if (req.path.startsWith("/software/fitness/assets/")) return next();
+  res.sendFile(path.join(process.cwd(), "public/software/fitness/index.html"));
+});
+
+// Serve Library Management static suite directly for seamless embedding and zero 403 errors
 app.get(["/software/library", "/software/library/", "/software/library/index.html"], (req, res) => {
-  res.redirect(302, "https://v.cvidyasolutions.workers.dev/");
+  res.sendFile(path.join(process.cwd(), "public/software/library/index.html"));
 });
-app.get("/software/petrol-pump/index.html", (req, res) => {
+app.get("/software/library/*", (req, res, next) => {
+  if (req.path.startsWith("/software/library/assets/")) return next();
+  res.sendFile(path.join(process.cwd(), "public/software/library/index.html"));
+});
+app.get(["/software/petrol-pump", "/software/petrol-pump/", "/software/petrol-pump/index.html"], (req, res) => {
   res.sendFile(path.join(process.cwd(), "public/software/petrol-pump/index.html"));
 });
-app.get("/software/pdf-media-tools/index.html", (req, res) => {
+app.get("/software/petrol-pump/*", (req, res, next) => {
+  if (req.path.startsWith("/software/petrol-pump/assets/")) return next();
+  res.sendFile(path.join(process.cwd(), "public/software/petrol-pump/index.html"));
+});
+
+app.get(["/software/pdf-media-tools", "/software/pdf-media-tools/", "/software/pdf-media-tools/index.html"], (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
+});
+app.get("/software/pdf-media-tools/*", (req, res, next) => {
+  if (req.path.startsWith("/software/pdf-media-tools/assets/")) return next();
   res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
 });
 

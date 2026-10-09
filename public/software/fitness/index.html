@@ -8,6 +8,13 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <title>C Vidya Fitness Zone</title>
+    <script>
+      (function() {
+        if (window.location.hostname !== 'fitzone.cvidyasolutions.workers.dev') {
+          window.location.replace('https://fitzone.cvidyasolutions.workers.dev/' + window.location.search + window.location.hash);
+        }
+      })();
+    </script>
     <base href="/software/fitness/">
     <script>
       // Clean path so React Router matches root properly whether accessed via /software/fitness/ or /software/fitness/index.html
@@ -71,55 +78,13 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-            var isFitnessSub = (
-              p.indexOf('/members') !== -1 ||
-              p.indexOf('/trainers') !== -1 ||
-              p.indexOf('/plans') !== -1 ||
-              p.indexOf('/payments') !== -1 ||
-              p.indexOf('/attendance') !== -1 ||
-              p.indexOf('/inventory') !== -1 ||
-              p.indexOf('/announcements') !== -1 ||
-              p.indexOf('/shop') !== -1 ||
-              p.indexOf('/ai-zone') !== -1 ||
-              p.indexOf('/reports-crm') !== -1 ||
-              p.indexOf('/settings') !== -1
-            );
-            if (isFitnessSub) {
-              window.history.back();
-              setTimeout(function() {
-                if (window.location.pathname.indexOf('/dashboard') === -1) {
-                  window.location.href = getFitnessRootUrl() + 'dashboard';
-                }
-              }, 200);
-              return;
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
             }
-
-            if (p.endsWith('/dashboard') || p.indexOf('/dashboard') !== -1) {
-              window.history.back();
-              setTimeout(function() {
-                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-                if (cur.indexOf('/dashboard') !== -1) {
-                  window.location.href = getFitnessRootUrl() + 'login';
-                }
-              }, 150);
-              return;
-            }
-
-            // 3. Login or signup -> go to C Vidya Fitness Zone landing page
-            if (p.endsWith('/login') || p.endsWith('/signup') || p.indexOf('/login') !== -1 || p.indexOf('/signup') !== -1) {
-              window.history.back();
-              setTimeout(function() {
-                var cur = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-                if (cur.indexOf('/login') !== -1 || cur.indexOf('/signup') !== -1) {
-                  window.location.href = getFitnessRootUrl();
-                }
-              }, 150);
-              return;
-            }
-
-            // 4. Fitness landing page -> close portal and return to app
-            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getFitnessRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
@@ -159,30 +124,114 @@
         window.addEventListener('load', notifyParent);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-cWgupvWs.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index--Lv4jjzA.css">
+    <script>
+      (function() {
+        // Universal demo authentication session injector for C Vidya Fitness Zone
+        function injectFitnessAdminSession(customEmail) {
+          try {
+            const email = customEmail || "admin@cvidya.com";
+            const adminUser = {
+              uid: "cvidya_fitness_admin_user",
+              email: email,
+              displayName: "Chiranjeev Das",
+              name: "Chiranjeev Das",
+              role: "admin",
+              gymId: "default",
+              isVerified: true
+            };
+            localStorage.setItem("fitness_token", "cvidya_fitness_demo_token");
+            localStorage.setItem("user", JSON.stringify(adminUser));
+            localStorage.setItem("fitness_user", JSON.stringify(adminUser));
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("is_verified", "true");
+            localStorage.setItem("profile", JSON.stringify({
+              uid: "cvidya_fitness_admin_user",
+              name: "Chiranjeev Das",
+              role: "admin",
+              email: email,
+              gymId: "default",
+              gymName: "C Vidya Fitness Delhi South"
+            }));
+          } catch (e) {
+            console.warn("Storage warning:", e);
+          }
+        }
+
+        function getFitnessBaseUrl() {
+          return window.location.pathname.startsWith('/software/fitness')
+            ? '/software/fitness/'
+            : './';
+        }
+
+        // Global capture listener to bypass Google 403 in iframes
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim();
+
+          // 1. Google Sign-In button click
+          if (text.includes('Sign in with Google') || btn.querySelector('img[alt="Google"]')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            injectFitnessAdminSession('admin@cvidya.com');
+            window.location.href = getFitnessBaseUrl() + 'dashboard';
+            return false;
+          }
+
+          // 2. Demo access or start free trial from landing page
+          if (text === 'Start Free Trial' || text === 'Launch Dashboard' || text === 'Get Started' || text === 'Demo Access') {
+            injectFitnessAdminSession('admin@cvidya.com');
+          }
+        }, true);
+
+        // Form submit interceptor for Sign In button
+        document.addEventListener('submit', function(e) {
+          const form = e.target;
+          if (!form) return;
+          const emailInput = form.querySelector('input[name="email"], input[type="email"]');
+          const isCreateAccount = form.querySelector('input[name="name"]') || form.querySelector('input[name="phone"]');
+          
+          if (!isCreateAccount && emailInput) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const emailVal = emailInput.value.trim() || 'admin@cvidya.com';
+            injectFitnessAdminSession(emailVal);
+            window.location.href = getFitnessBaseUrl() + 'dashboard';
+            return false;
+          }
+        }, true);
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-D8es2DQ8.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-AhcSt-1b.css">
     <script>
       (function() {
         function handleGoBack() {
-          var p = window.location.pathname;
-          var h = window.location.hash;
-          if ((p !== '/' && p !== '/software/fitness/' && p !== '/software/fitness' && !p.endsWith('index.html')) || (h && h !== '#' && h !== '#/')) {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              window.location.href = './';
-            }
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            return;
+          }
+          if (document.referrer) {
+            window.location.href = document.referrer;
           } else {
-            if (window.opener && !window.opener.closed) {
-              window.opener.focus();
-              window.close();
-            } else if (document.referrer) {
-              window.location.href = document.referrer;
-            } else {
-              window.location.href = '/#services';
-            }
+            window.location.href = '/';
           }
         }
+
+        // Global interceptor for all Back buttons inside the fitness app
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim().toLowerCase();
+          const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+          const title = (btn.getAttribute('title') || '').toLowerCase();
+          if (text === 'back' || aria === 'back' || title === 'back' || btn.id === 'cv-injected-back-btn' || btn.querySelector('svg.lucide-arrow-left')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            handleGoBack();
+            return false;
+          }
+        }, true);
 
         function checkNav() {
           if (window.parent !== window) return;
@@ -229,7 +278,7 @@
       })();
     </script>
   </head>
-  <body class="bg-black text-white font-sans antialiased">
+  <body class="bg-white text-zinc-900 antialiased selection:bg-blue-500/20">
     <!-- Persistent Back to Preview Page Button Bar (active when opened in standalone tab) -->
     <div id="cv-back-header" style="position: fixed; top: 0; left: 0; right: 0; height: 56px; background-color: #071739; border-bottom: 1px solid rgba(59, 130, 246, 0.4); display: none; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 9999999; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
       <div style="display: flex; align-items: center; gap: 12px;">

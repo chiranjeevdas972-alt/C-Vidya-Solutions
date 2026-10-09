@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   ArrowRight, 
   BookOpen, 
@@ -19,7 +19,6 @@ import {
   Cpu, 
   CheckCircle2, 
   Sparkles,
-  ExternalLink,
   Flame,
   Activity,
   FileText,
@@ -27,11 +26,17 @@ import {
   Layers,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  Code2,
+  Globe,
+  Receipt,
+  Server
 } from "lucide-react";
 import Logo from "../Logo";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
+import { coreCompanyServices, type CoreServiceItem } from "../../data";
+import CoreServiceDetailModal from "../CoreServiceDetailModal";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -41,6 +46,8 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct, onOpenSoftware: _onOpenSoftware, onOpenConsultation: _onOpenConsultation }: HomePageProps) {
+  const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
+
   const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault();
     onNavigate(path);
@@ -444,24 +451,82 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
-              <h2 id="services-heading" className="text-3xl font-bold tracking-tight text-slate-950">
-                Architectural Expertise &amp; Technology Consulting
+              <h2 id="services-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950">
+                Core Services &amp; IT Solutions
               </h2>
-              <p className="text-slate-600 text-sm sm:text-base mt-1">
-                Delivering robust, scalable solutions across the entire technology stack with precision engineering.
+              <p className="text-slate-600 text-sm sm:text-base mt-1 max-w-2xl">
+                Explore our full-lifecycle engineering services, custom web systems, GST billing software, and enterprise managed IT solutions. Click any service below to open comprehensive specifications.
               </p>
             </div>
 
             <a
               href="/services/"
               onClick={(e) => handleLink(e, "/services/")}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors self-start md:self-auto"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors self-start md:self-auto shrink-0"
             >
-              <span>View all enterprise services</span>
+              <span>Explore all services</span>
               <ArrowRight className="w-4 h-4" />
             </a>
+          </div>
+
+          {/* 4 Core Features Requested Grid (Click opens detailed functions and specifications) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {coreCompanyServices.map((srv) => {
+              const getIcon = () => {
+                switch (srv.iconType) {
+                  case "software": return <Code2 className="w-6 h-6 text-blue-600" />;
+                  case "web": return <Globe className="w-6 h-6 text-indigo-600" />;
+                  case "accounting": return <Receipt className="w-6 h-6 text-emerald-600" />;
+                  case "it": return <Server className="w-6 h-6 text-cyan-600" />;
+                  default: return <Cpu className="w-6 h-6 text-blue-600" />;
+                }
+              };
+
+              return (
+                <div
+                  key={srv.id}
+                  onClick={() => setSelectedCoreService(srv)}
+                  className="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/70 transition-colors pointer-events-none" />
+
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-200 flex items-center justify-center transition-colors">
+                        {getIcon()}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-base sm:text-lg text-slate-950 group-hover:text-blue-600 transition-colors capitalize leading-snug">
+                        {srv.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 mt-6 relative z-10 flex items-center justify-between">
+                    <span className="text-xs font-bold text-blue-600 group-hover:text-blue-700 flex items-center gap-1.5">
+                      <span>View Details</span>
+                      <span className="w-7 h-7 rounded-lg bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs">
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Section Sub-Header: Architectural & Cloud Consulting */}
+          <div className="mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              Enterprise Architectural Expertise &amp; Technology Consulting
+            </h3>
+            <p className="text-slate-600 text-xs sm:text-sm mt-1">
+              Delivering robust, scalable solutions across the entire technology stack with precision engineering.
+            </p>
           </div>
 
           {/* Grid Layout */}
@@ -635,6 +700,13 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
           </div>
         </div>
       </section>
+
+      {/* Detail Modal for Core Services */}
+      <CoreServiceDetailModal
+        service={selectedCoreService}
+        onClose={() => setSelectedCoreService(null)}
+        onOpenConsultation={_onOpenConsultation}
+      />
 
     </div>
   );

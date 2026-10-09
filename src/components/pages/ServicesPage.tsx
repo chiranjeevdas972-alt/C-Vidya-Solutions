@@ -17,17 +17,21 @@ import {
   BarChart3, 
   ShieldCheck, 
   ArrowRight, 
-  ExternalLink, 
   CheckCircle2, 
   Lock, 
   Flame, 
   Activity, 
   FileText, 
-  Sparkles 
+  Sparkles,
+  Code2,
+  Globe,
+  Receipt,
+  Server
 } from "lucide-react";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
-import { saasProductsData, aiAgentsData, otherServicesData } from "../../data";
+import { saasProductsData, aiAgentsData, otherServicesData, coreCompanyServices, type CoreServiceItem } from "../../data";
+import CoreServiceDetailModal from "../CoreServiceDetailModal";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -38,6 +42,8 @@ interface ServicesPageProps {
 }
 
 export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenConsultation }: ServicesPageProps) {
+  const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
+
   // Consultation Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -127,6 +133,66 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
         </p>
       </section>
 
+      {/* 1b. CORE COMPANY SERVICES & IT SOLUTIONS (Requested Features: Click opens detailed specs) */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-950">
+              Core Engineering Services &amp; IT Solutions
+            </h2>
+            <p className="text-sm text-slate-600 max-w-2xl mt-1">
+              Bespoke software architecture, modern web development, GST accounting software, and turnkey IT solutions. Click any service card to view complete functional specifications.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {coreCompanyServices.map((srv) => {
+            const getIcon = () => {
+              switch (srv.iconType) {
+                case "software": return <Code2 className="w-6 h-6 text-blue-600" />;
+                case "web": return <Globe className="w-6 h-6 text-indigo-600" />;
+                case "accounting": return <Receipt className="w-6 h-6 text-emerald-600" />;
+                case "it": return <Server className="w-6 h-6 text-cyan-600" />;
+                default: return <Cpu className="w-6 h-6 text-blue-600" />;
+              }
+            };
+
+            return (
+              <div
+                key={srv.id}
+                onClick={() => setSelectedCoreService(srv)}
+                className="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/70 transition-colors pointer-events-none" />
+
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-200 flex items-center justify-center transition-colors">
+                      {getIcon()}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-base sm:text-lg text-slate-950 group-hover:text-blue-600 transition-colors capitalize leading-snug">
+                      {srv.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 mt-6 relative z-10 flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-600 group-hover:text-blue-700 flex items-center gap-1.5">
+                    <span>View Details</span>
+                    <span className="w-7 h-7 rounded-lg bg-blue-50 group-hover:bg-blue-600 text-blue-600 group-hover:text-white flex items-center justify-center transition-all shadow-xs">
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 2. OUR SAAS PRODUCTS SECTION */}
       <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -1067,6 +1133,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           </div>
         </div>
       </section>
+
+      {/* Detail Modal for Core Services */}
+      <CoreServiceDetailModal
+        service={selectedCoreService}
+        onClose={() => setSelectedCoreService(null)}
+        onOpenConsultation={onOpenConsultation}
+      />
 
     </div>
   );

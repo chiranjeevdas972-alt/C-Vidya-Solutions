@@ -123,6 +123,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<ProductService | null>(null);
   const [activeSoftwareDetail, setActiveSoftwareDetail] = useState<ProductService | null>(null);
   const [activeLiveSoftware, setActiveLiveSoftware] = useState<ProductService | null>(null);
+  const [previousPreviewProduct, setPreviousPreviewProduct] = useState<ProductService | null>(null);
   const [architectureOpen, setArchitectureOpen] = useState(false);
   const [architectureTab, setArchitectureTab] = useState<"prd" | "trd" | "flow" | "uiux" | "schema" | "plan">("prd");
 
@@ -468,6 +469,7 @@ export default function App() {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onOpenSoftware={(product) => {
+            setPreviousPreviewProduct(selectedProduct);
             setSelectedProduct(null);
             setActiveLiveSoftware(product);
           }}
@@ -482,13 +484,18 @@ export default function App() {
       {activeSoftwareDetail && (
         <SoftwareDetailModal
           software={activeSoftwareDetail}
-          onClose={() => setActiveSoftwareDetail(null)}
+          onClose={() => {
+            setActiveSoftwareDetail(null);
+            setPreviousPreviewProduct(null);
+          }}
           onOpenLiveApp={(product) => {
+            setPreviousPreviewProduct(activeSoftwareDetail);
             setActiveSoftwareDetail(null);
             setActiveLiveSoftware(product);
           }}
           onOpenInquiry={(serviceTopic) => {
             setActiveSoftwareDetail(null);
+            setPreviousPreviewProduct(null);
             navigateTo("contact");
           }}
         />
@@ -498,7 +505,14 @@ export default function App() {
       {activeLiveSoftware && (
         <LiveSoftwareApp
           software={activeLiveSoftware}
-          onClose={() => setActiveLiveSoftware(null)}
+          onClose={() => {
+            const previewToRestore = previousPreviewProduct || activeLiveSoftware;
+            setActiveLiveSoftware(null);
+            setPreviousPreviewProduct(null);
+            if (previewToRestore) {
+              setActiveSoftwareDetail(previewToRestore);
+            }
+          }}
         />
       )}
 

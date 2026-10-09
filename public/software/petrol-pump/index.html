@@ -51,24 +51,13 @@
         window.addEventListener('message', function(e) {
           if (!e.data) return;
           if (e.data.type === 'CV_GO_BACK') {
-            var p = (window.location.pathname || '').replace(/\/+$/, '') || '/';
-            if (p.includes('/billing') || p.includes('/tanks') || p.includes('/reports')) {
-              window.location.href = getPetrolRootUrl() + 'dashboard';
-              return;
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
             }
-            if (p.endsWith('/dashboard')) {
-              window.location.href = getPetrolRootUrl() + 'login';
-              return;
-            }
-            if (p.endsWith('/login') || p.includes('/login')) {
-              window.location.href = getPetrolRootUrl();
-              return;
-            }
-            if (isPetrolRoot()) {
-              window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
-              return;
-            }
-            window.parent.postMessage({ type: 'CV_CLOSE_PORTAL' }, '*');
           } else if (e.data.type === 'CV_GO_HOME') {
             window.location.href = getPetrolRootUrl();
           } else if (e.data.type === 'CV_NAVIGATE') {
@@ -91,8 +80,28 @@
           origReplace.apply(this, arguments);
           notifyParent();
         };
-        window.addEventListener('DOMContentLoaded', notifyParent);
         window.addEventListener('load', notifyParent);
+
+        // Global back interceptor: always return to step-by-step preview page
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('button, a');
+          if (!btn) return;
+          const text = (btn.textContent || '').trim().toLowerCase();
+          const aria = (btn.getAttribute('aria-label') || '').toLowerCase();
+          const title = (btn.getAttribute('title') || '').toLowerCase();
+          if (text === 'back' || aria === 'back' || title === 'back' || btn.id === 'cv-injected-back-btn' || btn.querySelector('svg.lucide-arrow-left')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'CV_GO_TO_PREVIEW' }, '*');
+            } else if (document.referrer) {
+              window.location.href = document.referrer;
+            } else {
+              window.location.href = '/';
+            }
+            return false;
+          }
+        }, true);
       })();
     </script>
     <script type="module" crossorigin src="./assets/index-CYyZMday.js"></script>

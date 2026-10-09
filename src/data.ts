@@ -611,3 +611,158 @@ export const servicesData: ProductService[] = [
   ...saasProductsData,
   ...aiAgentsData
 ];
+
+// ==========================================
+// 3. CORE COMPANY SERVICES & IT SOLUTIONS
+// ==========================================
+export interface CoreServiceItem {
+  id: string;
+  num: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  badge: string;
+  description: string;
+  longDescription: string;
+  iconType: "software" | "web" | "accounting" | "it";
+  features: string[];
+  capabilities: { title: string; desc: string }[];
+  techStack: string[];
+  deliverables: string[];
+  highlights: { label: string; value: string }[];
+}
+
+export const coreCompanyServices: CoreServiceItem[] = [
+  {
+    id: "software-development-company",
+    num: "01",
+    title: "Software development company",
+    subtitle: "Enterprise Custom Software Engineering, Scalable SaaS Architectures & Cloud Microservices",
+    category: "Software Development",
+    badge: "Core Engineering",
+    description: "Full-lifecycle enterprise software development company delivering bespoke cloud architectures, scalable multi-tenant SaaS platforms, microservices, and mission-critical business automation.",
+    longDescription: "As an enterprise software development company, C Vidya Solutions delivers high-performance, fault-tolerant software tailored for modern enterprises. From conceptual architecture and database schema design to rapid MVP development and global multi-region cloud deployment, we turn complex operational requirements into intuitive, lightning-fast digital software solutions.",
+    iconType: "software",
+    features: [
+      "Custom Enterprise Software Engineering (Cloud, Web, Desktop & Mobile)",
+      "Multi-Tenant SaaS Architecture Design & Deployment with Zero Data Leaks",
+      "Microservices & High-Throughput REST / GraphQL / gRPC API Development",
+      "Legacy Code Modernization, Monolith-to-Cloud Migration & Refactoring",
+      "Database Modeling, Sharding & Query Optimization (PostgreSQL, Firestore, Redis)",
+      "Agile CI/CD Pipelines, Automated Testing Suites & Zero-Downtime Releases"
+    ],
+    capabilities: [
+      { title: "Custom SaaS Platforms", desc: "Multi-tenant architecture with tenant-isolated data, custom domain routing, role-based access control, and automated billing." },
+      { title: "Enterprise Systems Integration", desc: "Seamless interoperability between ERPs, CRMs, legacy databases, payment gateways, and third-party APIs." },
+      { title: "Scalable Cloud Architecture", desc: "Engineered on modern edge runtimes and cloud containers with auto-scaling to handle millions of daily transactions." },
+      { title: "Long-Term SLA & Support", desc: "24/7 technical monitoring, security patching, uptime guarantees, and ongoing feature iterations." }
+    ],
+    techStack: ["React 19", "TypeScript", "Node.js", "Python", "Go", "PostgreSQL", "Firebase Firestore", "Docker", "Kubernetes", "Cloudflare Workers"],
+    deliverables: ["Complete Source Code & Git Repositories", "Architecture Blueprint & Schema Documentation", "Automated Test Suites & CI/CD Pipelines", "Deployment Runbooks & Admin Training Guides", "Standard 1-Year SLA & Maintenance Guarantee"],
+    highlights: [
+      { label: "Engineering Standard", value: "Enterprise-Grade" },
+      { label: "MVP Velocity", value: "2-4 Weeks" },
+      { label: "Uptime SLA", value: "99.95% Guaranteed" },
+      { label: "Architecture", value: "Cloud-Native Edge" }
+    ]
+  },
+  {
+    id: "web-development-services",
+    num: "02",
+    title: "Web development services",
+    subtitle: "High-Performance Web Applications, Responsive Client Portals, PWAs & Conversion Platforms",
+    category: "Web Development",
+    badge: "Frontend & Full-Stack",
+    description: "Cutting-edge web development services building ultra-fast responsive web applications, interactive customer portals, Progressive Web Apps (PWAs), and conversion-optimized web experiences.",
+    longDescription: "Our web development services combine state-of-the-art frontend frameworks with rock-solid server-side architectures. We engineer pixel-perfect, accessible, mobile-first web applications optimized for Core Web Vitals, sub-second load times, and top search engine rankings.",
+    iconType: "web",
+    features: [
+      "High-Performance Single Page Applications (SPA) & Server-Side Rendered (SSR) Portals",
+      "Progressive Web Apps (PWAs) with Offline Caching & Native Device Functionality",
+      "Interactive Customer Portals, Executive Dashboards & Real-Time Collaborative Canvas",
+      "SEO-Optimized Semantic Markup, Automated OpenGraph Cards & Schema.org JSON-LD",
+      "Mobile-First Responsive Layouts with Zero Layout Shift (CLS) & Sub-Second LCP",
+      "Headless CMS Integrations, E-Commerce Stores & Payment Gateway Checkouts"
+    ],
+    capabilities: [
+      { title: "Sub-Second Performance", desc: "Optimized asset bundling, image compression, edge caching, and lightweight bundle splitting for instant loads." },
+      { title: "Interactive Dashboards", desc: "Real-time data visualization charts, filters, exportable CSV/PDF reports, and fluid micro-animations." },
+      { title: "Progressive Offline PWA", desc: "Service worker background caching ensuring your web app runs reliably even with intermittent or zero internet." },
+      { title: "Conversion & SEO First", desc: "Structured for high search visibility, Google SERP rich snippets, and maximum conversion rates." }
+    ],
+    techStack: ["Next.js", "React 19", "Tailwind CSS", "Vite", "TypeScript", "HTML5/CSS3", "WebGL / Three.js", "Workbox PWA", "Vercel / Cloudflare Edge"],
+    deliverables: ["Production-Ready Web Application", "Cross-Browser & Cross-Device QA Certification", "Google PageSpeed 95+ Audit Report", "SEO Meta & Social Card Configurations", "Full CMS Content Editing Access"],
+    highlights: [
+      { label: "Performance Score", value: "95+ PageSpeed" },
+      { label: "Mobile Responsiveness", value: "100% Adaptive" },
+      { label: "SEO Structured Data", value: "Schema.org Validated" },
+      { label: "Offline Capability", value: "PWA Service Worker" }
+    ]
+  },
+  {
+    id: "accounting-billing-software",
+    num: "03",
+    title: "Accounting & Billing software",
+    subtitle: "100% GST-Compliant Invoicing, Multi-Branch Cashbooks, Thermal Receipts & Financial Ledgers",
+    category: "Financial Software",
+    badge: "Financial SaaS",
+    description: "Enterprise accounting and billing software engineered for retail, wholesale, institutions, and service businesses. Automate GST tax calculations, payment gateways, daily till settlements, and financial audits.",
+    longDescription: "C Vidya Accounting & Billing software eliminates manual bookkeeping errors with real-time financial tracking. Designed strictly in accordance with Indian GST regulations and global accounting principles, it handles dual-entry bookkeeping, vendor payables, customer credit khata, barcode invoicing, and automated WhatsApp payment receipts.",
+    iconType: "accounting",
+    features: [
+      "100% GST-Compliant Tax Invoices (B2B & B2C), E-Way Bills & Credit Notes",
+      "Instant Thermal Receipt Printing (2-inch / 3-inch / A4 / A5) with QR Codes",
+      "Automated Cashbook Ledgers, Multi-Counter Till Closing & Daily Cash Reconciliations",
+      "Customer Credit Ledger (Khata / Udhar) with Automated WhatsApp Payment Reminders",
+      "Vendor Accounts Payable, Purchase Orders & Expense Category Tracking",
+      "Real-Time Profit & Loss (P&L), Balance Sheet, Trial Balance & GSTR-1 / 3B Reports"
+    ],
+    capabilities: [
+      { title: "GST Tax Ledger Engine", desc: "Automated CGST, SGST, IGST calculations with HSN/SAC code lookups and 1-click tax filing report exports." },
+      { title: "Multi-Counter POS Billing", desc: "Rapid barcode scanning, shortcut hotkeys, split payment methods (Cash, UPI, Card), and instant print." },
+      { title: "Credit Khata & Recovery", desc: "Track customer balances, credit limits, aging summaries, and dispatch automated WhatsApp payment links." },
+      { title: "Financial Audit Trail", desc: "Tamper-proof immutable activity log of all invoice edits, cancellations, and cashier shift handovers." }
+    ],
+    techStack: ["Encrypted Database", "Thermal ESC/POS Protocol", "UPI Deep-Link Engine", "GST Validation API", "Real-Time Ledger Math", "Automated WhatsApp API"],
+    deliverables: ["Turnkey Accounting & Invoicing Portal", "Thermal Printer & Barcode Scanner Hardware Setup", "Opening Balance & Existing Customer Data Import", "Staff Cashier Onboarding & Training Session", "GST Filing Reconciliation Support"],
+    highlights: [
+      { label: "Tax Compliance", value: "100% GST Ready" },
+      { label: "Invoice Generation", value: "< 2 Seconds" },
+      { label: "Payment Modes", value: "Cash, UPI, Card, NetBanking" },
+      { label: "Data Security", value: "AES-256 Encrypted" }
+    ]
+  },
+  {
+    id: "it-solutions-provider",
+    num: "04",
+    title: "IT solutions provider",
+    subtitle: "Managed IT Infrastructure, Zero-Trust Cybersecurity, Cloud Migrations & Hardware Integration",
+    category: "IT Solutions",
+    badge: "Managed IT Services",
+    description: "Comprehensive IT solutions provider delivering turnkey digital infrastructure, managed cloud services, biometric turnstile hardware integration, enterprise cybersecurity, and 24/7 technical support.",
+    longDescription: "As a trusted IT solutions provider, C Vidya Solutions bridges physical hardware and modern cloud software. We deploy and manage enterprise IT ecosystems: from biometric attendance turnstiles and RFID readers to secure cloud networks, automated off-site backups, and cyber defense.",
+    iconType: "it",
+    features: [
+      "Managed Cloud Edge Hosting & Infrastructure Setup (Cloudflare, GCP, AWS)",
+      "Biometric Fingerprint & Facial Recognition Turnstile Hardware Integration",
+      "RFID Smartcard Campus Passes, Barcode ISBN Scanners & POS Peripheral Setup",
+      "Zero-Trust Cybersecurity Audits, SSL/TLS Encryption & Data Protection Compliance",
+      "Automated Daily Offsite Backups & Rapid Disaster Recovery Disaster Drills",
+      "Dedicated 24/7 Helpdesk Support, Remote Troubleshooting & Onsite IT Assistance"
+    ],
+    capabilities: [
+      { title: "Hardware-to-Cloud Bridges", desc: "Connect physical turnstiles, biometric scanners, and thermal printers directly to cloud dashboards via IoT gateways." },
+      { title: "Cybersecurity & Data Privacy", desc: "Rigorous compliance with DPDP Act, GDPR, and ISO standards with encrypted at-rest and in-transit records." },
+      { title: "High-Availability Edge", desc: "Global CDN caching, DDoS mitigation, and failover routing guaranteeing uninterrupted 99.99% uptime." },
+      { title: "On-Demand IT Engineers", desc: "Dedicated certified cloud architects and field support technicians available whenever your team needs assistance." }
+    ],
+    techStack: ["IoT Hardware Gateways", "Biometric SDKs", "Cloudflare Global CDN", "Google Cloud Platform", "Zero-Trust WireGuard / VPN", "Prometheus & Grafana Telemetry"],
+    deliverables: ["Turnkey IT Infrastructure Audit & Blueprint", "Hardware Installation & Onsite Calibration", "Cloud Security Hardening & Penetration Testing", "Disaster Recovery & Redundant Backup Schedule", "Dedicated IT Account Manager & SLA Support"],
+    highlights: [
+      { label: "Hardware Support", value: "Biometric & RFID Ready" },
+      { label: "Security Architecture", value: "Zero-Trust Protocol" },
+      { label: "Backup Frequency", value: "Automated Daily Redundant" },
+      { label: "Technical Support", value: "24/7 SLA Backed" }
+    ]
+  }
+];

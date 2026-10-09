@@ -12,7 +12,6 @@ import {
   Headphones,
   Megaphone,
   CheckCircle2,
-  ExternalLink,
   Clock,
   Building2,
   GraduationCap,
@@ -55,26 +54,26 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     return software.id === "institutes" || software.name.toLowerCase().includes("institute");
   }, [software]);
 
-  // Use direct live worker URLs for all cloud SaaS apps and AI agents, enabling full native Google OAuth and dashboard access
+  // Direct local routes for full SaaS apps (Library, Fitness, Petrol Pump, PDF Tools), ensuring seamless same-origin step-by-step navigation
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     const id = software.id.toLowerCase();
-    if (id === "library" || software.externalLink.includes("v.cvidyasolutions")) {
-      return "https://v.cvidyasolutions.workers.dev/";
+    if (id === "library" || software.externalLink.includes("v.cvidyasolutions") || software.externalLink.includes("library")) {
+      return "/software/library/index.html";
     }
-    if (id === "fitness" || software.externalLink.includes("fitzone")) {
-      return "https://fitzone.cvidyasolutions.workers.dev/";
+    if (id === "fitness" || software.externalLink.includes("fitzone") || software.externalLink.includes("fitness")) {
+      return software.externalLink || "https://fitzone.cvidyasolutions.workers.dev/";
+    }
+    if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump") || software.externalLink.includes("petrol")) {
+      return "/software/petrol-pump/index.html";
+    }
+    if (id === "pdf-media-tools" || id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools") || software.externalLink.includes("pdf")) {
+      return "/software/pdf-media-tools/index.html";
     }
     if (id === "farming" || id === "agrifusion" || software.externalLink.includes("fresh.cvidyasolutions")) {
       return "https://fresh.cvidyasolutions.workers.dev/";
     }
-    if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump")) {
-      return "/software/petrol-pump/index.html";
-    }
-    if (id === "pdf-media-tools" || id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools")) {
-      return "/software/pdf-media-tools/index.html";
-    }
-    // For all AI agents and other SaaS products, load live software worker link directly without proxy
+    // For all AI agents and other SaaS products, load live software link
     return software.externalLink;
   }, [software]);
 
@@ -145,6 +144,8 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     if (!software) return false;
     const id = software.id.toLowerCase();
     return (
+      id === "library" ||
+      id === "fitness" ||
       id === "petrol-pump" ||
       id === "pdf-media-tools" ||
       id === "pdf-tools"
@@ -153,39 +154,8 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
 
   const lastBackClickRef = useRef<number>(0);
 
+  // Step-by-step backward navigation: Top Left Back Arrow returns directly to Product Preview Page
   const handleBack = () => {
-    const now = Date.now();
-    const timeSinceLastClick = now - lastBackClickRef.current;
-    lastBackClickRef.current = now;
-
-    // 1. If coming-soon overlay (Institutes) or no iframe available, close directly and return to preview page
-    if (isInstitutes || !iframeRef.current?.contentWindow) {
-      onClose();
-      return;
-    }
-
-    // 2. For local suites (Library, Fitness, Petrol Pump, PDF Tools), support step-by-step backward navigation
-    if (isLocalSuite) {
-      // If user is already on the landing page, or if back was clicked twice in quick succession (< 450ms):
-      // close immediately and return to the preview page!
-      if (!canGoBackState || timeSinceLastClick < 450) {
-        onClose();
-        return;
-      }
-
-      try {
-        iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
-      } catch (e) {
-        onClose();
-      }
-      return;
-    }
-
-    // 3. For all other live cloud software & AI Agents (Coaching, Agrifusion, Jewelry, CRM, Care Plus, AI Social, AI Support, SalesFlow, Marketing):
-    // Directly close and return to the preview / services page!
-    try {
-      iframeRef.current.contentWindow.postMessage({ type: "CV_GO_BACK" }, "*");
-    } catch (e) {}
     onClose();
   };
 
@@ -991,21 +961,30 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
               <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center z-20">
                 <div className="max-w-md space-y-4">
                   <div className="w-12 h-12 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center mx-auto">
-                    <ExternalLink className="w-6 h-6" />
+                    <RefreshCw className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-bold text-white">Live Application Ready</h3>
+                  <h3 className="text-lg font-bold text-white">Live Application Loading Notice</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    This cloud software suite is hosted on a secure production worker environment.
+                    Connecting to {software.name} environment. Click below to reload or return to the preview page.
                   </p>
-                  <a
-                    href={software.externalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all"
-                  >
-                    <span>Launch {software.name}</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleReloadSoftware}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Reload Application</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Back to Preview</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1037,26 +1016,14 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
               <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                 {software.description}
               </p>
-              {software.externalLink ? (
-                <a
-                  href={software.externalLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-2 px-6 py-3 ${currentConfig.primaryBtnBg} ${currentConfig.primaryBtnHover} text-white rounded-xl text-xs font-bold shadow-lg transition-all`}
-                >
-                  <span>Launch {software.name}</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Return to Products</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Return to Preview Page</span>
+              </button>
             </div>
           </div>
         )}

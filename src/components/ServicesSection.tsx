@@ -419,15 +419,15 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
             {/* Top Navigation Bar with Clear Back Button */}
             <div className="h-14 bg-brand-navy-950 text-white px-4 sm:px-6 flex items-center justify-between border-b border-brand-gold-500/30 shrink-0 shadow-xl z-10">
               
-              {/* Back Button with Arrow */}
+              {/* Back Button with Arrow - Returns to Preview Page */}
               <button
                 type="button"
                 onClick={() => {
+                  const currentApp = liveAppViewing;
                   setLiveAppViewing(null);
-                  setTimeout(() => {
-                    const elem = document.getElementById(id) || document.getElementById("services");
-                    elem?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
+                  if (currentApp) {
+                    setModalSoftware(currentApp);
+                  }
                 }}
                 className="flex items-center gap-2.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-black text-xs sm:text-sm transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
               >
