@@ -69,7 +69,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
   ] as const;
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText("cvidyasolutions@gmail.com");
+    navigator.clipboard.writeText("info@cvidyasolutions.com");
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -389,8 +389,8 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
 
                     <div className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
                       <div>
-                        <span className="text-[10px] text-slate-700 block font-mono font-bold">SUPPORT EMAIL</span>
-                        <strong className="text-slate-950 font-black">cvidyasolutions@gmail.com</strong>
+                        <span className="text-[10px] text-slate-700 block font-mono font-bold">OFFICIAL EMAIL</span>
+                        <strong className="text-slate-950 font-black">info@cvidyasolutions.com</strong>
                       </div>
                       <button 
                         onClick={handleCopyEmail}
@@ -802,7 +802,7 @@ export default function InfoHubModal({ isOpen, onClose, initialTab }: InfoHubMod
               <div className="p-3.5 bg-brand-navy-50 border border-brand-navy-100 rounded-xl text-[11px] leading-relaxed text-brand-navy-900 flex items-start gap-2.5">
                 <Building2 className="w-4 h-4 text-brand-navy-800 shrink-0 mt-0.5" />
                 <div>
-                  <strong>STPI Sindri Campus On-Site Requirements:</strong> Technical developers, interns, and analysts operate natively inside our research labs. Remote options are configured solely for pre-approved regional client system setups. For generic careers or trainee queries, write directly to <span className="font-mono font-bold">cvidyasolutions@gmail.com</span>.
+                  <strong>STPI Sindri Campus On-Site Requirements:</strong> Technical developers, interns, and analysts operate natively inside our research labs. Remote options are configured solely for pre-approved regional client system setups. For generic careers or trainee queries, write directly to <span className="font-mono font-bold">careers@cvidyasolutions.com</span>.
                 </div>
               </div>
             </div>

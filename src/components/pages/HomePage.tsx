@@ -93,7 +93,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   onClick={(e) => handleLink(e, "/software/")}
                   className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-sm transition-all hover:gap-3 cursor-pointer"
                 >
-                  <span>Explore Software Solutions</span>
+                  <span>Software Solutions</span>
                   <ArrowRight className="w-4 h-4" />
                 </a>
 
@@ -102,7 +102,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   onClick={(e) => handleLink(e, "/ai-agents/")}
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-md shadow-xs transition-colors cursor-pointer"
                 >
-                  <span>Discover AI Agents</span>
+                  <span>AI Agent</span>
                 </a>
 
                 <a
@@ -110,7 +110,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   onClick={(e) => handleLink(e, "/portfolio/")}
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-semibold rounded-md border border-slate-300 shadow-xs transition-colors cursor-pointer"
                 >
-                  <span>View Case Studies</span>
+                  <span>Case Studies</span>
                 </a>
               </div>
 
@@ -338,7 +338,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   onClick={(e) => handleLink(e, "/software/")}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                 >
-                  <span>Browse All 10 Software Products</span>
+                  <span>All Products</span>
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
@@ -436,7 +436,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   onClick={(e) => handleLink(e, "/ai-agents/")}
                   className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  <span>Explore Autonomous AI Agents</span>
+                  <span>Explore AI Agent</span>
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
@@ -671,9 +671,6 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-blue-900 to-[#071739] rounded-2xl p-8 sm:p-12 text-white flex flex-col lg:flex-row items-center justify-between gap-8 shadow-xl">
             <div className="space-y-3 max-w-2xl">
-              <div className="text-xs font-mono font-bold tracking-widest text-blue-300 uppercase">
-                ENGINEERING HEADQUARTERS &amp; R&amp;D
-              </div>
               <h2 id="about-summary-heading" className="text-2xl sm:text-3xl font-bold tracking-tight">
                 About C Vidya Solutions
               </h2>
@@ -685,16 +682,18 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
               <a
                 href="/about/"
                 onClick={(e) => handleLink(e, "/about/")}
-                className="px-6 py-3 bg-white text-slate-950 font-semibold rounded-lg hover:bg-slate-100 transition-colors text-sm"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-950 font-semibold rounded-lg hover:bg-slate-100 transition-colors text-sm shadow-xs group"
               >
-                Read Company History
+                <span>About</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </a>
               <a
                 href="/contact/"
                 onClick={(e) => handleLink(e, "/contact/")}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors text-sm"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors text-sm shadow-xs group"
               >
-                Contact Director Desk
+                <span>Contact</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </a>
             </div>
           </div>

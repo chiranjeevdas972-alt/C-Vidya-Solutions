@@ -655,7 +655,7 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
                   }}
                   className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
                 >
-                  <span>Click Here</span>
+                  <span>Try Now</span>
                 </button>
               </div>
             ) : (

@@ -104,7 +104,7 @@ export default function ContactPage({ onOpenLeadsModal }: ContactPageProps) {
             "name": "C Vidya Solutions",
             "url": "https://cvidyasolutions.com",
             "telephone": "+91-9288517027",
-            "email": "cvidyasolutions@gmail.com",
+            "email": "info@cvidyasolutions.com",
             "address": {
               "@type": "PostalAddress",
               "streetAddress": "Surunga, Baliapur",
@@ -161,13 +161,39 @@ export default function ContactPage({ onOpenLeadsModal }: ContactPageProps) {
                 </div>
                 <div className="space-y-1">
                   <div className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase">EMAIL CORRESPONDENCE</div>
-                  <div>
-                    <a href="mailto:cvidyasolutions@gmail.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
-                      cvidyasolutions@gmail.com
-                    </a>
-                    <div className="text-[10px] text-slate-500">Office Support Desk</div>
+                  <div className="space-y-2">
+                    <div>
+                      <a href="mailto:info@cvidyasolutions.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
+                        info@cvidyasolutions.com
+                      </a>
+                      <div className="text-[10px] text-slate-500">General Corporate Information</div>
+                    </div>
+                    <div>
+                      <a href="mailto:sales@cvidyasolutions.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
+                        sales@cvidyasolutions.com
+                      </a>
+                      <div className="text-[10px] text-slate-500">Enterprise Sales &amp; Live Demos</div>
+                    </div>
+                    <div>
+                      <a href="mailto:contact@cvidyasolutions.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
+                        contact@cvidyasolutions.com
+                      </a>
+                      <div className="text-[10px] text-slate-500">Client Relations &amp; Inquiries</div>
+                    </div>
+                    <div>
+                      <a href="mailto:support@cvidyasolutions.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
+                        support@cvidyasolutions.com
+                      </a>
+                      <div className="text-[10px] text-slate-500">Technical Support &amp; SLA Desk</div>
+                    </div>
+                    <div>
+                      <a href="mailto:careers@cvidyasolutions.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
+                        careers@cvidyasolutions.com
+                      </a>
+                      <div className="text-[10px] text-slate-500">Engineering Careers &amp; HR</div>
+                    </div>
                   </div>
-                  <div className="pt-1">
+                  <div className="pt-2 border-t border-slate-200/70">
                     <a href="mailto:chiranjeev0058@gmail.com" className="text-xs font-bold text-slate-950 hover:text-blue-600 block">
                       chiranjeev0058@gmail.com
                     </a>

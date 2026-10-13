@@ -984,6 +984,12 @@ export const CORE_PAGES_SEO = {
     description: "C Vidya Solutions guarantees zero data lock-in. Export complete relational databases in Excel, CSV, and JSON format at any time.",
     canonical: "https://cvidyasolutions.com/portability/",
     h1: "Data Portability & Export Guarantee"
+  },
+  mobileApp: {
+    title: "Download C Vidya Mobile App | Official Android & iOS App Registration",
+    description: "Download the official C Vidya Solutions Mobile Application for Android & iOS. Manage cloud business suites, gym members, library circulation, and coaching tests with offline auto-sync.",
+    canonical: "https://cvidyasolutions.com/mobile-app/",
+    h1: "C Vidya Mobile Workspace for Android & iOS"
   }
 };
 
@@ -1156,7 +1162,8 @@ export function getPageSeo(pathname: string): PageSeoResult {
     "/refund": "refund",
     "/cookies": "cookies",
     "/disclaimer": "disclaimer",
-    "/portability": "portability"
+    "/portability": "portability",
+    "/mobile-app": "mobileApp"
   };
 
   if (coreMap[cleanPath]) {

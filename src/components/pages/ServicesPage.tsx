@@ -96,7 +96,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
       setSubmitted(true);
     } catch (err: any) {
-      setFormError("Unable to submit right now. Please email directly at cvidyasolutions@gmail.com");
+      setFormError("Unable to submit right now. Please email directly at contact@cvidyasolutions.com");
     } finally {
       setSubmitting(false);
     }
@@ -221,10 +221,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[0])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -235,9 +238,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[0]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -260,10 +263,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[1])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -274,9 +280,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[1]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -299,10 +305,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[2])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -313,9 +322,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[2]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -338,10 +347,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[3])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -352,9 +364,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[3]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -377,10 +389,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[4])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -391,9 +406,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[4]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -416,10 +431,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[5])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -430,9 +448,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[5]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -455,10 +473,13 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
+                type="button"
                 onClick={() => onSelectProduct(saasProductsData[6])}
-                className="px-3.5 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -469,9 +490,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(saasProductsData[6]);
                   }
                 }}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -515,9 +536,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   onSelectProduct(aiAgentsData[0]);
                 }}
-                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
@@ -530,9 +553,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(aiAgentsData[0]);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -563,9 +586,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   onSelectProduct(aiAgentsData[1]);
                 }}
-                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
@@ -578,9 +603,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(aiAgentsData[1]);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -611,9 +636,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   onSelectProduct(aiAgentsData[2]);
                 }}
-                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
@@ -626,9 +653,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(aiAgentsData[2]);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -659,9 +686,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   onSelectProduct(aiAgentsData[3]);
                 }}
-                className="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
@@ -674,9 +703,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(aiAgentsData[3]);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center shrink-0 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -887,9 +916,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
               <button 
                 type="button"
                 onClick={() => onSelectProduct(otherServicesData[0])}
-                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -900,9 +931,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(otherServicesData[0]);
                   }
                 }}
-                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -933,9 +964,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
               <button 
                 type="button"
                 onClick={() => onSelectProduct(otherServicesData[1])}
-                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -946,9 +979,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(otherServicesData[1]);
                   }
                 }}
-                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -979,9 +1012,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
               <button 
                 type="button"
                 onClick={() => onSelectProduct(otherServicesData[2])}
-                className="flex-1 py-2 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                title="View details"
+                aria-label="View details"
               >
-                View more
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button 
                 type="button"
@@ -992,9 +1027,9 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                     onSelectProduct(otherServicesData[2]);
                   }
                 }}
-                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap"
+                className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
               >
-                Click here
+                <span>Try Now</span>
               </button>
             </div>
           </div>
@@ -1024,8 +1059,8 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 </div>
                 <div className="flex items-center gap-3">
                   <Headphones className="w-4 h-4 text-blue-400 shrink-0" />
-                  <a href="mailto:cvidyasolutions@gmail.com" className="hover:text-blue-400 underline">
-                    cvidyasolutions@gmail.com
+                  <a href="mailto:info@cvidyasolutions.com" className="hover:text-blue-400 underline">
+                    info@cvidyasolutions.com
                   </a>
                 </div>
               </div>

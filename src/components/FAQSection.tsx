@@ -114,7 +114,7 @@ const FAQ_DATA: FAQItem[] = [
     category: "all",
     categoryLabel: "Company & STPI",
     question: "Where is C Vidya Solutions located and who is the founder?",
-    answer: "C Vidya Solutions was founded in 2025 by Chiranjeev Das with the mission of innovating software for a simpler future.\n\n• Headquarters: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n• Branch Office & Director's Desk: STPI Sindri, BIT Sindri Campus, Dhanbad, Jharkhand\n• Contact Phone: 8987766981 / +91 9288517027\n• Official Email: cvidyasolutions@gmail.com / chiranjeev0058@gmail.com\n• Website: https://cvidyasolutions.com"
+    answer: "C Vidya Solutions was founded in 2025 by Chiranjeev Das with the mission of innovating software for a simpler future.\n\n• Headquarters: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n• Branch Office & Director's Desk: STPI Sindri, BIT Sindri Campus, Dhanbad, Jharkhand\n• Contact Phone: 8987766981 / +91 9288517027\n• Official Emails: info@cvidyasolutions.com, sales@cvidyasolutions.com, contact@cvidyasolutions.com\n• Director Desk: chiranjeev0058@gmail.com\n• Website: https://cvidyasolutions.com"
   }
 ];
 

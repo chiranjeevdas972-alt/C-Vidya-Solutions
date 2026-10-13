@@ -15,6 +15,7 @@ import AiAgentsDirectoryPage from "./components/pages/AiAgentsDirectoryPage";
 import PricingPage from "./components/pages/PricingPage";
 import ProductLandingPage from "./components/pages/ProductLandingPage";
 import BlogArticlePage from "./components/pages/BlogArticlePage";
+import MobileAppPage from "./components/pages/MobileAppPage";
 import ProductDetailModal from "./components/ProductDetailModal";
 import SoftwareDetailModal from "./components/SoftwareDetailModal";
 import LiveSoftwareApp from "./components/LiveSoftwareApp";
@@ -60,7 +61,7 @@ function resolveRoute(pathname: string, hash: string): RouteState {
     const hashContent = hash.replace(/^#\/?/, "").replace(/\/+$/, "");
     const corePages = [
       "home", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
-      "pricing", "software", "ai-agents", "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
+      "pricing", "software", "ai-agents", "mobile-app", "coming-soon", "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
     ];
     if (corePages.includes(hashContent)) {
       cleanPath = hashContent === "home" ? "/" : `/${hashContent}`;
@@ -105,6 +106,8 @@ function resolveRoute(pathname: string, hash: string): RouteState {
   if (cleanPath === "/careers") return { type: "page", id: "careers" };
   if (cleanPath === "/blog") return { type: "page", id: "blog" };
   if (cleanPath === "/faq") return { type: "page", id: "faq" };
+  if (cleanPath === "/mobile-app") return { type: "page", id: "mobile-app" };
+  if (cleanPath === "/coming-soon") return { type: "page", id: "coming-soon" };
 
   const compliancePages = ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"];
   for (const cp of compliancePages) {
@@ -139,7 +142,9 @@ export default function App() {
   const [leadsModalOpen, setLeadsModalOpen] = useState(false);
   const [leadsPasscode, setLeadsPasscode] = useState("");
   const [leadsAuthenticated, setLeadsAuthenticated] = useState(false);
+  const [adminTab, setAdminTab] = useState<"leads" | "app_registrations">("leads");
   const [inquiriesList, setInquiriesList] = useState<any[]>([]);
+  const [appRegistrationsList, setAppRegistrationsList] = useState<any[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
 
@@ -174,6 +179,9 @@ export default function App() {
     if (window.location.pathname !== urlToPush) {
       window.history.pushState(null, "", urlToPush);
     }
+    setActiveLiveSoftware(null);
+    setActiveSoftwareDetail(null);
+    setSelectedProduct(null);
     const newRoute = resolveRoute(urlToPush, "");
     setRoute(newRoute);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -257,11 +265,38 @@ export default function App() {
     }
   };
 
+  const fetchAppRegistrations = async () => {
+    try {
+      setLoadingInquiries(true);
+      const querySnapshot = await getDocs(collection(db, "app_download_registrations"));
+      const list: any[] = [];
+      querySnapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      list.sort((a, b) => new Date(b.clientTimestamp || b.createdAt || 0).getTime() - new Date(a.clientTimestamp || a.createdAt || 0).getTime());
+      setAppRegistrationsList(list);
+    } catch (err) {
+      console.warn("Error fetching app download registrations:", err);
+    } finally {
+      setLoadingInquiries(false);
+    }
+  };
+
+  const deleteAppRegistration = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "app_download_registrations", id));
+      setAppRegistrationsList(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error("Error deleting app registration:", err);
+    }
+  };
+
   const handleLeadsLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (leadsPasscode === "9288517027" || leadsPasscode === "8987766981" || leadsPasscode === "admin123" || leadsPasscode === "cvidya2026") {
       setLeadsAuthenticated(true);
       fetchInquiries();
+      fetchAppRegistrations();
     } else {
       alert("Invalid Passcode. Please enter authorized administrative passcode.");
     }
@@ -402,6 +437,15 @@ export default function App() {
             {route.type === "page" && route.id === "blog" && (
               <BlogPage 
                 onNavigate={navigateTo}
+              />
+            )}
+
+            {/* 11.05 MOBILE APP DOWNLOAD & COMING SOON PAGE */}
+            {route.type === "page" && (route.id === "mobile-app" || route.id === "coming-soon") && (
+              <MobileAppPage
+                onNavigate={navigateTo}
+                onOpenConsultation={() => navigateTo("/contact/")}
+                initialShowComingSoon={route.id === "coming-soon"}
               />
             )}
 
@@ -558,20 +602,43 @@ export default function App() {
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-950">Firestore Requisitions Ledger</h3>
-                    <p className="text-xs text-slate-500 font-mono">Live customer callback requests and inquiries</p>
+                    <h3 className="text-xl font-bold text-slate-950">Administrative Data Center</h3>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setAdminTab("leads")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          adminTab === "leads"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        Client Leads ({inquiriesList.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminTab("app_registrations")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          adminTab === "app_registrations"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        📱 App Registrations ({appRegistrationsList.length})
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={fetchInquiries}
+                      onClick={() => {
+                        fetchInquiries();
+                        fetchAppRegistrations();
+                      }}
                       disabled={loadingInquiries}
                       className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded cursor-pointer"
                     >
                       {loadingInquiries ? "Refreshing..." : "Refresh"}
                     </button>
-                    <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded">
-                      {inquiriesList.length} Leads
-                    </span>
                   </div>
                 </div>
 
@@ -581,58 +648,111 @@ export default function App() {
                     type="text"
                     value={leadSearch}
                     onChange={(e) => setLeadSearch(e.target.value)}
-                    placeholder="Filter by name, phone, or service..."
+                    placeholder={adminTab === "leads" ? "Filter by name, phone, or service..." : "Filter by applicant name, platform, or email..."}
                     className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden"
                   />
                 </div>
 
-                <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-                  {inquiriesList
-                    .filter(inq => {
-                      if (!leadSearch) return true;
-                      const q = leadSearch.toLowerCase();
-                      return (
-                        (inq.name && inq.name.toLowerCase().includes(q)) ||
-                        (inq.phone && inq.phone.toLowerCase().includes(q)) ||
-                        (inq.service && inq.service.toLowerCase().includes(q)) ||
-                        (inq.email && inq.email.toLowerCase().includes(q))
-                      );
-                    })
-                    .map((item) => (
-                      <div key={item.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-4 text-xs">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-950 text-sm">{item.name}</span>
-                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-mono text-[10px]">{item.service || "General"}</span>
+                {adminTab === "leads" ? (
+                  <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                    {inquiriesList
+                      .filter(inq => {
+                        if (!leadSearch) return true;
+                        const q = leadSearch.toLowerCase();
+                        return (
+                          (inq.name && inq.name.toLowerCase().includes(q)) ||
+                          (inq.phone && inq.phone.toLowerCase().includes(q)) ||
+                          (inq.service && inq.service.toLowerCase().includes(q)) ||
+                          (inq.email && inq.email.toLowerCase().includes(q))
+                        );
+                      })
+                      .map((item) => (
+                        <div key={item.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-4 text-xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-950 text-sm">{item.name}</span>
+                              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-mono text-[10px]">{item.service || "General"}</span>
+                            </div>
+                            <div className="text-slate-600 font-mono flex flex-wrap gap-x-4 gap-y-1">
+                              <span>📞 {item.phone}</span>
+                              <span>✉️ {item.email}</span>
+                              <span>🕒 {item.timestamp ? new Date(item.timestamp).toLocaleString() : "Recent"}</span>
+                            </div>
+                            {item.message && (
+                              <p className="text-slate-700 pt-1 font-sans bg-white p-2 rounded border border-slate-100">
+                                &ldquo;{item.message}&rdquo;
+                              </p>
+                            )}
                           </div>
-                          <div className="text-slate-600 font-mono flex flex-wrap gap-x-4 gap-y-1">
-                            <span>📞 {item.phone}</span>
-                            <span>✉️ {item.email}</span>
-                            <span>🕒 {item.timestamp ? new Date(item.timestamp).toLocaleString() : "Recent"}</span>
-                          </div>
-                          {item.message && (
-                            <p className="text-slate-700 pt-1 font-sans bg-white p-2 rounded border border-slate-100">
-                              &ldquo;{item.message}&rdquo;
-                            </p>
-                          )}
+
+                          <button
+                            onClick={() => deleteInquiry(item.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                            title="Delete Lead"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
+                      ))}
 
-                        <button
-                          onClick={() => deleteInquiry(item.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
-                          title="Delete Lead"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    {inquiriesList.length === 0 && !loadingInquiries && (
+                      <div className="text-center py-8 text-slate-400 text-xs">
+                        No customer inquiries stored yet.
                       </div>
-                    ))}
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                    {appRegistrationsList
+                      .filter(reg => {
+                        if (!leadSearch) return true;
+                        const q = leadSearch.toLowerCase();
+                        return (
+                          (reg.name && reg.name.toLowerCase().includes(q)) ||
+                          (reg.phone && reg.phone.toLowerCase().includes(q)) ||
+                          (reg.platform && reg.platform.toLowerCase().includes(q)) ||
+                          (reg.email && reg.email.toLowerCase().includes(q))
+                        );
+                      })
+                      .map((item) => (
+                        <div key={item.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-4 text-xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-950 text-sm">{item.name}</span>
+                              <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase ${
+                                item.platform === "android" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
+                              }`}>
+                                {item.platform === "android" ? "🤖 Android" : "🍎 iOS"}
+                              </span>
+                            </div>
+                            <div className="text-slate-600 font-mono flex flex-wrap gap-x-4 gap-y-1">
+                              <span>📞 {item.phone}</span>
+                              <span>✉️ {item.email}</span>
+                              <span>🕒 {item.clientTimestamp ? new Date(item.clientTimestamp).toLocaleString() : "Recent"}</span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-mono flex items-center gap-2 pt-0.5">
+                              <span>ID: {item.id}</span>
+                              <span>• Consent: {item.privacyConsent ? "Verified" : "None"}</span>
+                            </div>
+                          </div>
 
-                  {inquiriesList.length === 0 && !loadingInquiries && (
-                    <div className="text-center py-8 text-slate-400 text-xs">
-                      No customer inquiries stored yet.
-                    </div>
-                  )}
-                </div>
+                          <button
+                            onClick={() => deleteAppRegistration(item.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
+                            title="Delete Registration"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+
+                    {appRegistrationsList.length === 0 && !loadingInquiries && (
+                      <div className="text-center py-8 text-slate-400 text-xs">
+                        No mobile app download registrations stored yet.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

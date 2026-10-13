@@ -90,6 +90,20 @@ const routes = [
     canonical: "https://cvidyasolutions.com/faq/",
     h1: "Frequently Asked Questions"
   },
+  {
+    path: "/mobile-app/",
+    title: "Download C Vidya Mobile App | Official Android & iOS App Registration",
+    description: "Download the official C Vidya Solutions Mobile Application for Android & iOS. Manage cloud business suites, gym members, library circulation, and coaching tests with offline auto-sync.",
+    canonical: "https://cvidyasolutions.com/mobile-app/",
+    h1: "C Vidya Mobile Workspace for Android & iOS"
+  },
+  {
+    path: "/coming-soon/",
+    title: "C Vidya Software & AI Agents Mobile Apps | Coming Soon Roadmap",
+    description: "Preview the upcoming C Vidya SaaS software and autonomous AI agent mobile applications for Android & iOS. Built with offline sync and biometric security.",
+    canonical: "https://cvidyasolutions.com/coming-soon/",
+    h1: "C Vidya Mobile Applications Coming Soon"
+  },
   // Dedicated Product Pages
   {
     path: "/software/library-management/",

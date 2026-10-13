@@ -71,10 +71,16 @@
     max-width: 100%;
   }
 
-  /* Ensure text wraps correctly without overflowing small phone viewports */
-  h1, h2, h3, h4, h5, h6, p, span, a, button {
+  /* Ensure headings and body paragraphs wrap without breaking words awkwardly */
+  h1, h2, h3, h4, h5, h6, p {
     overflow-wrap: break-word;
-    word-break: break-word;
+    word-break: normal;
+  }
+
+  /* Prevent navigation and button labels from breaking mid-word */
+  nav a, button, .whitespace-nowrap {
+    word-break: keep-all;
+    overflow-wrap: normal;
   }
 }
 

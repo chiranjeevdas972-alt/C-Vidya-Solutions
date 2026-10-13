@@ -151,7 +151,7 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
             }}
             className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all shrink-0 cursor-pointer"
           >
-            <span>Click Here</span>
+            <span>Try Now</span>
           </button>
         </div>
 

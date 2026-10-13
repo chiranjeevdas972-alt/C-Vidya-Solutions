@@ -39,6 +39,23 @@
         "timestamp": { "type": "string", "description": "Timestamp of application submission." }
       },
       "required": ["name", "email", "phone", "jobTitle"]
+    },
+    "AppRegistration": {
+      "title": "AppRegistration",
+      "description": "User registration record for early access and downloading the mobile app.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the registrant." },
+        "email": { "type": "string", "format": "email", "description": "Registrant email address." },
+        "phone": { "type": "string", "description": "Registrant mobile phone number." },
+        "platform": { "type": "string", "enum": ["android", "ios"], "description": "Selected mobile OS platform." },
+        "privacyConsent": { "type": "boolean", "description": "Explicit privacy policy consent agreement." },
+        "privacyPolicyVersion": { "type": "string", "description": "Version identifier of accepted privacy terms." },
+        "status": { "type": "string", "description": "Registration state." },
+        "clientTimestamp": { "type": "string", "description": "ISO timestamp recorded on client device." },
+        "userAgent": { "type": "string", "description": "Client device user agent." }
+      },
+      "required": ["name", "email", "phone", "platform", "privacyConsent"]
     }
   },
   "firestore": {
@@ -49,6 +66,10 @@
     "job_applications/{jobApplicationId}": {
       "schema": "JobApplication",
       "description": "A collection containing all career job applications and resume submissions."
+    },
+    "app_download_registrations/{regId}": {
+      "schema": "AppRegistration",
+      "description": "A collection containing verified mobile app download registrations and early access requests."
     }
   }
 }

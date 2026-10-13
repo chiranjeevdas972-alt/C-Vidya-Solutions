@@ -299,11 +299,11 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                             e.stopPropagation();
                             setModalSoftware(product);
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                          className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 flex items-center justify-center transition-all cursor-pointer border border-slate-200"
                           title={`View details of ${product.name}`}
+                          aria-label={`View details of ${product.name}`}
                         >
-                          <Info className="w-3 h-3 text-brand-gold-600" />
-                          <span>View more</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
                         </button>
 
                         {product.externalLink ? (
@@ -313,14 +313,14 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                               e.stopPropagation();
                               handleOpenSoftware(product);
                             }}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 text-center whitespace-nowrap ${
+                            className={`inline-flex items-center justify-center px-3 py-1 rounded-lg text-xs font-bold font-sans transition-all cursor-pointer border shadow-2xs hover:scale-105 active:scale-95 text-center whitespace-nowrap ${
                               activeCategory === "saas"
                                 ? "bg-brand-gold-500 hover:bg-brand-gold-600 text-slate-950 border-brand-gold-600/30"
                                 : "bg-[#42A5F5] hover:bg-blue-600 text-white border-blue-500/40"
                             }`}
                             title={`Open ${product.name}`}
                           >
-                            <span>Click here</span>
+                            <span>Try Now</span>
                           </button>
                         ) : null}
                       </div>
@@ -357,19 +357,20 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
                     <button
                       type="button"
                       onClick={() => setModalSoftware(selectedService)}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
+                      className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                      title={`View details of ${selectedService.name}`}
+                      aria-label={`View details of ${selectedService.name}`}
                     >
-                      <Info className="w-3.5 h-3.5 text-brand-gold-400" />
-                      <span>View more</span>
+                      <ArrowRight className="w-4 h-4" />
                     </button>
 
                     {selectedService.externalLink && (
                       <button
                         type="button"
                         onClick={() => handleOpenSoftware(selectedService)}
-                        className="px-3.5 py-1.5 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer border-none text-center whitespace-nowrap"
+                        className="inline-flex items-center justify-center px-3.5 py-1.5 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer border-none text-center whitespace-nowrap"
                       >
-                        <span>Click here</span>
+                        <span>Try Now</span>
                       </button>
                     )}
                   </div>

@@ -190,10 +190,11 @@ export default function SoftwareDirectoryPage({
                       e.preventDefault();
                       onNavigate(item.urlPath);
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 group-hover:translate-x-0.5 transition-transform"
+                    className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer group-hover:scale-105 active:scale-95"
+                    title={`View ${rawProduct.name} details`}
+                    aria-label={`View ${rawProduct.name} details`}
                   >
-                    <span>View more</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                   </a>
 
                   {rawProduct.externalLink && (
@@ -206,10 +207,10 @@ export default function SoftwareDirectoryPage({
                           window.open(rawProduct.externalLink, "_blank");
                         }
                       }}
-                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors text-center whitespace-nowrap"
+                      className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors text-center whitespace-nowrap shadow-xs"
                       title={`Launch live demo of ${rawProduct.name}`}
                     >
-                      Click here
+                      <span>Try Now</span>
                     </button>
                   )}
                 </div>

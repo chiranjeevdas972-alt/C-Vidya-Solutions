@@ -554,11 +554,17 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                       EMAIL CORRESPONDENCE
                     </div>
                     <div className="mt-1 space-y-1.5">
-                      <div>
-                        <a href="mailto:cvidyasolutions@gmail.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
-                          cvidyasolutions@gmail.com
+                      <div className="space-y-1">
+                        <a href="mailto:info@cvidyasolutions.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                          info@cvidyasolutions.com
                         </a>
-                        <span className="text-[10px] text-slate-500 font-medium block">Office Support Desk</span>
+                        <a href="mailto:sales@cvidyasolutions.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                          sales@cvidyasolutions.com
+                        </a>
+                        <a href="mailto:contact@cvidyasolutions.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">
+                          contact@cvidyasolutions.com
+                        </a>
+                        <span className="text-[10px] text-slate-500 font-medium block">Office &amp; Sales Desk</span>
                       </div>
                       <div className="pt-1.5 border-t border-slate-200/50">
                         <a href="mailto:chiranjeev0058@gmail.com" className="font-sans font-bold text-xs sm:text-sm text-brand-navy-950 hover:text-brand-gold-600 transition-colors block leading-tight break-all">

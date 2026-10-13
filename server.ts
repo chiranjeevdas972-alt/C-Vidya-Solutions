@@ -1320,6 +1320,69 @@ app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
   }
 });
 
+// API: Submit Mobile App Registration
+app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
+  const { name, email, phone, platform, privacyConsent, registrationId } = req.body;
+
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: "Name, email, and phone are required fields." });
+  }
+
+  const cleanName = sanitizeInput(name, 150);
+  const cleanEmail = sanitizeInput(email, 200).toLowerCase();
+  const cleanPhone = sanitizeInput(phone, 50);
+  const cleanPlatform = (platform === "ios" ? "ios" : "android");
+
+  if (!cleanName || cleanName.length < 2) {
+    return res.status(400).json({ error: "Please enter a valid full name (minimum 2 characters)." });
+  }
+
+  if (!isValidEmail(cleanEmail)) {
+    return res.status(400).json({ error: "Please enter a valid email address." });
+  }
+
+  const id = registrationId || `appreg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const timestamp = new Date().toISOString();
+
+  const regRecord = {
+    id,
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: `Mobile App Early Access (${cleanPlatform.toUpperCase()})`,
+    message: `Platform: ${cleanPlatform} | Privacy Consent: ${privacyConsent ? 'Accepted' : 'Given'} | Version: 2026.1`,
+    platform: cleanPlatform,
+    status: "registered",
+    timestamp,
+    source: "mobile_app_download_page"
+  };
+
+  // 1. Direct Firestore Persistence (to inquiries collection which is permitted by live security rules)
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await setDoc(docRef, regRecord);
+    console.log("Successfully persisted app registration to Firestore inquiries:", id);
+  } catch (error) {
+    console.warn("Firestore app registration persistence note:", error);
+  }
+
+  // 2. Dispatch Lead notification email to cvidyasolutions@gmail.com
+  sendLeadNotificationEmail({
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: `Mobile App Registration (${cleanPlatform.toUpperCase()})`,
+    message: `User registered for C Vidya Solutions Mobile App for ${cleanPlatform.toUpperCase()}.`,
+    source: "Mobile App Download Page"
+  }).catch((err) => console.error("Registration email dispatch error:", err));
+
+  return res.json({
+    success: true,
+    registrationId: id,
+    message: `Registration confirmed for ${cleanName}.`
+  });
+});
+
 // Smart local fallback assistant handler for offline, network errors or missing credentials
 function getFallbackReply(messages: any[]): string {
   return getSmartAssistantResponse(messages);

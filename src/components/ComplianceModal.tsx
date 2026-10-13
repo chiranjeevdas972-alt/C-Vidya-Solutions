@@ -350,7 +350,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
                 <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
                   <p className="font-semibold text-slate-800 text-xs">Refund Eligibility Rules:</p>
                   <p className="text-[11.5px]">
-                    We supply a <strong>7-Day No-Questions-Asked Refund Guarantee</strong> for all first-time software suite activations. To claim a refund, email <span className="font-mono text-brand-navy-900">cvidyasolutions@gmail.com</span> with details. Refund processing typically completes via banking routes within 5 to 7 working business days.
+                    We supply a <strong>7-Day No-Questions-Asked Refund Guarantee</strong> for all first-time software suite activations. To claim a refund, email <span className="font-mono text-brand-navy-900">support@cvidyasolutions.com</span> with details. Refund processing typically completes via banking routes within 5 to 7 working business days.
                   </p>
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function ComplianceModal({ isOpen, onClose, initialTab = "privacy
                   We supply a <strong>7-Day No-Questions-Asked Refund Guarantee</strong> for all first-time software suite activations. If you are unsatisfied with the integrated suite capabilities, barcode scanning logs, or CRM functions within the first 7 days of payment, you may initiate a full refund.
                 </p>
                 <p className="mb-4">
-                  To request a refund, please send an official email to <span className="font-mono font-bold text-brand-navy-900">cvidyasolutions@gmail.com</span> with your payment confirmation ledger.
+                  To request a refund, please send an official email to <span className="font-mono font-bold text-brand-navy-900">support@cvidyasolutions.com</span> with your payment confirmation ledger.
                 </p>
               </div>
 

@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // Global security helpers
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
     }
 
     function isSignedIn() {
@@ -59,6 +59,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Strict validation for mobile app download registrations
+    function isValidAppRegistration(data) {
+      return data != null
+        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'platform' in data && data.platform is string && (data.platform == "android" || data.platform == "ios")
+        && 'privacyConsent' in data && data.privacyConsent == true
+        && (!('status' in data) || (data.status is string && data.status.size() <= 100))
+        && (!('privacyPolicyVersion' in data) || (data.privacyPolicyVersion is string && data.privacyPolicyVersion.size() <= 50))
+        && (!('clientTimestamp' in data) || (data.clientTimestamp is string && data.clientTimestamp.size() <= 100))
+        && (!('userAgent' in data) || (data.userAgent is string && data.userAgent.size() <= 300));
+    }
+
     // Inquiries collection: Public can submit verified leads, ONLY authenticated admins can read (PII Isolation)
     match /inquiries/{inquiryId} {
       allow create: if isValidId(inquiryId) && isValidInquiry(request.resource.data);
@@ -72,5 +86,13 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow update, delete: if isAdmin();
     }
+
+    // Mobile app registrations collection: Public can submit valid registration; ONLY authenticated admins can read/manage (Zero Public Read)
+    match /app_download_registrations/{regId} {
+      allow create: if isValidId(regId) && isValidAppRegistration(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
   }
 }
+

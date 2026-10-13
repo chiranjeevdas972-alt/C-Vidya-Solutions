@@ -78,11 +78,25 @@ export default function Footer({
                   +91 92885 17027
                 </a>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <a href="mailto:cvidyasolutions@gmail.com" className="hover:text-blue-400 transition-colors">
-                  cvidyasolutions@gmail.com
-                </a>
+              <div className="flex items-start gap-2">
+                <Mail className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                <div className="flex flex-col space-y-1">
+                  <a href="mailto:info@cvidyasolutions.com" className="hover:text-blue-400 transition-colors">
+                    info@cvidyasolutions.com
+                  </a>
+                  <a href="mailto:sales@cvidyasolutions.com" className="hover:text-blue-400 transition-colors">
+                    sales@cvidyasolutions.com
+                  </a>
+                  <a href="mailto:contact@cvidyasolutions.com" className="hover:text-blue-400 transition-colors">
+                    contact@cvidyasolutions.com
+                  </a>
+                  <a href="mailto:support@cvidyasolutions.com" className="hover:text-blue-400 transition-colors">
+                    support@cvidyasolutions.com
+                  </a>
+                  <a href="mailto:careers@cvidyasolutions.com" className="hover:text-blue-400 transition-colors">
+                    careers@cvidyasolutions.com
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -243,6 +257,9 @@ export default function Footer({
               RESOURCES &amp; HUB
             </h5>
             <nav className="grid grid-cols-1 gap-2 text-xs text-slate-300" aria-label="Resources">
+              <a href="/mobile-app/" onClick={(e) => handleLink(e, "/mobile-app/")} className="hover:text-blue-400 transition-colors font-semibold text-blue-300">
+                📱 Mobile App (Android &amp; iOS)
+              </a>
               <a href="/blog/" onClick={(e) => handleLink(e, "/blog/")} className="hover:text-blue-400 transition-colors">
                 Technology Blog
               </a>

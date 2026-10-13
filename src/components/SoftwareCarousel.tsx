@@ -245,7 +245,7 @@ export default function SoftwareCarousel() {
                         className="font-display font-extrabold text-base md:text-[17px] text-[#42A5F5] hover:text-brand-gold-400 hover:underline tracking-tight leading-tight flex items-center gap-1.5 cursor-pointer"
                       >
                         <span>{activeSoftware.name}</span>
-                        <span className="text-[9px] bg-brand-gold-500/25 text-brand-gold-300 px-2 py-0.5 rounded-full uppercase font-mono font-bold leading-none select-none">Click Here ↗</span>
+                        <span className="text-[9px] bg-brand-gold-500/25 text-brand-gold-300 px-2 py-0.5 rounded-full uppercase font-mono font-bold leading-none select-none">Try Now ↗</span>
                       </a>
                     ) : (
                       <h3 className="font-display font-extrabold text-base md:text-[17px] text-[#42A5F5] tracking-tight leading-tight">
@@ -334,7 +334,7 @@ export default function SoftwareCarousel() {
                         rel="noopener noreferrer"
                         className="font-mono text-[9.5px] text-brand-gold-400 hover:text-brand-gold-200 hover:underline font-bold ml-1.5 bg-brand-navy-950 px-2 py-0.5 rounded border border-brand-gold-500/30 flex items-center gap-1 transition-all cursor-pointer"
                       >
-                        <span>Click Here ↗</span>
+                        <span>Try Now ↗</span>
                       </a>
                     ) : (
                       <span className="font-mono text-[9px] text-slate-400 font-semibold ml-1.5 bg-brand-navy-950/80 px-1.5 py-0.5 rounded border border-brand-navy-800">
