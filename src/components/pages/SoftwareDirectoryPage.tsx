@@ -30,7 +30,6 @@ export default function SoftwareDirectoryPage({
   onOpenLiveApp,
   onOpenConsultation
 }: SoftwareDirectoryPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const softwareItems = Object.values(PRODUCT_SEO_DATA).filter(p => p.type === "software");
@@ -52,23 +51,12 @@ export default function SoftwareDirectoryPage({
     }
   };
 
-  const categories = [
-    { id: "all", label: "All Software Products" },
-    { id: "Academic", label: "Academic & Campus" },
-    { id: "Fitness", label: "Fitness & Gym" },
-    { id: "Enterprise", label: "Enterprise & CRM" },
-    { id: "Agribusiness", label: "Agribusiness & Farm" },
-    { id: "Energy", label: "Energy & Fuel Station" },
-    { id: "Healthcare", label: "Healthcare & Clinical" },
-    { id: "Utilities", label: "Document & Media" }
-  ];
-
   const filteredItems = softwareItems.filter(item => {
-    const matchesCategory = selectedCategory === "all" || item.category.toLowerCase().includes(selectedCategory.toLowerCase());
-    const matchesSearch = searchQuery.trim() === "" || 
-      item.h1Title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      item.metaDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return item.h1Title.toLowerCase().includes(q) || 
+      item.metaDescription.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q);
   });
 
   const schemaJsonLd = {
@@ -111,34 +99,26 @@ export default function SoftwareDirectoryPage({
             Discover modern, cloud-native enterprise software designed to eliminate operational friction across educational institutions, health clubs, fuel retail stations, precious jewelers, and commercial agribusinesses.
           </p>
 
-          {/* Search bar & filter pills */}
-          <div className="pt-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-            <div className="relative flex-1 max-w-md">
+          {/* Search bar only */}
+          <div className="pt-4 max-w-xl">
+            <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search software products, modules, keywords..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
               />
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              {categories.map((cat) => (
+              {searchQuery && (
                 <button
-                  key={cat.id}
                   type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    selectedCategory === cat.id
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer font-medium"
                 >
-                  {cat.label}
+                  Clear
                 </button>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -223,13 +203,13 @@ export default function SoftwareDirectoryPage({
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 space-y-3">
             <Layers className="w-8 h-8 text-slate-400 mx-auto" />
             <div className="font-bold text-slate-800">No software products match your search.</div>
-            <p className="text-xs text-slate-500">Try adjusting your keyword filter or view all products.</p>
+            <p className="text-xs text-slate-500">Try adjusting your keyword search or view all products.</p>
             <button
               type="button"
-              onClick={() => { setSelectedCategory("all"); setSearchQuery(""); }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold"
+              onClick={() => setSearchQuery("")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 cursor-pointer transition-colors"
             >
-              Reset Filters
+              Clear Search
             </button>
           </div>
         )}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Phone, Mail, Menu, X, ArrowRight, Smartphone } from "lucide-react";
+import { Menu, X, ArrowRight, Smartphone } from "lucide-react";
 import Logo from "./Logo";
 
 interface HeaderProps {
@@ -39,26 +39,8 @@ export default function Header({
   };
 
   return (
-    <div className="sticky top-0 z-50 w-full shadow-xs bg-white/95 backdrop-blur-md border-b border-slate-200/80 pt-[env(safe-area-inset-top,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+    <div className="sticky top-0 z-50 w-full shadow-md bg-[#071739]/95 backdrop-blur-md border-b border-slate-800/80 pt-[env(safe-area-inset-top,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       
-      {/* Top Banner (Corporate bar with phone on left, email shifted to right) */}
-      <div id="top-bar" className="bg-[#071739] text-xs text-slate-300 py-1.5 px-4 hidden md:block border-b border-blue-900/40 font-mono">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <a href="tel:+919288517027" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors">
-              <Phone className="w-3 h-3 text-blue-400" />
-              <span>+91 92885 17027</span>
-            </a>
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="mailto:info@cvidyasolutions.com" className="flex items-center gap-1.5 hover:text-blue-400 transition-colors text-slate-300">
-              <Mail className="w-3 h-3 text-blue-400" />
-              <span>info@cvidyasolutions.com</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
       {/* Main Header / Navigation */}
       <header id="main-nav" className="w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
@@ -72,17 +54,17 @@ export default function Header({
           >
             <Logo size={42} showText={false} className="group-hover:scale-105 transition-all shrink-0" />
             <div>
-              <div className="font-display font-bold text-xl md:text-2xl tracking-tight text-slate-950 group-hover:text-blue-600 transition-colors">
+              <div className="font-display font-bold text-xl md:text-2xl tracking-tight text-white group-hover:text-blue-400 transition-colors">
                 C VIDYA
               </div>
-              <div className="text-[10px] font-mono tracking-widest text-blue-600 font-bold -mt-0.5">
+              <div className="text-[10px] font-mono tracking-widest text-blue-400 font-bold -mt-0.5">
                 SOLUTIONS
               </div>
             </div>
           </a>
 
           {/* Desktop Navigation Link Anchors - Responsive auto-adjusting spacing, whitespace-nowrap, and xl threshold */}
-          <nav className="hidden xl:flex items-center gap-2.5 2xl:gap-5 text-xs xl:text-[13px] 2xl:text-sm font-semibold text-slate-700">
+          <nav className="hidden xl:flex items-center gap-2.5 2xl:gap-5 text-xs xl:text-[13px] 2xl:text-sm font-semibold text-slate-300">
             {navItems.map((item) => {
               const isActive = activePage === item.id || 
                 (item.id === "software" && activePage.startsWith("software")) ||
@@ -94,13 +76,13 @@ export default function Header({
                   onClick={(e) => handleNavClick(e, item.path)}
                   className={`relative py-1 px-1.5 transition-colors whitespace-nowrap shrink-0 ${
                     isActive 
-                      ? "text-blue-600 font-bold" 
-                      : "hover:text-blue-600 text-slate-700"
+                      ? "text-blue-400 font-bold" 
+                      : "hover:text-blue-400 text-slate-200"
                   }`}
                 >
                   {item.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-600 rounded-full" />
+                    <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-blue-500 rounded-full" />
                   )}
                 </a>
               );
@@ -114,21 +96,21 @@ export default function Header({
               onClick={(e) => handleNavClick(e, "/mobile-app/")}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 activePage === "mobile-app"
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80"
               }`}
               title="Download C Vidya Mobile App"
             >
-              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+              <Smartphone className="w-3.5 h-3.5 text-blue-400" />
               <span>Mobile App</span>
             </a>
 
             <button
               type="button"
-              onClick={onOpenConsultation || (() => onOpenHub("/contact/"))}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+              onClick={onOpenConsultation || (() => onOpenHub("/contact/?mode=demo"))}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
             >
-              <span>Book a Demo</span>
+              <span>Book Free Demo</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -139,7 +121,7 @@ export default function Header({
               id="mobile-nav-toggle"
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 hover:bg-slate-100 rounded-lg text-slate-800 cursor-pointer"
+              className="p-2 hover:bg-slate-800 rounded-lg text-slate-200 hover:text-white cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -149,8 +131,8 @@ export default function Header({
 
         {/* Mobile & Tablet Dropdown Panel */}
         {mobileMenuOpen && (
-          <div id="mobile-nav-menu" className="xl:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3">
-            <nav className="flex flex-col gap-1 text-slate-800">
+          <div id="mobile-nav-menu" className="xl:hidden bg-[#071739] border-b border-slate-800 px-4 pt-2 pb-6 space-y-3">
+            <nav className="flex flex-col gap-1 text-slate-200">
               {navItems.map((item) => {
                 const isActive = activePage === item.id;
                 return (
@@ -159,7 +141,7 @@ export default function Header({
                     href={item.path}
                     onClick={(e) => handleNavClick(e, item.path)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium ${
-                      isActive ? "bg-blue-50 text-blue-600 font-bold" : "hover:bg-slate-50 text-slate-700"
+                      isActive ? "bg-blue-900/50 text-blue-400 font-bold" : "hover:bg-slate-800 text-slate-200"
                     }`}
                   >
                     {item.label}
@@ -168,17 +150,17 @@ export default function Header({
               })}
             </nav>
 
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   if (onOpenConsultation) onOpenConsultation();
-                  else onOpenHub("/contact/");
+                  else onOpenHub("/contact/?mode=demo");
                 }}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-xs text-center cursor-pointer"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-md shadow-xs text-center cursor-pointer"
               >
-                Book a Demo
+                Book Free Demo
               </button>
             </div>
           </div>

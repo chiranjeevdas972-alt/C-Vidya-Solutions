@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Mail, MapPin, Send, CheckCircle, Database, ShieldCheck, MailOpen, Trash2, Building, GraduationCap, AlertCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Send, CheckCircle, Database, MailOpen, Trash2, Building, GraduationCap, AlertCircle } from "lucide-react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
@@ -408,11 +408,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
           </button>
         </form>
 
-        <div className="mt-4 pt-3 border-t border-slate-200/70 flex justify-between items-center gap-2">
-          <div className="flex items-center gap-1 text-[10px] text-slate-600 font-bold">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>SSL Encrypted</span>
-          </div>
+        <div className="mt-4 pt-3 border-t border-slate-200/70 flex justify-end items-center gap-2">
 
           <button
             type="button"
@@ -422,10 +418,11 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                 fetchInquiries();
               }
             }}
-            className="text-[10px] font-mono font-semibold text-brand-gold-600 hover:text-brand-gold-700 flex items-center gap-1.5 px-2 py-1 bg-brand-gold-100/50 rounded-md border border-brand-gold-200/50 transition-all cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+            title="Database"
+            aria-label="Database"
           >
-            <Database className="w-3 h-3" />
-            <span>{showInquiriesPanel ? "Hide Leads" : "Show Onsite Leads"}</span>
+            <Database className="w-4 h-4" />
           </button>
         </div>
 
@@ -589,14 +586,8 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
           <div className="bg-slate-50/90 border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-xs hover:shadow-md transition-all h-full flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <span className="h-[2px] w-5 bg-brand-navy-900" />
-                  <span className="text-[11px] font-mono font-bold text-brand-navy-900 uppercase tracking-widest">
-                    ONLINE REQUISITION
-                  </span>
-                </div>
                 <h3 className="font-display font-extrabold text-xl text-brand-navy-950 uppercase tracking-tight leading-snug">
-                  SUBMIT A CALLBACK INQUIRY
+                  GET IN TOUCH
                 </h3>
                 <p className="mt-1 text-slate-600 text-xs sm:text-sm font-normal">
                   We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
@@ -717,18 +708,14 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                   ) : (
                     <>
                       <Send className="w-4 h-4 text-brand-gold-400" />
-                      <span>TRANSMIT REQUISITION RECEIVED</span>
+                      <span>SUBMIT</span>
                     </>
                   )}
                 </button>
               </form>
             </div>
 
-            <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-1.5 text-slate-600 font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>SSL Encrypted</span>
-              </div>
+            <div className="pt-3 border-t border-slate-200/80 flex items-center justify-end text-[11px]">
               <button
                 type="button"
                 onClick={() => {
@@ -737,10 +724,11 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                     fetchInquiries();
                   }
                 }}
-                className="text-[10.5px] font-mono font-bold text-brand-gold-700 hover:text-brand-gold-800 flex items-center gap-1.5 px-2.5 py-1 bg-brand-gold-100/60 rounded-lg border border-brand-gold-300/50 transition-all cursor-pointer"
+                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-all cursor-pointer"
+                title="Database"
+                aria-label="Database"
               >
-                <Database className="w-3.5 h-3.5" />
-                <span>{showInquiriesPanel ? "Hide Leads" : "Onsite Leads"}</span>
+                <Database className="w-4 h-4" />
               </button>
             </div>
 

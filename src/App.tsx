@@ -40,21 +40,25 @@ import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export type RouteState =
-  | { type: "page"; id: string }
+  | { type: "page"; id: string; mode?: "demo" | "full" }
   | { type: "product"; productKey: string }
   | { type: "article"; articleSlug: string };
 
-function resolveRoute(pathname: string, hash: string): RouteState {
+function resolveRoute(pathname: string, hash: string, search: string = ""): RouteState {
   // 1. Architecture modal hash check
   if (hash.startsWith("#architecture")) {
     return { type: "page", id: "home" };
   }
 
-  // Normalize path by stripping trailing slashes
-  let cleanPath = pathname.replace(/\/+$/, "");
+  // Normalize path by stripping query strings and trailing slashes
+  const pathOnly = pathname.split("?")[0].split("#")[0];
+  let cleanPath = pathOnly.replace(/\/+$/, "");
   if (!cleanPath || cleanPath === "") {
     cleanPath = "/";
   }
+
+  const fullSearch = search || (pathname.includes("?") ? pathname.slice(pathname.indexOf("?")) : (typeof window !== "undefined" ? window.location.search : ""));
+  const isDemo = fullSearch.includes("mode=demo") || fullSearch.includes("demo=true") || hash.includes("demo") || cleanPath === "/book-free-demo" || cleanPath === "/book-demo";
 
   // 2. Handle legacy hash navigation like #about or #software/library-management
   if (hash && hash.length > 1) {
@@ -102,7 +106,9 @@ function resolveRoute(pathname: string, hash: string): RouteState {
   if (cleanPath === "/about") return { type: "page", id: "about" };
   if (cleanPath === "/services") return { type: "page", id: "services" };
   if (cleanPath === "/portfolio") return { type: "page", id: "portfolio" };
-  if (cleanPath === "/contact") return { type: "page", id: "contact" };
+  if (cleanPath === "/contact" || cleanPath === "/book-free-demo" || cleanPath === "/book-demo") {
+    return { type: "page", id: "contact", mode: isDemo ? "demo" : "full" };
+  }
   if (cleanPath === "/careers") return { type: "page", id: "careers" };
   if (cleanPath === "/blog") return { type: "page", id: "blog" };
   if (cleanPath === "/faq") return { type: "page", id: "faq" };
@@ -133,7 +139,7 @@ export default function App() {
   // Router State
   const [route, setRoute] = useState<RouteState>(() => {
     if (typeof window !== "undefined") {
-      return resolveRoute(window.location.pathname, window.location.hash);
+      return resolveRoute(window.location.pathname, window.location.hash, window.location.search);
     }
     return { type: "page", id: "home" };
   });
@@ -176,13 +182,17 @@ export default function App() {
       urlToPush += "/";
     }
 
-    if (window.location.pathname !== urlToPush) {
+    const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+    if (currentUrl !== urlToPush) {
       window.history.pushState(null, "", urlToPush);
     }
     setActiveLiveSoftware(null);
     setActiveSoftwareDetail(null);
     setSelectedProduct(null);
-    const newRoute = resolveRoute(urlToPush, "");
+    const searchPart = urlToPush.includes("?") ? urlToPush.slice(urlToPush.indexOf("?")) : "";
+    const hashPart = urlToPush.includes("#") ? urlToPush.slice(urlToPush.indexOf("#")) : "";
+    const pathPart = urlToPush.split("?")[0].split("#")[0];
+    const newRoute = resolveRoute(pathPart, hashPart, searchPart);
     setRoute(newRoute);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -202,7 +212,7 @@ export default function App() {
         return;
       }
 
-      const newRoute = resolveRoute(window.location.pathname, window.location.hash);
+      const newRoute = resolveRoute(window.location.pathname, window.location.hash, window.location.search);
       setRoute(newRoute);
       setActiveLiveSoftware(null);
       setActiveSoftwareDetail(null);
@@ -226,6 +236,9 @@ export default function App() {
   // Compute active navigation tab for Header styling
   const headerActivePage = useMemo(() => {
     if (route.type === "page") {
+      if (route.id === "contact" && route.mode === "demo") {
+        return "demo";
+      }
       return route.id;
     }
     if (route.type === "product") {
@@ -335,7 +348,7 @@ export default function App() {
         activePage={headerActivePage}
         onOpenAssistant={() => setAiOpen(true)} 
         onOpenHub={(path) => navigateTo(path)}
-        onOpenConsultation={() => navigateTo("/contact/")}
+        onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
         onOpenArchitecture={() => {
           setArchitectureTab("prd");
           setArchitectureOpen(true);
@@ -358,7 +371,7 @@ export default function App() {
                 onNavigate={navigateTo}
                 onSelectProduct={(product) => setActiveSoftwareDetail(product)}
                 onOpenSoftware={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -367,7 +380,7 @@ export default function App() {
               <SoftwareDirectoryPage 
                 onNavigate={navigateTo}
                 onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -376,7 +389,7 @@ export default function App() {
               <AiAgentsDirectoryPage 
                 onNavigate={navigateTo}
                 onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -384,7 +397,7 @@ export default function App() {
             {route.type === "page" && route.id === "pricing" && (
               <PricingPage 
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -400,7 +413,7 @@ export default function App() {
               <ServicesPage 
                 onSelectProduct={(product) => setActiveSoftwareDetail(product)}
                 onOpenSoftware={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -414,6 +427,8 @@ export default function App() {
             {/* 8. CONTACT US PAGE */}
             {route.type === "page" && route.id === "contact" && (
               <ContactPage 
+                mode={route.mode || "full"}
+                onNavigate={navigateTo}
                 onOpenLeadsModal={() => setLeadsModalOpen(true)}
               />
             )}
@@ -444,7 +459,7 @@ export default function App() {
             {route.type === "page" && (route.id === "mobile-app" || route.id === "coming-soon") && (
               <MobileAppPage
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
                 initialShowComingSoon={route.id === "coming-soon"}
               />
             )}
@@ -454,7 +469,7 @@ export default function App() {
               <BlogArticlePage
                 article={ARTICLES_DATA[route.articleSlug]}
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -465,7 +480,7 @@ export default function App() {
                 productData={activeProductData}
                 onNavigate={navigateTo}
                 onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
-                onOpenConsultation={() => navigateTo("/contact/")}
+                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
 
@@ -519,7 +534,7 @@ export default function App() {
           }}
           onOpenConsultation={() => {
             setSelectedProduct(null);
-            navigateTo("contact");
+            navigateTo("/contact/?mode=demo");
           }}
         />
       )}

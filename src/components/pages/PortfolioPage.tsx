@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   ArrowRight, 
   BarChart3, 
@@ -12,7 +12,8 @@ import {
   Cpu, 
   Bot, 
   Building2, 
-  Sparkles 
+  Sparkles,
+  Search
 } from "lucide-react";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
@@ -22,7 +23,7 @@ interface PortfolioPageProps {
 }
 
 export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
-  const [activeFilter, setActiveFilter] = useState<"All Projects" | "FinTech" | "Data Analytics" | "Cloud Infrastructure" | "AI Agents" | "SaaS Suite">("All Projects");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCase, setSelectedCase] = useState<any | null>(null);
 
   const projects = [
@@ -124,9 +125,17 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
     }
   ];
 
-  const filteredProjects = activeFilter === "All Projects"
-    ? projects
-    : projects.filter(p => p.category === activeFilter);
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) return projects;
+    const q = searchQuery.toLowerCase();
+    return projects.filter(p => 
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.technologies.some(t => t.toLowerCase().includes(q)) ||
+      p.details.toLowerCase().includes(q)
+    );
+  }, [projects, searchQuery]);
 
   return (
     <div className="w-full bg-white font-sans text-slate-900 selection:bg-blue-600 selection:text-white pb-24">
@@ -159,21 +168,27 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
           Explore a curated selection of our high-fidelity enterprise software architectures, SaaS deployments, and autonomous AI systems delivered with institutional trust.
         </p>
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-6">
-          {(["All Projects", "FinTech", "Data Analytics", "Cloud Infrastructure", "AI Agents", "SaaS Suite"] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                activeFilter === filter
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-950 border border-slate-200/80"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
+        {/* Search Engine Bar */}
+        <div className="pt-6 max-w-xl mx-auto">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search projects, architectures, technologies..."
+              className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs sm:text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer font-medium"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
@@ -231,6 +246,21 @@ export default function PortfolioPage({ onNavigate }: PortfolioPageProps) {
             </div>
           ))}
         </div>
+
+        {filteredProjects.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 space-y-3">
+            <Search className="w-8 h-8 text-slate-400 mx-auto" />
+            <div className="font-bold text-slate-800">No projects match "{searchQuery}"</div>
+            <p className="text-xs text-slate-500">Try adjusting your search terms or keywords.</p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 cursor-pointer transition-colors"
+            >
+              Clear Search
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Case Study Details Modal */}

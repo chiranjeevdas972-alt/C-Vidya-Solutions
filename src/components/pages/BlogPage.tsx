@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { X, Search } from "lucide-react";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
 import { ARTICLES_DATA, ArticleSeoInfo } from "../../articleData";
@@ -10,21 +10,19 @@ interface BlogPageProps {
 
 export default function BlogPage({ onNavigate }: BlogPageProps) {
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const allArticlesList = Object.values(ARTICLES_DATA);
 
-  const categories = [
-    "All",
-    "Library & Education",
-    "AI Automation",
-    "SaaS & Cloud",
-    "Security & Architecture"
-  ];
-
-  const filteredArticles = activeCategory === "All"
-    ? allArticlesList
-    : allArticlesList.filter(a => a.category === activeCategory);
+  const filteredArticles = useMemo(() => {
+    if (!searchQuery.trim()) return allArticlesList;
+    const q = searchQuery.toLowerCase();
+    return allArticlesList.filter(a => 
+      a.title.toLowerCase().includes(q) ||
+      a.summary.toLowerCase().includes(q) ||
+      a.category.toLowerCase().includes(q)
+    );
+  }, [allArticlesList, searchQuery]);
 
   const handleArticleClick = (article: ArticleSeoInfo) => {
     if (onNavigate) {
@@ -67,21 +65,27 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
           Deep-dive technical articles, campus automation frameworks, AI agent architectures, and enterprise cloud blueprints by C Vidya Solutions.
         </p>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-6">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
-                activeCategory === cat
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Search Engine Bar */}
+        <div className="pt-6 max-w-xl mx-auto">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles, guides, topics..."
+              className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-xs sm:text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer font-medium"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
@@ -118,6 +122,21 @@ export default function BlogPage({ onNavigate }: BlogPageProps) {
             </div>
           ))}
         </div>
+
+        {filteredArticles.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 space-y-3">
+            <Search className="w-8 h-8 text-slate-400 mx-auto" />
+            <div className="font-bold text-slate-800">No articles match "{searchQuery}"</div>
+            <p className="text-xs text-slate-500">Try adjusting your search terms or keywords.</p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 cursor-pointer transition-colors"
+            >
+              Clear Search
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Fallback Article Reader Modal if onNavigate is not passed */}
