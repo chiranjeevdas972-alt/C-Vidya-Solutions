@@ -417,47 +417,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-slate-950 flex flex-col"
           >
-            {/* Top Navigation Bar with Clear Back Button */}
-            <div className="h-14 bg-brand-navy-950 text-white px-4 sm:px-6 flex items-center justify-between border-b border-brand-gold-500/30 shrink-0 shadow-xl z-10">
-              
-              {/* Back Button with Arrow - Returns to Preview Page */}
-              <button
-                type="button"
-                onClick={() => {
-                  const currentApp = liveAppViewing;
-                  setLiveAppViewing(null);
-                  if (currentApp) {
-                    setModalSoftware(currentApp);
-                  }
-                }}
-                className="flex items-center gap-2.5 px-4 py-2 bg-brand-gold-500 hover:bg-brand-gold-400 text-slate-950 rounded-xl font-display font-black text-xs sm:text-sm transition-all shadow-md hover:scale-105 active:scale-95 cursor-pointer border-none"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-950 stroke-[3]" />
-                <span className="tracking-wide">Back</span>
-              </button>
-
-              {/* Center App Name */}
-              <div className="flex items-center">
-                <span className="font-display font-black text-xs sm:text-sm uppercase text-white tracking-wide">
-                  {liveAppViewing.name}
-                </span>
-              </div>
-
-              {/* Right Close Button */}
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setLiveAppViewing(null)}
-                  className="p-2 bg-white/10 hover:bg-red-500/30 text-white hover:text-red-300 rounded-lg text-xs font-bold transition-all cursor-pointer border-none"
-                  title="Close"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-            </div>
-
-            {/* Live App Frame & Loader */}
+            {/* Live App Frame & Loader - Full Screen with No Top Bar */}
             <div className="flex-1 relative bg-slate-900 w-full h-full overflow-hidden">
               {frameLoading && (
                 <div className="absolute inset-0 z-10 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
@@ -473,21 +433,23 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
               <iframe
                 key={frameKey}
                 src={
-                  liveAppViewing.id === "fitness" || liveAppViewing.externalLink?.includes("fitzone.cvidyasolutions.workers.dev")
-                    ? "https://fitzone.cvidyasolutions.workers.dev/"
-                    : liveAppViewing.id === "library" || liveAppViewing.externalLink?.includes("v.cvidyasolutions.workers.dev")
-                    ? "https://v.cvidyasolutions.workers.dev/"
+                  liveAppViewing.id === "fitness" || liveAppViewing.externalLink?.includes("fitzone")
+                    ? "/software/fitness/index.html"
+                    : liveAppViewing.id === "library" || liveAppViewing.externalLink?.includes("v.cvidyasolutions")
+                    ? "/software/library/index.html"
                     : liveAppViewing.id === "petrol-pump" || liveAppViewing.externalLink?.includes("c-vidya-cloud-petrol-pump")
                     ? "/software/petrol-pump/index.html"
                     : liveAppViewing.id === "pdf-media-tools" || liveAppViewing.id === "pdf-tools" || liveAppViewing.externalLink?.includes("c-vidya-pdf-saas-tools")
                     ? "/software/pdf-media-tools/index.html"
+                    : liveAppViewing.id === "institutes" || liveAppViewing.externalLink?.includes("institutes")
+                    ? "https://coaching.cvidyasolutions.workers.dev/?type=institutes"
                     : liveAppViewing.externalLink
                 }
                 title={liveAppViewing.name}
+                loading="eager"
                 onLoad={() => setFrameLoading(false)}
                 className="w-full h-full border-none bg-white"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
               />
             </div>
           </motion.div>

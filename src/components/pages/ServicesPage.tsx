@@ -44,6 +44,41 @@ interface ServicesPageProps {
 export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenConsultation }: ServicesPageProps) {
   const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
 
+  const handleOpenCoreService = (srv: CoreServiceItem) => {
+    if (typeof window !== "undefined") {
+      window.history.replaceState({ ...(window.history.state || {}), scrollY: window.scrollY }, "");
+      window.history.pushState(
+        {
+          isModal: true,
+          modalType: "core-service",
+          serviceId: srv.id,
+          scrollY: window.scrollY,
+        },
+        "",
+        window.location.pathname + window.location.search + window.location.hash
+      );
+    }
+    setSelectedCoreService(srv);
+  };
+
+  const handleCloseCoreService = () => {
+    if (typeof window !== "undefined" && window.history.state?.modalType === "core-service") {
+      window.history.back();
+    } else {
+      setSelectedCoreService(null);
+    }
+  };
+
+  React.useEffect(() => {
+    const handlePop = (e: PopStateEvent) => {
+      if (!e.state?.isModal || e.state?.modalType !== "core-service") {
+        setSelectedCoreService(null);
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
+
   // Consultation Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -161,7 +196,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             return (
               <div
                 key={srv.id}
-                onClick={() => setSelectedCoreService(srv)}
+                onClick={() => handleOpenCoreService(srv)}
                 className="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/70 transition-colors pointer-events-none" />
@@ -234,8 +269,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[0]);
-                  } else {
-                    onSelectProduct(saasProductsData[0]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -276,8 +309,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[1]);
-                  } else {
-                    onSelectProduct(saasProductsData[1]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -318,8 +349,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[2]);
-                  } else {
-                    onSelectProduct(saasProductsData[2]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -360,8 +389,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[3]);
-                  } else {
-                    onSelectProduct(saasProductsData[3]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -402,8 +429,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[4]);
-                  } else {
-                    onSelectProduct(saasProductsData[4]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -444,8 +469,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[5]);
-                  } else {
-                    onSelectProduct(saasProductsData[5]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -486,8 +509,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(saasProductsData[6]);
-                  } else {
-                    onSelectProduct(saasProductsData[6]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -512,7 +533,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           
           {/* Agent 1 */}
           <div 
-            onClick={() => onSelectProduct(aiAgentsData[0])}
+            onClick={() => {
+              if (onOpenSoftware) {
+                onOpenSoftware(aiAgentsData[0]);
+              }
+            }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-start gap-4">
@@ -549,8 +574,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   if (onOpenSoftware) {
                     onOpenSoftware(aiAgentsData[0]);
-                  } else {
-                    onSelectProduct(aiAgentsData[0]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -562,7 +585,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
           {/* Agent 2 */}
           <div 
-            onClick={() => onSelectProduct(aiAgentsData[1])}
+            onClick={() => {
+              if (onOpenSoftware) {
+                onOpenSoftware(aiAgentsData[1]);
+              }
+            }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-start gap-4">
@@ -599,8 +626,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   if (onOpenSoftware) {
                     onOpenSoftware(aiAgentsData[1]);
-                  } else {
-                    onSelectProduct(aiAgentsData[1]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -612,7 +637,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
           {/* Agent 3 */}
           <div 
-            onClick={() => onSelectProduct(aiAgentsData[2])}
+            onClick={() => {
+              if (onOpenSoftware) {
+                onOpenSoftware(aiAgentsData[2]);
+              }
+            }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-start gap-4">
@@ -649,8 +678,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   if (onOpenSoftware) {
                     onOpenSoftware(aiAgentsData[2]);
-                  } else {
-                    onSelectProduct(aiAgentsData[2]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -662,7 +689,11 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
 
           {/* Agent 4 */}
           <div 
-            onClick={() => onSelectProduct(aiAgentsData[3])}
+            onClick={() => {
+              if (onOpenSoftware) {
+                onOpenSoftware(aiAgentsData[3]);
+              }
+            }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
           >
             <div className="flex items-start gap-4">
@@ -699,8 +730,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                   e.stopPropagation();
                   if (onOpenSoftware) {
                     onOpenSoftware(aiAgentsData[3]);
-                  } else {
-                    onSelectProduct(aiAgentsData[3]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -927,8 +956,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(otherServicesData[0]);
-                  } else {
-                    onSelectProduct(otherServicesData[0]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
@@ -975,8 +1002,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(otherServicesData[1]);
-                  } else {
-                    onSelectProduct(otherServicesData[1]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
@@ -1023,8 +1048,6 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={() => {
                   if (onOpenSoftware) {
                     onOpenSoftware(otherServicesData[2]);
-                  } else {
-                    onSelectProduct(otherServicesData[2]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
@@ -1172,7 +1195,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
       {/* Detail Modal for Core Services */}
       <CoreServiceDetailModal
         service={selectedCoreService}
-        onClose={() => setSelectedCoreService(null)}
+        onClose={handleCloseCoreService}
         onOpenConsultation={onOpenConsultation}
       />
 

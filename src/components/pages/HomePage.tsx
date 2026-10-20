@@ -35,7 +35,7 @@ import {
 import Logo from "../Logo";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
-import { coreCompanyServices, type CoreServiceItem } from "../../data";
+import { coreCompanyServices, saasProductsData, aiAgentsData, type CoreServiceItem } from "../../data";
 import CoreServiceDetailModal from "../CoreServiceDetailModal";
 
 interface HomePageProps {
@@ -45,8 +45,43 @@ interface HomePageProps {
   onOpenConsultation?: () => void;
 }
 
-export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct, onOpenSoftware: _onOpenSoftware, onOpenConsultation: _onOpenConsultation }: HomePageProps) {
+export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct, onOpenSoftware, onOpenConsultation: _onOpenConsultation }: HomePageProps) {
   const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
+
+  const handleOpenCoreService = (srv: CoreServiceItem) => {
+    if (typeof window !== "undefined") {
+      window.history.replaceState({ ...(window.history.state || {}), scrollY: window.scrollY }, "");
+      window.history.pushState(
+        {
+          isModal: true,
+          modalType: "core-service",
+          serviceId: srv.id,
+          scrollY: window.scrollY,
+        },
+        "",
+        window.location.pathname + window.location.search + window.location.hash
+      );
+    }
+    setSelectedCoreService(srv);
+  };
+
+  const handleCloseCoreService = () => {
+    if (typeof window !== "undefined" && window.history.state?.modalType === "core-service") {
+      window.history.back();
+    } else {
+      setSelectedCoreService(null);
+    }
+  };
+
+  React.useEffect(() => {
+    const handlePop = (e: PopStateEvent) => {
+      if (!e.state?.isModal || e.state?.modalType !== "core-service") {
+        setSelectedCoreService(null);
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
 
   const handleLink = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault();
@@ -185,148 +220,308 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   </a>
                 </div>
 
-                {/* Crawlable List of 10 SaaS Products */}
+                {/* Crawlable List of 10 SaaS Products with Instant Arrow Action */}
                 <nav className="space-y-3 pt-2" aria-label="C Vidya Software Solutions">
                   
-                  <a 
-                    href="/software/library-management/"
-                    onClick={(e) => handleLink(e, "/software/library-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <BookOpen className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Library Management Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Automated book circulation, barcode ISBN laser scanning, and study seat reservations.</p>
-                    </div>
-                  </a>
+                  {/* 1. Library Management */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/library-management/"
+                      onClick={(e) => handleLink(e, "/software/library-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <BookOpen className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Library Management Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Automated book circulation, barcode ISBN laser scanning, and study seat reservations.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[0]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Library Management"
+                      aria-label="Open C Vidya Library Management"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/fitness-zone/"
-                    onClick={(e) => handleLink(e, "/software/fitness-zone/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Dumbbell className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Fitness Zone Management Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Gym member subscription billing, biometric turnstile gates, and trainer rosters.</p>
-                    </div>
-                  </a>
+                  {/* 2. Fitness Zone */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/fitness-zone/"
+                      onClick={(e) => handleLink(e, "/software/fitness-zone/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Dumbbell className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Fitness Zone Management Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Gym member subscription billing, biometric turnstile gates, and trainer rosters.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[1]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Fitness Zone"
+                      aria-label="Open C Vidya Fitness Zone"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/institutes-management/"
-                    onClick={(e) => handleLink(e, "/software/institutes-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <GraduationCap className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Institutes Management ERP
-                      </h3>
-                      <p className="text-xs text-slate-500">Multi-branch school administration, admissions pipeline, fee ledgers, and gradebooks.</p>
-                    </div>
-                  </a>
+                  {/* 3. Institutes Management */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/institutes-management/"
+                      onClick={(e) => handleLink(e, "/software/institutes-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <GraduationCap className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Institutes Management ERP
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Multi-branch school administration, admissions pipeline, fee ledgers, and gradebooks.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[2]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Institutes Management"
+                      aria-label="Open C Vidya Institutes Management"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/coaching-management/"
-                    onClick={(e) => handleLink(e, "/software/coaching-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Activity className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Coaching Management Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Batch schedules, test series analytics, and automated parent report cards.</p>
-                    </div>
-                  </a>
+                  {/* 4. Coaching Management */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/coaching-management/"
+                      onClick={(e) => handleLink(e, "/software/coaching-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Activity className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Coaching Management Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Batch schedules, test series analytics, and automated parent report cards.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[3]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Coaching Management"
+                      aria-label="Open C Vidya Coaching Management"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/enterprise-crm/"
-                    onClick={(e) => handleLink(e, "/software/enterprise-crm/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Users className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Enterprise CRM Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Multi-stage sales pipelines, partner coordination, and customer relationship tracking.</p>
-                    </div>
-                  </a>
+                  {/* 5. Enterprise CRM */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/enterprise-crm/"
+                      onClick={(e) => handleLink(e, "/software/enterprise-crm/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Users className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Enterprise CRM Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Multi-stage sales pipelines, partner coordination, and customer relationship tracking.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[6]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Enterprise CRM"
+                      aria-label="Open C Vidya Enterprise CRM"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/petrol-pump-management/"
-                    onClick={(e) => handleLink(e, "/software/petrol-pump-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Flame className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Petrol Pump Fuel Management Suite
-                      </h3>
-                      <p className="text-xs text-slate-500">Dispenser meter reconciliation, underground dip tank stock, and shift settlement.</p>
-                    </div>
-                  </a>
+                  {/* 6. Petrol Pump Suite */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/petrol-pump-management/"
+                      onClick={(e) => handleLink(e, "/software/petrol-pump-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Flame className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Petrol Pump Fuel Management Suite
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Dispenser meter reconciliation, underground dip tank stock, and shift settlement.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[7]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Petrol Pump Suite"
+                      aria-label="Open C Vidya Petrol Pump Suite"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/agriculture-management/"
-                    onClick={(e) => handleLink(e, "/software/agriculture-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Sprout className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya AgriFusion Agribusiness Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Crop planting cycles, livestock healthcare ledgers, and farm harvest inventory.</p>
-                    </div>
-                  </a>
+                  {/* 7. AgriFusion */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/agriculture-management/"
+                      onClick={(e) => handleLink(e, "/software/agriculture-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Sprout className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya AgriFusion Agribusiness Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Crop planting cycles, livestock healthcare ledgers, and farm harvest inventory.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[4]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya AgriFusion"
+                      aria-label="Open C Vidya AgriFusion"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/jewellers-management/"
-                    onClick={(e) => handleLink(e, "/software/jewellers-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Gem className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Jewellers Management Software
-                      </h3>
-                      <p className="text-xs text-slate-500">Precious metals inventory, RFID barcode tags, hallmarking, and daily rate billing.</p>
-                    </div>
-                  </a>
+                  {/* 8. Jewellers Management */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/jewellers-management/"
+                      onClick={(e) => handleLink(e, "/software/jewellers-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Gem className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Jewellers Management Software
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Precious metals inventory, RFID barcode tags, hallmarking, and daily rate billing.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[5]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya Jewellers Management"
+                      aria-label="Open C Vidya Jewellers Management"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/healthcare-management/"
-                    onClick={(e) => handleLink(e, "/software/healthcare-management/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <Activity className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya Care Plus Healthcare Management System
-                      </h3>
-                      <p className="text-xs text-slate-500">Hospital OPD/IPD queues, electronic health records, and pharmacy point of sale.</p>
-                    </div>
-                  </a>
+                  {/* 9. Healthcare Management */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/healthcare-management/"
+                      onClick={(e) => handleLink(e, "/software/healthcare-management/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Activity className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya Care Plus Healthcare Management System
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Hospital OPD/IPD queues, electronic health records, and pharmacy point of sale.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[8]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open Care Plus Healthcare"
+                      aria-label="Open Care Plus Healthcare"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/software/pdf-media-tools/"
-                    onClick={(e) => handleLink(e, "/software/pdf-media-tools/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <FileText className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm">
-                        C Vidya PDF &amp; Media Tools SaaS
-                      </h3>
-                      <p className="text-xs text-slate-500">Client-side PDF merging, document compression, and format conversion automation.</p>
-                    </div>
-                  </a>
+                  {/* 10. PDF & Media Tools */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors group">
+                    <a 
+                      href="/software/pdf-media-tools/"
+                      onClick={(e) => handleLink(e, "/software/pdf-media-tools/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <FileText className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors text-sm truncate">
+                          C Vidya PDF &amp; Media Tools SaaS
+                        </h3>
+                        <p className="text-xs text-slate-500 line-clamp-1">Client-side PDF merging, document compression, and format conversion automation.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(saasProductsData[9]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya PDF & Media Tools"
+                      aria-label="Open C Vidya PDF & Media Tools"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
                 </nav>
               </div>
@@ -367,64 +562,128 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                   </a>
                 </div>
 
-                {/* Crawlable List of 4 AI Agents */}
-                <nav className="space-y-6 pt-2" aria-label="C Vidya Autonomous AI Agents">
+                {/* Crawlable List of 4 AI Agents with Instant Arrow Action */}
+                <nav className="space-y-5 pt-2" aria-label="C Vidya Autonomous AI Agents">
                   
-                  <a 
-                    href="/ai-agents/customer-support/"
-                    onClick={(e) => handleLink(e, "/ai-agents/customer-support/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-900/60 transition-colors block"
-                  >
-                    <Headphones className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm">
-                        C Vidya AI Customer Support Agent
-                      </h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">24/7 autonomous sub-second RAG support with verified enterprise knowledge retrieval.</p>
-                    </div>
-                  </a>
+                  {/* Agent 1: Customer Support */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-900/60 transition-colors group">
+                    <a 
+                      href="/ai-agents/customer-support/"
+                      onClick={(e) => handleLink(e, "/ai-agents/customer-support/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Headphones className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm truncate">
+                          C Vidya AI Customer Support Agent
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-1">24/7 autonomous sub-second RAG support with verified enterprise knowledge retrieval.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(aiAgentsData[1]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya AI Customer Support Agent"
+                      aria-label="Open C Vidya AI Customer Support Agent"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/ai-agents/sales-flow/"
-                    onClick={(e) => handleLink(e, "/ai-agents/sales-flow/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-900/60 transition-colors block"
-                  >
-                    <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm">
-                        C Vidya SalesFlow AI Outbound Agent
-                      </h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">Autonomous SDR agent automating multi-channel lead follow-ups and calendar bookings.</p>
-                    </div>
-                  </a>
+                  {/* Agent 2: SalesFlow Outbound */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-900/60 transition-colors group">
+                    <a 
+                      href="/ai-agents/sales-flow/"
+                      onClick={(e) => handleLink(e, "/ai-agents/sales-flow/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm truncate">
+                          C Vidya SalesFlow AI Outbound Agent
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-1">Autonomous SDR agent automating multi-channel lead follow-ups and calendar bookings.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(aiAgentsData[2]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya SalesFlow AI Outbound Agent"
+                      aria-label="Open C Vidya SalesFlow AI Outbound Agent"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/ai-agents/social-media/"
-                    onClick={(e) => handleLink(e, "/ai-agents/social-media/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-900/60 transition-colors block"
-                  >
-                    <MessageSquare className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm">
-                        C Vidya AI Social Media Marketing Agent
-                      </h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">Continuous editorial scheduling, trending hashtag analytics, and cross-channel distribution.</p>
-                    </div>
-                  </a>
+                  {/* Agent 3: Social Media Marketing */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-900/60 transition-colors group">
+                    <a 
+                      href="/ai-agents/social-media/"
+                      onClick={(e) => handleLink(e, "/ai-agents/social-media/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <MessageSquare className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm truncate">
+                          C Vidya AI Social Media Marketing Agent
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-1">Continuous editorial scheduling, trending hashtag analytics, and cross-channel distribution.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(aiAgentsData[0]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya AI Social Media Agent"
+                      aria-label="Open C Vidya AI Social Media Agent"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                  <a 
-                    href="/ai-agents/b2b-marketing/"
-                    onClick={(e) => handleLink(e, "/ai-agents/b2b-marketing/")}
-                    className="flex items-start gap-3.5 group p-2 rounded-lg hover:bg-slate-900/60 transition-colors block"
-                  >
-                    <Megaphone className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm">
-                        C Vidya B2B SaaS Growth Marketing AI
-                      </h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">Autonomous inbound demand generation, semantic SEO research, and ROI attribution.</p>
-                    </div>
-                  </a>
+                  {/* Agent 4: B2B Growth Marketing */}
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-slate-900/60 transition-colors group">
+                    <a 
+                      href="/ai-agents/b2b-marketing/"
+                      onClick={(e) => handleLink(e, "/ai-agents/b2b-marketing/")}
+                      className="flex items-start gap-3.5 flex-1 min-w-0"
+                    >
+                      <Megaphone className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-white group-hover:text-blue-400 transition-colors text-sm truncate">
+                          C Vidya B2B SaaS Growth Marketing AI
+                        </h3>
+                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-1">Autonomous inbound demand generation, semantic SEO research, and ROI attribution.</p>
+                      </div>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSoftware) {
+                          onOpenSoftware(aiAgentsData[3]);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
+                      title="Open C Vidya B2B Growth Marketing AI"
+                      aria-label="Open C Vidya B2B Growth Marketing AI"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
 
                 </nav>
               </div>
@@ -487,7 +746,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
               return (
                 <div
                   key={srv.id}
-                  onClick={() => setSelectedCoreService(srv)}
+                  onClick={() => handleOpenCoreService(srv)}
                   className="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/70 transition-colors pointer-events-none" />
@@ -703,7 +962,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
       {/* Detail Modal for Core Services */}
       <CoreServiceDetailModal
         service={selectedCoreService}
-        onClose={() => setSelectedCoreService(null)}
+        onClose={handleCloseCoreService}
         onOpenConsultation={_onOpenConsultation}
       />
 

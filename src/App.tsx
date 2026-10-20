@@ -27,8 +27,10 @@ import ArchitectureHubModal from "./components/ArchitectureHubModal";
 import NetworkStatusBanner from "./components/NetworkStatusBanner";
 import Logo from "./components/Logo";
 import { type ProductService } from "./types";
-import { saasProductsData, aiAgentsData } from "./data";
+import { saasProductsData, aiAgentsData, otherServicesData } from "./data";
 import { PRODUCT_SEO_DATA, CORE_PAGES_SEO } from "./seoData";
+
+const allProducts: ProductService[] = [...saasProductsData, ...aiAgentsData, ...otherServicesData];
 import { ARTICLES_DATA } from "./articleData";
 import { 
   Lock, 
@@ -154,6 +156,126 @@ export default function App() {
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [leadSearch, setLeadSearch] = useState("");
 
+  // Open live software with browser history push so Chrome Back returns to originating page & scroll position
+  const openLiveSoftware = (product: ProductService, originatingPreviewProduct?: ProductService | null) => {
+    const currentScrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        {
+          ...(window.history.state || {}),
+          type: "page",
+          scrollY: currentScrollY,
+        },
+        ""
+      );
+      window.history.pushState(
+        {
+          isModal: true,
+          modalType: "live-software",
+          productId: product.id,
+          previewProductId: originatingPreviewProduct ? originatingPreviewProduct.id : (previousPreviewProduct ? previousPreviewProduct.id : null),
+          scrollY: currentScrollY,
+        },
+        "",
+        window.location.pathname + window.location.search + window.location.hash
+      );
+    }
+    if (originatingPreviewProduct) {
+      setPreviousPreviewProduct(originatingPreviewProduct);
+    }
+    setActiveSoftwareDetail(null);
+    setSelectedProduct(null);
+    setActiveLiveSoftware(product);
+  };
+
+  // Open product detail preview with browser history push
+  const openSoftwareDetail = (product: ProductService) => {
+    const currentScrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        {
+          ...(window.history.state || {}),
+          type: "page",
+          scrollY: currentScrollY,
+        },
+        ""
+      );
+      window.history.pushState(
+        {
+          isModal: true,
+          modalType: "software-detail",
+          productId: product.id,
+          scrollY: currentScrollY,
+        },
+        "",
+        window.location.pathname + window.location.search + window.location.hash
+      );
+    }
+    setActiveLiveSoftware(null);
+    setSelectedProduct(null);
+    setActiveSoftwareDetail(product);
+  };
+
+  // Close handlers that respect browser history
+  const closeLiveSoftware = () => {
+    if (typeof window !== "undefined" && window.history.state?.isModal) {
+      window.history.back();
+    } else {
+      setActiveLiveSoftware(null);
+      if (previousPreviewProduct) {
+        setActiveSoftwareDetail(previousPreviewProduct);
+        setPreviousPreviewProduct(null);
+      }
+    }
+  };
+
+  const closeSoftwareDetail = () => {
+    if (typeof window !== "undefined" && window.history.state?.isModal) {
+      window.history.back();
+    } else {
+      setActiveSoftwareDetail(null);
+      setPreviousPreviewProduct(null);
+    }
+  };
+
+  const closeProductDetail = () => {
+    if (typeof window !== "undefined" && window.history.state?.isModal) {
+      window.history.back();
+    } else {
+      setSelectedProduct(null);
+    }
+  };
+
+  // Scroll position tracker: updates history.state without creating history entries
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    let scrollTimer: any;
+    const handleScroll = () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        if (typeof window !== "undefined" && !window.history.state?.isModal) {
+          window.history.replaceState(
+            {
+              ...(window.history.state || {}),
+              type: "page",
+              scrollY: window.scrollY,
+            },
+            ""
+          );
+        }
+      }, 100);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimer);
+    };
+  }, []);
+
   // Navigation controller with HTML5 History & URL normalization
   const navigateTo = (target: string) => {
     // 1. Architecture modal shortcut
@@ -183,23 +305,53 @@ export default function App() {
     }
 
     const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-    if (currentUrl !== urlToPush) {
-      window.history.pushState(null, "", urlToPush);
+
+    // Save scroll position for origin page in history
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        {
+          ...(window.history.state || {}),
+          type: "page",
+          url: currentUrl,
+          scrollY: window.scrollY,
+        },
+        ""
+      );
     }
+
+    if (currentUrl !== urlToPush) {
+      window.history.pushState({ type: "page", url: urlToPush, scrollY: 0 }, "", urlToPush);
+    }
+
     setActiveLiveSoftware(null);
     setActiveSoftwareDetail(null);
     setSelectedProduct(null);
+    setPreviousPreviewProduct(null);
+
     const searchPart = urlToPush.includes("?") ? urlToPush.slice(urlToPush.indexOf("?")) : "";
     const hashPart = urlToPush.includes("#") ? urlToPush.slice(urlToPush.indexOf("#")) : "";
     const pathPart = urlToPush.split("?")[0].split("#")[0];
     const newRoute = resolveRoute(pathPart, hashPart, searchPart);
     setRoute(newRoute);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (hashPart && hashPart.length > 1) {
+      const hashId = hashPart.replace(/^#/, "");
+      requestAnimationFrame(() => {
+        const el = document.getElementById(hashId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
   };
 
   // HTML5 History & Popstate event listener
   useEffect(() => {
-    const handleLocationChange = () => {
+    const handleLocationChange = (event?: PopStateEvent) => {
       const hash = window.location.hash;
       if (hash.startsWith("#architecture")) {
         const subTab = hash.split("-")[1] as any;
@@ -212,14 +364,63 @@ export default function App() {
         return;
       }
 
-      const newRoute = resolveRoute(window.location.pathname, window.location.hash, window.location.search);
-      setRoute(newRoute);
+      const state = event?.state || (typeof window !== "undefined" ? window.history.state : null);
+
+      // Check if state indicates a modal or live software was opened
+      if (state && state.isModal) {
+        const prod = allProducts.find((p) => p.id === state.productId);
+        if (prod) {
+          if (state.modalType === "live-software") {
+            setActiveLiveSoftware(prod);
+            setActiveSoftwareDetail(null);
+            setSelectedProduct(null);
+            if (state.previewProductId) {
+              const prev = allProducts.find((p) => p.id === state.previewProductId);
+              if (prev) setPreviousPreviewProduct(prev);
+            }
+            return;
+          } else if (state.modalType === "software-detail") {
+            setActiveLiveSoftware(null);
+            setActiveSoftwareDetail(prod);
+            setSelectedProduct(null);
+            setPreviousPreviewProduct(null);
+            return;
+          } else if (state.modalType === "product-detail") {
+            setActiveLiveSoftware(null);
+            setActiveSoftwareDetail(null);
+            setSelectedProduct(prod);
+            return;
+          }
+        }
+      }
+
+      // No modal active in popped history state: close any open software overlay/preview
       setActiveLiveSoftware(null);
       setActiveSoftwareDetail(null);
       setSelectedProduct(null);
+      setPreviousPreviewProduct(null);
+
+      const newRoute = resolveRoute(window.location.pathname, window.location.hash, window.location.search);
+      setRoute(newRoute);
 
       if (newRoute.type === "page" && ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"].includes(newRoute.id)) {
         setComplianceTab(newRoute.id);
+      }
+
+      // Exact scroll position preservation on Browser Back / Forward
+      const targetScrollY = state?.scrollY;
+      if (typeof targetScrollY === "number") {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: targetScrollY, behavior: "instant" });
+        });
+      } else if (window.location.hash && window.location.hash.length > 1) {
+        const hashId = window.location.hash.replace(/^#/, "");
+        const targetEl = document.getElementById(hashId);
+        if (targetEl) {
+          requestAnimationFrame(() => {
+            targetEl.scrollIntoView({ behavior: "smooth" });
+          });
+        }
       }
     };
 
@@ -369,8 +570,8 @@ export default function App() {
             {route.type === "page" && route.id === "home" && (
               <HomePage 
                 onNavigate={navigateTo}
-                onSelectProduct={(product) => setActiveSoftwareDetail(product)}
-                onOpenSoftware={(product) => setActiveLiveSoftware(product)}
+                onSelectProduct={openSoftwareDetail}
+                onOpenSoftware={openLiveSoftware}
                 onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
@@ -379,7 +580,7 @@ export default function App() {
             {route.type === "page" && route.id === "software" && (
               <SoftwareDirectoryPage 
                 onNavigate={navigateTo}
-                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenLiveApp={openLiveSoftware}
                 onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
@@ -388,7 +589,7 @@ export default function App() {
             {route.type === "page" && route.id === "ai-agents" && (
               <AiAgentsDirectoryPage 
                 onNavigate={navigateTo}
-                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenLiveApp={openLiveSoftware}
                 onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
@@ -411,8 +612,8 @@ export default function App() {
             {/* 6. SERVICES PAGE */}
             {route.type === "page" && route.id === "services" && (
               <ServicesPage 
-                onSelectProduct={(product) => setActiveSoftwareDetail(product)}
-                onOpenSoftware={(product) => setActiveLiveSoftware(product)}
+                onSelectProduct={openSoftwareDetail}
+                onOpenSoftware={openLiveSoftware}
                 onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
@@ -479,7 +680,7 @@ export default function App() {
                 seoInfo={PRODUCT_SEO_DATA[route.productKey]}
                 productData={activeProductData}
                 onNavigate={navigateTo}
-                onOpenLiveApp={(product) => setActiveLiveSoftware(product)}
+                onOpenLiveApp={openLiveSoftware}
                 onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
               />
             )}
@@ -526,52 +727,37 @@ export default function App() {
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          onClose={closeProductDetail}
           onOpenSoftware={(product) => {
-            setPreviousPreviewProduct(selectedProduct);
-            setSelectedProduct(null);
-            setActiveLiveSoftware(product);
+            openLiveSoftware(product, selectedProduct);
           }}
           onOpenConsultation={() => {
-            setSelectedProduct(null);
+            closeProductDetail();
             navigateTo("/contact/?mode=demo");
           }}
         />
       )}
 
-      {/* 5b. FULL SOFTWARE & AGENT DETAIL VIEW WITH BACK BUTTON */}
+      {/* 5b. FULL SOFTWARE & AGENT DETAIL PREVIEW VIEW WITH STEP-BY-STEP BACK BUTTON */}
       {activeSoftwareDetail && (
         <SoftwareDetailModal
           software={activeSoftwareDetail}
-          onClose={() => {
-            setActiveSoftwareDetail(null);
-            setPreviousPreviewProduct(null);
-          }}
+          onClose={closeSoftwareDetail}
           onOpenLiveApp={(product) => {
-            setPreviousPreviewProduct(activeSoftwareDetail);
-            setActiveSoftwareDetail(null);
-            setActiveLiveSoftware(product);
+            openLiveSoftware(product, activeSoftwareDetail);
           }}
-          onOpenInquiry={(serviceTopic) => {
-            setActiveSoftwareDetail(null);
-            setPreviousPreviewProduct(null);
+          onOpenInquiry={(_serviceTopic) => {
+            closeSoftwareDetail();
             navigateTo("contact");
           }}
         />
       )}
 
-      {/* 5c. LIVE SOFTWARE & AUTONOMOUS AGENT APPLICATION WITH DIRECT BACK NAVIGATION */}
+      {/* 5c. LIVE SOFTWARE & AUTONOMOUS AGENT APPLICATION WITH STEP-BY-STEP PREVIEW NAVIGATION */}
       {activeLiveSoftware && (
         <LiveSoftwareApp
           software={activeLiveSoftware}
-          onClose={() => {
-            const previewToRestore = previousPreviewProduct || activeLiveSoftware;
-            setActiveLiveSoftware(null);
-            setPreviousPreviewProduct(null);
-            if (previewToRestore) {
-              setActiveSoftwareDetail(previewToRestore);
-            }
-          }}
+          onClose={closeLiveSoftware}
         />
       )}
 

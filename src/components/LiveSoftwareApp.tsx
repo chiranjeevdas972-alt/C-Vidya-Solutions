@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ProductService } from "../types";
-import institutesImg from "../assets/images/institutes_software_dashboard_1784909550776.jpg";
-import institutesComingSoonImg from "../assets/images/institutes_coming_soon_1789758787152.jpg";
 import { 
   ArrowLeft,
   ArrowRight, 
@@ -32,6 +30,9 @@ import {
   BarChart3
 } from "lucide-react";
 
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase";
+
 interface LiveSoftwareAppProps {
   software: ProductService | null;
   onClose: () => void;
@@ -44,15 +45,58 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
   const [iframeKey, setIframeKey] = useState(1);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Coming Soon state for institutes
-  const [activePictureIndex, setActivePictureIndex] = useState(0);
-  const [waitlistEmail, setWaitlistEmail] = useState("");
-  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
+  const isInstitutes = 
+    software?.id?.toLowerCase() === "institutes" || 
+    software?.id?.toLowerCase() === "institutes-management" ||
+    software?.id?.toLowerCase()?.includes("institute") || 
+    software?.name?.toLowerCase()?.includes("institute");
 
-  const isInstitutes = useMemo(() => {
-    if (!software) return false;
-    return software.id === "institutes" || software.name.toLowerCase().includes("institute");
-  }, [software]);
+  // State for Institutes Early Access Beta waitlist registration
+  const [instituteLeadName, setInstituteLeadName] = useState("");
+  const [instituteName, setInstituteName] = useState("");
+  const [instituteEmail, setInstituteEmail] = useState("");
+  const [institutePhone, setInstitutePhone] = useState("");
+  const [instituteStudents, setInstituteStudents] = useState("250 - 1,000 students");
+  const [instituteSubmitted, setInstituteSubmitted] = useState(false);
+  const [instituteSubmitting, setInstituteSubmitting] = useState(false);
+
+  const handleInstituteNotifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!institutePhone && !instituteEmail) return;
+    setInstituteSubmitting(true);
+    try {
+      try {
+        const inquiriesCol = collection(db, "inquiries");
+        await addDoc(inquiriesCol, {
+          name: instituteLeadName.trim() || instituteName.trim() || "Institute Administrator",
+          email: instituteEmail.trim() || "institutes-early-access@cvidya.com",
+          phone: institutePhone.trim(),
+          service: "C Vidya Institutes Management (Coming Soon Early Access)",
+          message: `Institution: ${instituteName.trim()} | Size: ${instituteStudents} | Early access request`,
+          timestamp: new Date().toISOString(),
+          status: "pending_review"
+        });
+      } catch (fbErr) {
+        console.warn("Firestore save fallback:", fbErr);
+      }
+      await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: instituteLeadName.trim() || instituteName.trim() || "Institute Administrator",
+          email: instituteEmail.trim() || "institutes-early-access@cvidya.com",
+          phone: institutePhone.trim(),
+          service: "C Vidya Institutes Management (Coming Soon Early Access)",
+          message: `Institution: ${instituteName.trim()} | Size: ${instituteStudents} | Early access request`
+        })
+      }).catch(() => {});
+      setInstituteSubmitted(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setInstituteSubmitting(false);
+    }
+  };
 
   // Direct local routes for full SaaS apps (Library, Fitness, Petrol Pump, PDF Tools), ensuring seamless same-origin step-by-step navigation
   const effectiveIframeSrc = useMemo(() => {
@@ -62,7 +106,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       return "/software/library/index.html";
     }
     if (id === "fitness" || software.externalLink.includes("fitzone") || software.externalLink.includes("fitness")) {
-      return software.externalLink || "https://fitzone.cvidyasolutions.workers.dev/";
+      return "/software/fitness/index.html";
     }
     if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump") || software.externalLink.includes("petrol")) {
       return "/software/petrol-pump/index.html";
@@ -80,9 +124,17 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
   useEffect(() => {
     if (software) {
       document.body.style.overflow = "hidden";
-      setIframeLoaded(false);
+      // Open immediately with zero artificial delay
+      const id = software.id.toLowerCase();
+      const isLocal = id === "library" || id === "fitness" || id === "petrol-pump" || id === "pdf-media-tools" || id === "pdf-tools";
+      setIframeLoaded(isLocal);
       setIframeError(false);
       setIframeKey((k) => k + 1);
+
+      // Instant reveal timer in 100ms max for remote links so the software canvas is always active
+      const fastRevealTimer = setTimeout(() => {
+        setIframeLoaded(true);
+      }, 100);
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -91,6 +143,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => {
+        clearTimeout(fastRevealTimer);
         document.body.style.overflow = "unset";
         window.removeEventListener("keydown", handleKeyDown);
       };
@@ -152,12 +205,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     );
   }, [software]);
 
-  const lastBackClickRef = useRef<number>(0);
 
-  // Step-by-step backward navigation: Top Left Back Arrow returns directly to Product Preview Page
-  const handleBack = () => {
-    onClose();
-  };
 
   // Define dynamic metadata, branding colors, typography and navigation features for every software
   interface SoftwareConfig {
@@ -634,325 +682,217 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     setIframeError(false);
   };
 
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!waitlistEmail.trim()) return;
-    setIsWaitlistSubmitted(true);
-  };
-
-  const institutesGallery = [
-    {
-      src: institutesComingSoonImg,
-      badge: "Campus Operations Master Preview",
-      title: "Interactive Campus ERP & Student Analytics Hub",
-      desc: "Centralized intelligence portal covering multi-branch enrollments, smart automated fee collections, real-time bus GPS telemetry, and biometric attendance logs."
-    },
-    {
-      src: institutesImg,
-      badge: "Academic Ledger & Gradebook",
-      title: "Automated CBSE / ICSE Exam & Report Card Generator",
-      desc: "Instant digital gradebook reconciliation, automated homework diaries, faculty assignment matrix, and instant parent WhatsApp status notifications."
-    }
-  ];
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   return (
     <div className="fixed inset-0 z-[9990] w-full h-full h-[100dvh] w-screen max-w-full bg-slate-950 text-white flex flex-col overflow-hidden animate-fadeIn">
-      {/* Auto-Adjusting Sleek Arrow Back Button (Icon Only - Instant Step-by-Step Back Navigation) */}
-      <div className="fixed top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 md:top-4 md:left-4 z-[9999] pointer-events-auto mt-[env(safe-area-inset-top,0px)] ml-[env(safe-area-inset-left,0px)]">
-        <button
-          type="button"
-          onClick={handleBack}
-          className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 ${currentConfig.backBtnBg} ${currentConfig.backBtnHover} active:scale-90 text-white rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105`}
-          title="Back to Preview Page"
-          aria-label="Back to Preview Page"
-        >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
-        </button>
-      </div>
-
-      {/* Auto-Adjusting Sleek Close Button (Icon Only - Responsive Corner Placement) */}
-      <div className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 md:top-4 md:right-4 z-[9999] pointer-events-auto mt-[env(safe-area-inset-top,0px)] mr-[env(safe-area-inset-right,0px)]">
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 text-white bg-slate-900/90 hover:bg-slate-800 active:scale-90 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-xl hover:shadow-2xl cursor-pointer border border-white/25 shrink-0 backdrop-blur-md hover:scale-105"
-          title="Close software view"
-          aria-label="Close software view"
-        >
-          <X className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-      </div>
-
-      {/* Main Software Canvas Area: Full Screen with No Second Header */}
-      <main className={`flex-1 w-full h-full relative bg-slate-950 flex flex-col min-h-0 min-w-0 ${isInstitutes ? "overflow-y-auto" : "overflow-hidden"}`}>
+      {/* Main Software Canvas Area: Full Screen */}
+      <main className="flex-1 w-full h-full relative bg-slate-950 flex flex-col min-h-0 min-w-0 overflow-hidden">
         {isInstitutes ? (
-          /* Advanced High-Fidelity Coming Soon UI with Pictures & Feature Roadmap */
-          <div className="w-full flex-1 pt-16 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col gap-8">
-            
-            {/* Top Announcement Banner */}
-            <div className="flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto pt-2">
-              <div className="inline-flex items-center gap-3 px-6 py-2.5 sm:px-8 sm:py-3 rounded-full bg-amber-500/15 border-2 border-amber-400/60 text-amber-300 text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-widest shadow-xl shadow-amber-500/15 backdrop-blur-md">
-                <span className="relative flex h-3.5 w-3.5 sm:h-5 sm:w-5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 sm:h-5 sm:w-5 bg-amber-400" />
-                </span>
+          /* ================================================================= */
+          /* DEDICATED FULL-SCREEN COMING SOON PAGE FOR C VIDYA INSTITUTES    */
+          /* ================================================================= */
+          <div className="w-full h-full overflow-y-auto bg-gradient-to-b from-[#061024] via-slate-950 to-slate-950 text-white flex flex-col items-center justify-start p-4 sm:p-8 animate-fadeIn">
+            {/* Top Bar */}
+            <div className="w-full max-w-5xl flex items-center justify-between pb-6 border-b border-blue-900/40 mb-8 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-sm sm:text-base text-white tracking-wide">
+                    C VIDYA INSTITUTES MANAGEMENT
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Coming Soon Presentation */}
+            <div className="w-full max-w-4xl space-y-8 text-center pb-16">
+              
+              {/* Coming Soon Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-bold font-mono tracking-wider uppercase shadow-lg shadow-amber-500/10">
+                <Clock className="w-4 h-4 text-amber-400" />
                 <span>COMING SOON</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-tight">
-                C Vidya Institutes Management
-              </h1>
-
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
-                The modern cloud ERP engineered for schools, colleges, and multi-campus academies. 
-                Manage admissions, automated fee cashbooks, biometric attendance, and student report cards seamlessly.
-              </p>
-
-              {/* Progress Tracker */}
-              <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg mt-2">
-                <div className="flex justify-between items-center text-xs text-slate-300 font-semibold mb-2">
-                  <span className="flex items-center gap-1.5 text-blue-400">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Deployment Status: Phase 3 Beta</span>
-                  </span>
-                  <span className="text-emerald-400 font-mono font-bold">88% Ready</span>
-                </div>
-                <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 rounded-full w-[88%]" />
-                </div>
-                <div className="flex justify-between text-[11px] text-slate-500 mt-2">
-                  <span>Architecture Validated</span>
-                  <span>Campus Field Tests</span>
-                  <span>Public Ingress</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Pictures Showcase Section */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-                <div>
-                  <span className="text-xs font-mono uppercase tracking-wider text-blue-400 font-bold">
-                    Official Software Architecture Gallery
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
-                    {institutesGallery[activePictureIndex].title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-                    {institutesGallery[activePictureIndex].desc}
-                  </p>
-                </div>
-
-                {/* Picture Selector Tabs */}
-                <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 shrink-0 self-start sm:self-center">
-                  {institutesGallery.map((pic, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActivePictureIndex(idx)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        activePictureIndex === idx
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "text-slate-400 hover:text-white hover:bg-slate-800"
-                      }`}
-                    >
-                      <span>Preview {idx + 1}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Main Featured Image with Frame & Highlights */}
-              <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner group">
-                <img
-                  src={institutesGallery[activePictureIndex].src}
-                  alt={institutesGallery[activePictureIndex].title}
-                  className="w-full h-auto max-h-[520px] object-cover object-top transition-transform duration-500 group-hover:scale-[1.01]"
-                  referrerPolicy="no-referrer"
-                />
-
-                {/* Image Overlay Badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-xs font-semibold text-white shadow-lg">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>{institutesGallery[activePictureIndex].badge}</span>
-                </div>
-
-                <div className="absolute bottom-4 right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-slate-700/60 text-xs font-mono text-emerald-400 shadow-lg">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>High-Fidelity ERP Mockup</span>
-                </div>
-              </div>
-
-              {/* Gallery Thumbnails */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {institutesGallery.map((pic, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setActivePictureIndex(idx)}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${
-                      activePictureIndex === idx
-                        ? "bg-blue-950/40 border-blue-500/80 shadow-md ring-1 ring-blue-500/40"
-                        : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-950"
-                    }`}
-                  >
-                    <img
-                      src={pic.src}
-                      alt={pic.title}
-                      className="w-20 h-14 sm:w-24 sm:h-16 object-cover rounded-lg shrink-0 border border-slate-800"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="truncate">
-                      <div className="text-xs font-bold text-white truncate">{pic.title}</div>
-                      <div className="text-[11px] text-slate-400 truncate mt-0.5">{pic.desc}</div>
-                      <span className="text-[10px] font-mono text-blue-400 font-semibold mt-1 inline-block">
-                        Click to view preview
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Core Modules Bento Grid */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-blue-400" />
-                  <span>Built-in Modules Available on Launch</span>
-                </h3>
-                <span className="text-xs font-mono text-slate-400 hidden sm:inline">
-                  Enterprise-Grade Multi-Tenant Architecture
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-3">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Student Admissions &amp; CRM</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    Online registration forms, entrance exam allotments, verification checklists, and auto-generated student enrollment IDs.
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center mb-3">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Automated Fees &amp; Cashbooks</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    Term billing schedules, UPI/card payment gateway, penalty calculations, and instant WhatsApp receipt dispatch.
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-3">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Biometric &amp; RFID Attendance</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    Hardware turnstile integrations, teacher attendance, period timetables, and automated SMS alerts to guardians for absent students.
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center mb-3">
-                    <Calendar className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Exams &amp; Gradebook Engine</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    CBSE, ICSE, and state-board compliant report cards, hall tickets, teacher grading portals, and rank list generators.
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center mb-3">
-                    <Bus className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Live GPS School Bus Tracking</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    Real-time vehicle map telemetry, driver roster management, geo-fence boarding alerts, and fuel consumption logs.
-                  </p>
-                </div>
-
-                <div className="bg-slate-900/70 border border-slate-800 p-5 rounded-2xl hover:border-slate-700 transition-all">
-                  <div className="w-10 h-10 rounded-xl bg-rose-600/20 text-rose-400 flex items-center justify-center mb-3">
-                    <Smartphone className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">Parent &amp; Faculty Mobile Portal</h4>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                    Dedicated mobile app for digital homework submission, event calendars, report downloads, and direct teacher queries.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* VIP Early Access Priority Form */}
-            <div id="vip-waitlist-section" className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 border border-blue-900/50 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-              <div className="space-y-2 max-w-xl text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 uppercase tracking-wider">
-                  <Bell className="w-3.5 h-3.5" />
-                  <span>Exclusive Early Access Sandbox</span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white">
-                  Get Notified When Institute Management Launches
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Join 120+ educational institutions on the VIP waitlist to receive a complimentary 30-day campus trial and priority onboarding.
+              {/* Big Title & Description */}
+              <div className="space-y-4">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
+                  C VIDYA INSTITUTES MANAGEMENT
+                </h1>
+                <p className="text-base sm:text-xl text-blue-200/90 font-medium max-w-2xl mx-auto">
+                  All-in-One Multi-Branch Campus Administration, Student Admissions &amp; Smart Fee Portal
+                </p>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                  Our comprehensive Institutional ERP suite is currently in final QA testing and multi-campus sync optimization. It is scheduled for release following complete security auditing.
                 </p>
               </div>
 
-              <div className="w-full md:w-auto shrink-0 max-w-md">
-                {isWaitlistSubmitted ? (
-                  <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs sm:text-sm flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <div>
-                      <p className="font-bold text-white">You're on the VIP waitlist!</p>
-                      <p className="text-xs text-emerald-300 mt-0.5">We will notify your institute as soon as the live portal opens.</p>
-                    </div>
+              {/* Planned Module Highlights Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left pt-4">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
+                    <GraduationCap className="w-5 h-5" />
                   </div>
-                ) : (
-                  <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-2.5">
-                    <input
-                      type="text"
-                      required
-                      placeholder="School / College or Email..."
-                      value={waitlistEmail}
-                      onChange={(e) => setWaitlistEmail(e.target.value)}
-                      className="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 min-w-[240px]"
-                    />
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer shrink-0"
-                    >
-                      <span>Join Waitlist</span>
-                    </button>
-                  </form>
-                )}
+                  <h3 className="font-bold text-sm text-white">Admissions CRM</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">End-to-end student counseling pipeline, digital document verification, and seat locking.</p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white">Fee Cashbooks &amp; Ledgers</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">Multi-term fee collection, automated WhatsApp receipts, and instant daily bank reconciliation.</p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center font-bold">
+                    <BarChart3 className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white">CBSE/ICSE Gradebook</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">Standard marksheet compilation, automated report cards, and academic ranking analytics.</p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center font-bold">
+                    <Bus className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white">GPS School Bus Tracking</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">Live vehicle telemetry, route optimization, driver rosters, and parent arrival notifications.</p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center font-bold">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white">Parent Portal &amp; Alerts</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">Real-time attendance logs, homework feeds, and official circular broadcasts on mobile.</p>
+                </div>
+
+                <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-blue-500/40 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-rose-600/20 text-rose-400 flex items-center justify-center font-bold">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white">Multi-Campus Governance</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">Centralized director dashboard with branch-level P&amp;L, staff rosters, and compliance audits.</p>
+                </div>
               </div>
-            </div>
 
-            {/* Bottom Return Action */}
-            <div className="flex justify-center pb-8 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all border border-slate-700 cursor-pointer shadow-lg"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180 text-blue-400" />
-                <span>Return to C Vidya Solutions Products</span>
-              </button>
-            </div>
+              {/* Early Access Waitlist Form */}
+              <div className="pt-4 max-w-xl mx-auto text-left">
+                <div className="bg-white/5 border border-blue-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl space-y-5">
+                  <div className="text-center space-y-1">
+                    <h3 className="font-bold text-lg sm:text-xl text-white">
+                      Register for Early Beta Access
+                    </h3>
+                    <p className="text-xs text-slate-300">
+                      Be among the first schools and colleges to deploy C Vidya Institutes Management with dedicated onboarding.
+                    </p>
+                  </div>
 
+                  {instituteSubmitted ? (
+                    <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-center space-y-2 animate-fadeIn">
+                      <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
+                      <p className="text-sm font-bold text-emerald-300">You are registered for Early Access!</p>
+                      <p className="text-xs text-slate-300">Our engineering desk will contact you with deployment details as soon as beta slots open.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleInstituteNotifySubmit} className="space-y-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">Institution Name</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. St. Xavier's Academy"
+                            value={instituteName}
+                            onChange={(e) => setInstituteName(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">Contact Person Name</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Principal / Director"
+                            value={instituteLeadName}
+                            onChange={(e) => setInstituteLeadName(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">Mobile / WhatsApp Number</label>
+                          <input
+                            type="tel"
+                            required
+                            placeholder="e.g. +91 98765 43210"
+                            value={institutePhone}
+                            onChange={(e) => setInstitutePhone(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-300 mb-1">Official Email Address</label>
+                          <input
+                            type="email"
+                            placeholder="contact@school.edu.in"
+                            value={instituteEmail}
+                            onChange={(e) => setInstituteEmail(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">Student Enrollment Scale</label>
+                        <select
+                          value={instituteStudents}
+                          onChange={(e) => setInstituteStudents(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-blue-500 transition-colors"
+                        >
+                          <option value="Under 250 students">Under 250 students</option>
+                          <option value="250 - 1,000 students">250 - 1,000 students</option>
+                          <option value="1,000 - 3,000 students">1,000 - 3,000 students</option>
+                          <option value="3,000+ students (Multi-branch campus)">3,000+ students (Multi-branch campus)</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={instituteSubmitting}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 active:scale-98 text-white rounded-xl text-xs sm:text-sm font-bold tracking-wide shadow-lg shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {instituteSubmitting ? "Submitting Registration..." : "Request Priority Early Access"}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+
+
+
+            </div>
           </div>
-        ) : software.externalLink ? (
+        ) : software?.externalLink ? (
           <div className="w-full h-full relative flex flex-col flex-1 min-h-0 min-w-0 overflow-hidden">
-            {/* Loading Indicator */}
+            {/* Non-blocking top progress bar while frame streams */}
             {!iframeLoaded && !iframeError && (
-              <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center gap-3 z-10">
-                <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
-                <p className="text-xs text-slate-400 font-mono">Loading {software.name} environment...</p>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500/20 z-20 overflow-hidden pointer-events-none">
+                <div className="h-full bg-blue-500 animate-pulse w-full" />
               </div>
             )}
 
@@ -965,7 +905,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
                   </div>
                   <h3 className="text-lg font-bold text-white">Live Application Loading Notice</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Connecting to {software.name} environment. Click below to reload or return to the preview page.
+                    Connecting to {software.name} environment. Click below to reload or return to the website.
                   </p>
                   <div className="flex items-center justify-center gap-3">
                     <button
@@ -982,7 +922,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
                       className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      <span>Back to Preview</span>
+                      <span>Back to Preview Page</span>
                     </button>
                   </div>
                 </div>
@@ -1012,9 +952,9 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
               <div className={`w-16 h-16 rounded-2xl ${currentConfig.badgeBg} flex items-center justify-center mx-auto shadow-lg ${currentConfig.badgeShadow}`}>
                 <BrandIcon className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white">{software.name}</h3>
+              <h3 className="text-xl font-bold text-white">{software?.name}</h3>
               <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                {software.description}
+                {software?.description}
               </p>
               <button
                 type="button"

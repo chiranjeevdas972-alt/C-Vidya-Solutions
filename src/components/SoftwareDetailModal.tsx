@@ -122,22 +122,27 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
         className="fixed inset-0 z-50 w-full h-full min-h-screen bg-slate-50 overflow-y-auto flex flex-col"
       >
         {/* Sticky Top Full Page Header */}
-        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pl-[max(1rem,env(safe-area-inset-left,1rem))] pr-[max(1rem,env(safe-area-inset-right,1rem))] flex items-center">
-          <button
-            type="button"
-            onClick={() => {
-              if (activeDetailPage) {
-                setActiveDetailPage(null);
-              } else {
-                onClose();
-              }
-            }}
-            className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 active:scale-90 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:scale-105 cursor-pointer border border-white/20 shrink-0"
-            title={activeDetailPage ? "Back to Overview" : "Back"}
-            aria-label={activeDetailPage ? "Back to Overview" : "Back"}
-          >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
-          </button>
+        <div className="sticky top-0 z-30 bg-[#071739] text-white shadow-xl border-b border-blue-900/50 px-4 sm:px-8 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pl-[max(1rem,env(safe-area-inset-left,1rem))] pr-[max(1rem,env(safe-area-inset-right,1rem))] flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (activeDetailPage) {
+                  setActiveDetailPage(null);
+                } else {
+                  onClose();
+                }
+              }}
+              className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 active:scale-90 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:scale-105 cursor-pointer border border-white/20 shrink-0"
+              title="Back"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5]" />
+            </button>
+            <span className="text-xs sm:text-sm font-bold font-mono tracking-wider text-slate-200 uppercase truncate">
+              {software.name} Preview
+            </span>
+          </div>
         </div>
 
         {/* ------------------------------------------------------------- */}
@@ -644,7 +649,7 @@ export default function SoftwareDetailModal({ software, onClose, onOpenLiveApp, 
             </div>
 
             {/* Bottom Navigation & Inquire Bar */}
-            {software.externalLink ? (
+            {(software.externalLink || software.id === "institutes") ? (
               <div className="pt-8 border-t border-slate-200 flex items-center justify-end gap-4 pb-12">
                 <button
                   type="button"

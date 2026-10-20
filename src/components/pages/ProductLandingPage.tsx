@@ -112,10 +112,16 @@ export default function ProductLandingPage({
       <div className="bg-[#071739] text-white px-4 sm:px-8 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pl-[max(1rem,env(safe-area-inset-left,1rem))] pr-[max(1rem,env(safe-area-inset-right,1rem))] flex items-center border-b border-blue-900/50 shadow-md">
         <button
           type="button"
-          onClick={() => onNavigate(seoInfo.type === "software" ? "/software/" : "/ai-agents/")}
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              window.history.back();
+            } else {
+              onNavigate(seoInfo.type === "software" ? "/software/" : "/ai-agents/");
+            }
+          }}
           className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 active:scale-90 text-white rounded-xl flex items-center justify-center transition-all shadow-md hover:scale-105 cursor-pointer border border-white/20 shrink-0"
-          title={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Landing Page`}
-          aria-label={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Landing Page`}
+          title={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Preview Page`}
+          aria-label={`Back to ${seoInfo.type === "software" ? "Software" : "AI Agents"} Preview Page`}
         >
           <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-white stroke-[2.5] rotate-180" />
         </button>
@@ -153,7 +159,7 @@ export default function ProductLandingPage({
 
             {/* Action CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              {productData.externalLink && (
+              {(productData.externalLink || productData.id === "institutes") && (
                 <button
                   type="button"
                   onClick={() => {
@@ -514,7 +520,7 @@ export default function ProductLandingPage({
               Request Enterprise Quotation
             </button>
 
-            {productData.externalLink && (
+            {(productData.externalLink || productData.id === "institutes") && (
               <button
                 type="button"
                 onClick={() => {
