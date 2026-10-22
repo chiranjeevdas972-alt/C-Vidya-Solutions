@@ -8,7 +8,8 @@
     "build": "node scripts/generate-favicons.cjs && vite build && node scripts/generate-static-pages.cjs && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node server.ts",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -34,6 +35,7 @@
     "@types/node": "^22.14.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "vitest": "^5.0.5",
     "wrangler": "^4.147.0"
   }
 }

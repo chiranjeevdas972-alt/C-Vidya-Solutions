@@ -104,7 +104,13 @@ This lead was automatically captured by the C Vidya AI Assistant and forwarded t
 }
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+// Parse command line arguments (e.g., npm run dev --port 3000 --host 0.0.0.0)
+const portArgIndex = process.argv.indexOf("--port");
+const argPort = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? parseInt(process.argv[portArgIndex + 1], 10) : null;
+const envPort = process.env.PORT && process.env.PORT !== "8080" ? parseInt(process.env.PORT, 10) : null;
+// Environment constraint: Dev server must run on port 3000
+const PORT = argPort || envPort || 3000;
 
 // Security: Disable X-Powered-By to prevent fingerprinting by port scanners and ethical hacking tools
 app.disable("x-powered-by");
@@ -1536,6 +1542,74 @@ app.get("/software/pdf-media-tools/*", (req, res, next) => {
   res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
 });
 
+// IndexNow Protocol Key File Verification Endpoint (RFC/IndexNow standard for Microsoft Bing & partner search engines)
+app.get("/:key.txt", (req, res, next) => {
+  const indexNowKey = process.env.INDEXNOW_KEY;
+  if (indexNowKey && req.params.key === indexNowKey) {
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.status(200).send(indexNowKey);
+  }
+  next();
+});
+
+// IndexNow Submission Endpoint (Secure server-side API proxy)
+app.post("/api/indexnow/submit", express.json(), async (req, res) => {
+  const indexNowKey = process.env.INDEXNOW_KEY;
+  if (!indexNowKey) {
+    return res.status(400).json({
+      success: false,
+      error: "INDEXNOW_KEY environment variable is not configured. Generate a key from https://www.bing.com/indexnow and add it to your secrets.",
+    });
+  }
+
+  const { urlList } = req.body || {};
+  if (!Array.isArray(urlList) || urlList.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: "A non-empty urlList array of full URLs is required.",
+    });
+  }
+
+  // Filter only valid https://cvidyasolutions.com URLs
+  const validUrls = urlList.filter(
+    (u) => typeof u === "string" && u.startsWith("https://cvidyasolutions.com")
+  );
+
+  if (validUrls.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: "No valid https://cvidyasolutions.com URLs provided in submission payload.",
+    });
+  }
+
+  try {
+    const payload = {
+      host: "cvidyasolutions.com",
+      key: indexNowKey,
+      keyLocation: `https://cvidyasolutions.com/${indexNowKey}.txt`,
+      urlList: validUrls,
+    };
+
+    const response = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+
+    return res.status(response.status).json({
+      success: response.ok,
+      status: response.status,
+      submittedCount: validUrls.length,
+      urls: validUrls,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to transmit URLs to IndexNow API gateway",
+    });
+  }
+});
+
 // Serve public static assets with index: false, bypassing /software/pdf-media-tools so the SPA landing page loads
 const publicStaticMiddleware = express.static(path.join(process.cwd(), "public"), { index: false });
 app.use((req, res, next) => {
@@ -1572,8 +1646,7 @@ function renderSeoTemplate(rawHtml: string, reqPath: string): string {
 
 // Vite / static file serving integration
 async function startServer() {
-  const distExists = fs.existsSync(path.join(process.cwd(), "dist", "index.html"));
-  const isProduction = process.env.NODE_ENV === "production" || (distExists && process.env.NODE_ENV !== "development");
+  const isProduction = process.env.NODE_ENV === "production";
 
   if (!isProduction) {
     console.log(`Setting up Vite development middleware on port ${PORT}...`);

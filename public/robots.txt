@@ -3,4 +3,14 @@ Allow: /
 Disallow: /api/
 Disallow: /admin/
 
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
 Sitemap: https://cvidyasolutions.com/sitemap.xml
