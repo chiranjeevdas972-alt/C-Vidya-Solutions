@@ -112,7 +112,7 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
       return "/software/petrol-pump/index.html";
     }
     if (id === "pdf-media-tools" || id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools") || software.externalLink.includes("pdf")) {
-      return "/software/pdf-media-tools/index.html";
+      return "/software/pdf-tools/index.html";
     }
     if (id === "farming" || id === "agrifusion" || software.externalLink.includes("fresh.cvidyasolutions")) {
       return "https://fresh.cvidyasolutions.workers.dev/";

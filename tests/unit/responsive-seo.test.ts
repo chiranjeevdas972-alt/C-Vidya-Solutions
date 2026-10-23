@@ -100,4 +100,19 @@ describe("Responsive Design, Cross-Browser Compatibility & Multi-Search-Engine S
     expect(payload.urlList.length).toBe(2);
     expect(payload.urlList.every(u => u.startsWith("https://cvidyasolutions.com"))).toBe(true);
   });
+
+  it("should ensure C Vidya PDF and Media Tools SaaS Try Now launches the live software (/software/pdf-tools/index.html) and does not collide with the SEO details route (/software/pdf-media-tools/)", () => {
+    const pdfToolsHtmlPath = path.join(rootDir, "public/software/pdf-tools/index.html");
+    expect(fs.existsSync(pdfToolsHtmlPath)).toBe(true);
+
+    const pdfToolsHtml = fs.readFileSync(pdfToolsHtmlPath, "utf-8");
+    expect(pdfToolsHtml).toContain('<base href="/software/pdf-tools/">');
+    expect(pdfToolsHtml).toContain("./assets/index-Dr7Qrl8o.js");
+    expect(pdfToolsHtml).toContain("Cvidya PDF and Media tool SaaS");
+
+    const liveAppTsx = fs.readFileSync(path.join(rootDir, "src/components/LiveSoftwareApp.tsx"), "utf-8");
+    expect(liveAppTsx).toContain('return "/software/pdf-tools/index.html";');
+    expect(liveAppTsx).not.toContain('return "/software/pdf-media-tools/index.html";');
+  });
 });
+

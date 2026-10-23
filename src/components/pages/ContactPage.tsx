@@ -282,19 +282,6 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
           /* Book Free Demo Mode: ONLY Get In Touch Section */
           <div className="space-y-4">
             {renderFormCard(true)}
-
-            {onNavigate && (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => onNavigate("/contact/")}
-                  className="text-xs text-slate-500 hover:text-blue-600 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  <span>Looking for Director Desk or Regional Offices? Go to Contact Us</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
           </div>
         ) : (
           /* Contact Us Page: All Details (Director Desk, Get In Touch, Regional Locations) */

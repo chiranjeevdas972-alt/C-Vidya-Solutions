@@ -1534,12 +1534,12 @@ app.get("/software/petrol-pump/*", (req, res, next) => {
   res.sendFile(path.join(process.cwd(), "public/software/petrol-pump/index.html"));
 });
 
-app.get(["/software/pdf-media-tools", "/software/pdf-media-tools/", "/software/pdf-media-tools/index.html"], (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
+app.get(["/software/pdf-tools", "/software/pdf-tools/", "/software/pdf-tools/index.html"], (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public/software/pdf-tools/index.html"));
 });
-app.get("/software/pdf-media-tools/*", (req, res, next) => {
-  if (req.path.startsWith("/software/pdf-media-tools/assets/")) return next();
-  res.sendFile(path.join(process.cwd(), "public/software/pdf-media-tools/index.html"));
+app.get("/software/pdf-tools/*", (req, res, next) => {
+  if (req.path.startsWith("/software/pdf-tools/assets/")) return next();
+  res.sendFile(path.join(process.cwd(), "public/software/pdf-tools/index.html"));
 });
 
 // IndexNow Protocol Key File Verification Endpoint (RFC/IndexNow standard for Microsoft Bing & partner search engines)

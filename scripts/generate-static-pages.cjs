@@ -353,14 +353,17 @@ for (const r of routes) {
 }
 
 // Generate static entry points for software subroutes (dashboard, login) for Cloudflare CDN edge serving
-const softwareSuites = ["fitness", "library", "petrol-pump", "pdf-media-tools"];
+const softwareSuites = ["fitness", "library", "petrol-pump", "pdf-tools"];
 for (const sw of softwareSuites) {
   const sourceHtmlPath = path.join(distDir, "software", sw, "index.html");
   const fallbackSource = path.join(__dirname, "../public/software", sw, "index.html");
-  const actualSource = fs.existsSync(sourceHtmlPath) ? sourceHtmlPath : (fs.existsSync(fallbackSource) ? fallbackSource : null);
+  const actualSource = fs.existsSync(fallbackSource) ? fallbackSource : (fs.existsSync(sourceHtmlPath) ? sourceHtmlPath : null);
   
   if (actualSource) {
     const swHtml = fs.readFileSync(actualSource, "utf-8");
+    const rootEntry = path.join(distDir, "software", sw, "index.html");
+    fs.mkdirSync(path.dirname(rootEntry), { recursive: true });
+    fs.writeFileSync(rootEntry, swHtml, "utf-8");
     const subroutes = ["dashboard", "login", "signup", "register"];
     for (const sub of subroutes) {
       const subDir = path.join(distDir, "software", sw, sub);
