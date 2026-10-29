@@ -16,16 +16,24 @@ import PricingPage from "./components/pages/PricingPage";
 import ProductLandingPage from "./components/pages/ProductLandingPage";
 import BlogArticlePage from "./components/pages/BlogArticlePage";
 import MobileAppPage from "./components/pages/MobileAppPage";
+import AdminDashboardPage from "./components/pages/AdminDashboardPage";
 import ProductDetailModal from "./components/ProductDetailModal";
 import SoftwareDetailModal from "./components/SoftwareDetailModal";
 import LiveSoftwareApp from "./components/LiveSoftwareApp";
 import AiAssistant from "./components/AiAssistant";
+import AiCallingConsolePanel from "./components/AiCallingConsolePanel";
 import ComplianceModal, { CookieConsentBanner } from "./components/ComplianceModal";
 import CompliancePage from "./components/CompliancePage";
 import InfoHubModal from "./components/InfoHubModal";
 import ArchitectureHubModal from "./components/ArchitectureHubModal";
 import NetworkStatusBanner from "./components/NetworkStatusBanner";
 import Logo from "./components/Logo";
+import {
+  ActivityPingNotification,
+  SuccessFeedbackToast,
+  isActivityPingsEnabled,
+  setActivityPingsEnabled
+} from "./components/ActivityPingsAndTour";
 import { type ProductService } from "./types";
 import { saasProductsData, aiAgentsData, otherServicesData } from "./data";
 import { PRODUCT_SEO_DATA, CORE_PAGES_SEO } from "./seoData";
@@ -38,15 +46,24 @@ import {
   Trash2, 
   Search
 } from "lucide-react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { db } from "./firebase";
+import { collection, getDocs, deleteDoc, updateDoc, doc } from "firebase/firestore";
+import {
+  db,
+  auth,
+  getAdminAuthHeaders,
+  verifyAdminPasscodeWithServer,
+  signInAdminWithGoogle,
+  signOutAdmin,
+  isAuthorizedAdminUser,
+  onAuthStateChanged,
+} from "./firebase";
 
 export type RouteState =
   | { type: "page"; id: string; mode?: "demo" | "full" }
   | { type: "product"; productKey: string }
   | { type: "article"; articleSlug: string };
 
-function resolveRoute(pathname: string, hash: string, search: string = ""): RouteState {
+export function resolveRoute(pathname: string, hash: string, search: string = ""): RouteState {
   // 1. Architecture modal hash check
   if (hash.startsWith("#architecture")) {
     return { type: "page", id: "home" };
@@ -67,7 +84,8 @@ function resolveRoute(pathname: string, hash: string, search: string = ""): Rout
     const hashContent = hash.replace(/^#\/?/, "").replace(/\/+$/, "");
     const corePages = [
       "home", "about", "services", "portfolio", "contact", "careers", "blog", "faq",
-      "pricing", "software", "ai-agents", "mobile-app", "coming-soon", "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
+      "pricing", "software", "ai-agents", "mobile-app", "coming-soon", "admin", "admin-dashboard",
+      "privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"
     ];
     if (corePages.includes(hashContent)) {
       cleanPath = hashContent === "home" ? "/" : `/${hashContent}`;
@@ -116,6 +134,7 @@ function resolveRoute(pathname: string, hash: string, search: string = ""): Rout
   if (cleanPath === "/faq") return { type: "page", id: "faq" };
   if (cleanPath === "/mobile-app") return { type: "page", id: "mobile-app" };
   if (cleanPath === "/coming-soon") return { type: "page", id: "coming-soon" };
+  if (cleanPath === "/admin" || cleanPath === "/admin-dashboard") return { type: "page", id: "admin" };
 
   const compliancePages = ["privacy", "terms", "billing", "refund", "cookies", "disclaimer", "portability"];
   for (const cp of compliancePages) {
@@ -150,7 +169,10 @@ export default function App() {
   const [leadsModalOpen, setLeadsModalOpen] = useState(false);
   const [leadsPasscode, setLeadsPasscode] = useState("");
   const [leadsAuthenticated, setLeadsAuthenticated] = useState(false);
-  const [adminTab, setAdminTab] = useState<"leads" | "app_registrations">("leads");
+  const [leadsAuthError, setLeadsAuthError] = useState("");
+  const [leadsAuthenticating, setLeadsAuthenticating] = useState(false);
+  const [adminUserEmail, setAdminUserEmail] = useState<string | null>(null);
+  const [adminTab, setAdminTab] = useState<"leads" | "app_registrations" | "crm_report" | "ai_calling">("leads");
   const [inquiriesList, setInquiriesList] = useState<any[]>([]);
   const [appRegistrationsList, setAppRegistrationsList] = useState<any[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
@@ -452,31 +474,84 @@ export default function App() {
     return "home";
   }, [route]);
 
-  // Fetch Firestore Leads for Admin Portal
+  // Fetch Firestore + API Leads for Admin Portal
   const fetchInquiries = async () => {
     setLoadingInquiries(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "inquiries"));
-      const list: any[] = [];
-      querySnapshot.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
-      });
+      const mergedMap = new Map<string, any>();
+
+      try {
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch("/api/inquiries", { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.inquiries)) {
+            data.inquiries.forEach((item: any) => {
+              if (item && item.id) mergedMap.set(String(item.id), item);
+            });
+          }
+        }
+      } catch {
+        // Ignore API fallback error
+      }
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "inquiries"));
+        querySnapshot.forEach((docSnap) => {
+          mergedMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
+        });
+      } catch (err) {
+        console.warn("Error fetching Firestore inquiries:", err);
+      }
+
+      const list = Array.from(mergedMap.values());
       list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
       setInquiriesList(list);
-    } catch (err) {
-      console.warn("Error fetching inquiries:", err);
     } finally {
       setLoadingInquiries(false);
+    }
+  };
+
+  const updateLeadStatus = async (id: string, newStatus: string) => {
+    setInquiriesList((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
+    );
+    try {
+      const authHeaders = await getAdminAuthHeaders();
+      await fetch(`/api/crm/leads/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch {
+      // Ignore network error
+    }
+    try {
+      await updateDoc(doc(db, "inquiries", id), { status: newStatus });
+    } catch {
+      // Ignore if record only exists in memory or public rules block unauthenticated update
     }
   };
 
   const deleteInquiry = async (id: string) => {
     try {
       await deleteDoc(doc(db, "inquiries", id));
-      setInquiriesList(prev => prev.filter(item => item.id !== id));
     } catch (err) {
-      console.error("Error deleting inquiry:", err);
+      console.warn("Firestore delete notice:", err);
     }
+    try {
+      const authHeaders = await getAdminAuthHeaders();
+      await fetch(`/api/inquiries/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+    } catch {
+      // Ignore API delete notice
+    }
+    setInquiriesList(prev => prev.filter(item => item.id !== id));
   };
 
   const fetchAppRegistrations = async () => {
@@ -505,15 +580,60 @@ export default function App() {
     }
   };
 
-  const handleLeadsLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (isAuthorizedAdminUser(user)) {
+        setAdminUserEmail(user?.email || null);
+        setLeadsAuthenticated(true);
+      } else {
+        setAdminUserEmail(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLeadsLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (leadsPasscode === "9288517027" || leadsPasscode === "8987766981" || leadsPasscode === "admin123" || leadsPasscode === "cvidya2026") {
-      setLeadsAuthenticated(true);
-      fetchInquiries();
-      fetchAppRegistrations();
-    } else {
-      alert("Invalid Passcode. Please enter authorized administrative passcode.");
+    setLeadsAuthError("");
+    setLeadsAuthenticating(true);
+    try {
+      const result = await verifyAdminPasscodeWithServer(leadsPasscode);
+      if (result.authorized) {
+        setLeadsAuthenticated(true);
+        setLeadsPasscode("");
+        fetchInquiries();
+        fetchAppRegistrations();
+      } else {
+        setLeadsAuthError(result.message || "Invalid Passcode. Please enter authorized administrative credentials.");
+      }
+    } finally {
+      setLeadsAuthenticating(false);
     }
+  };
+
+  const handleGoogleAdminSignIn = async () => {
+    setLeadsAuthError("");
+    setLeadsAuthenticating(true);
+    try {
+      const result = await signInAdminWithGoogle();
+      if (result.authorized) {
+        setAdminUserEmail(result.user?.email || null);
+        setLeadsAuthenticated(true);
+        fetchInquiries();
+        fetchAppRegistrations();
+      } else {
+        setLeadsAuthError(result.message || "Google Admin Sign-In failed.");
+      }
+    } finally {
+      setLeadsAuthenticating(false);
+    }
+  };
+
+  const handleAdminSignOut = async () => {
+    await signOutAdmin();
+    setAdminUserEmail(null);
+    setLeadsAuthenticated(false);
+    setLeadsModalOpen(false);
   };
 
   // Find product data from dataset
@@ -630,7 +750,7 @@ export default function App() {
               <ContactPage 
                 mode={route.mode || "full"}
                 onNavigate={navigateTo}
-                onOpenLeadsModal={() => setLeadsModalOpen(true)}
+                onOpenLeadsModal={() => navigateTo("/admin")}
               />
             )}
 
@@ -693,6 +813,11 @@ export default function App() {
                 onTabChange={(tab) => navigateTo(`/${tab}/`)}
               />
             )}
+
+            {/* 14. PRIVATE ADMIN LOGIN & DASHBOARD ROUTE (/admin) */}
+            {route.type === "page" && route.id === "admin" && (
+              <AdminDashboardPage onNavigate={navigateTo} />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -709,6 +834,7 @@ export default function App() {
       {/* 4. FLOATING AI ASSISTANT TRIGGER */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 mb-[env(safe-area-inset-bottom,0px)] mr-[env(safe-area-inset-right,0px)]">
         <button
+          id="floating-ai-assistant-btn"
           type="button"
           onClick={() => setAiOpen(true)}
           className="group flex items-center gap-2.5 px-3.5 py-2.5 sm:px-4 sm:py-3 bg-[#071739] text-white rounded-full shadow-2xl hover:bg-slate-900 border border-blue-500/40 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer font-sans"
@@ -722,6 +848,10 @@ export default function App() {
           </span>
         </button>
       </div>
+
+      {/* 4b. FEATURE 03: REAL-DATA ACTIVITY PINGS + FEATURE 12: SUCCESS FEEDBACK TOAST */}
+      <ActivityPingNotification onNavigate={navigateTo} />
+      <SuccessFeedbackToast onNavigate={navigateTo} />
 
       {/* 5. PRODUCT DETAIL MODAL */}
       {selectedProduct && (
@@ -777,34 +907,57 @@ export default function App() {
                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
                   <Lock className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-950">Administrative Passcode</h3>
+                <h3 className="text-xl font-bold text-slate-950">Administrative Authentication</h3>
                 <p className="text-xs text-slate-500">
-                  Enter director passcode to view real-time customer callback requisitions stored in Firestore.
+                  Sign in with an authorized C Vidya Solutions Google administrator account (`emailVerified: true`).
                 </p>
 
-                <form onSubmit={handleLeadsLogin} className="space-y-3 pt-2">
-                  <input
-                    type="password"
-                    required
-                    value={leadsPasscode}
-                    onChange={(e) => setLeadsPasscode(e.target.value)}
-                    placeholder="Enter Security Code"
-                    className="w-full px-3.5 py-2.5 text-center text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
-                  >
-                    Unlock Leads Ledger
-                  </button>
-                </form>
+                {leadsAuthError && (
+                  <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                    {leadsAuthError}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={leadsAuthenticating}
+                  onClick={handleGoogleAdminSignIn}
+                  className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>🔐 Sign in with Google Admin (Firebase)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLeadsModalOpen(false);
+                    navigateTo("/admin");
+                  }}
+                  className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+                >
+                  Open Full Admin Dashboard (/admin)
+                </button>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-950">Administrative Data Center</h3>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-slate-950">Administrative Data Center &amp; CRM</h3>
+                      {adminUserEmail && (
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
+                          {adminUserEmail}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleAdminSignOut}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-[10px] font-semibold transition-colors cursor-pointer"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
                       <button
                         type="button"
                         onClick={() => setAdminTab("leads")}
@@ -814,7 +967,7 @@ export default function App() {
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
-                        Client Leads ({inquiriesList.length})
+                        CRM Leads ({inquiriesList.length})
                       </button>
                       <button
                         type="button"
@@ -826,6 +979,28 @@ export default function App() {
                         }`}
                       >
                         📱 App Registrations ({appRegistrationsList.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminTab("crm_report")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          adminTab === "crm_report"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        📊 Management Report
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAdminTab("ai_calling")}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          adminTab === "ai_calling"
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        📞 AI Calling &amp; HR Hub
                       </button>
                     </div>
                   </div>
@@ -843,18 +1018,26 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={leadSearch}
-                    onChange={(e) => setLeadSearch(e.target.value)}
-                    placeholder={adminTab === "leads" ? "Filter by name, phone, or service..." : "Filter by applicant name, platform, or email..."}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden"
-                  />
-                </div>
+                {adminTab !== "crm_report" && adminTab !== "ai_calling" && (
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={leadSearch}
+                      onChange={(e) => setLeadSearch(e.target.value)}
+                      placeholder={adminTab === "leads" ? "Filter by name, company, city, phone, or product..." : "Filter by applicant name, platform, or email..."}
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden"
+                    />
+                  </div>
+                )}
 
-                {adminTab === "leads" ? (
+                {adminTab === "ai_calling" ? (
+                  <AiCallingConsolePanel
+                    leads={inquiriesList}
+                    onUpdateLeadStatus={updateLeadStatus}
+                    onRefreshLeads={fetchInquiries}
+                  />
+                ) : adminTab === "leads" ? (
                   <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                     {inquiriesList
                       .filter(inq => {
@@ -862,6 +1045,8 @@ export default function App() {
                         const q = leadSearch.toLowerCase();
                         return (
                           (inq.name && inq.name.toLowerCase().includes(q)) ||
+                          (inq.company && inq.company.toLowerCase().includes(q)) ||
+                          (inq.cityCountry && inq.cityCountry.toLowerCase().includes(q)) ||
                           (inq.phone && inq.phone.toLowerCase().includes(q)) ||
                           (inq.service && inq.service.toLowerCase().includes(q)) ||
                           (inq.email && inq.email.toLowerCase().includes(q))
@@ -869,16 +1054,37 @@ export default function App() {
                       })
                       .map((item) => (
                         <div key={item.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-4 text-xs">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                          <div className="space-y-1.5 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span className="font-bold text-slate-950 text-sm">{item.name}</span>
                               <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-mono text-[10px]">{item.service || "General"}</span>
+                              <select
+                                value={item.status || "New"}
+                                onChange={(e) => updateLeadStatus(item.id, e.target.value)}
+                                aria-label={`Lead status for ${item.name}`}
+                                className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-slate-700 cursor-pointer"
+                              >
+                                <option value="New">New</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Qualified">Qualified</option>
+                                <option value="Demo Scheduled">Demo Scheduled</option>
+                                <option value="Converted">Converted</option>
+                                <option value="Closed">Closed</option>
+                              </select>
                             </div>
                             <div className="text-slate-600 font-mono flex flex-wrap gap-x-4 gap-y-1">
                               <span>📞 {item.phone}</span>
                               <span>✉️ {item.email}</span>
+                              {item.company && <span>🏢 {item.company}</span>}
+                              {item.cityCountry && <span>📍 {item.cityCountry}</span>}
+                              {item.businessType && <span>🏷️ {item.businessType}</span>}
                               <span>🕒 {item.timestamp ? new Date(item.timestamp).toLocaleString() : "Recent"}</span>
                             </div>
+                            {item.followUpTask && (
+                              <div className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
+                                📅 Follow-Up Task: {item.followUpTask}
+                              </div>
+                            )}
                             {item.message && (
                               <p className="text-slate-700 pt-1 font-sans bg-white p-2 rounded border border-slate-100">
                                 &ldquo;{item.message}&rdquo;
@@ -902,7 +1108,7 @@ export default function App() {
                       </div>
                     )}
                   </div>
-                ) : (
+                ) : adminTab === "app_registrations" ? (
                   <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                     {appRegistrationsList
                       .filter(reg => {
@@ -952,6 +1158,37 @@ export default function App() {
                         No mobile app download registrations stored yet.
                       </div>
                     )}
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-1 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="text-[10px] font-mono uppercase text-slate-500">Total CRM Leads</div>
+                        <div className="text-xl font-bold text-slate-950 mt-0.5">{inquiriesList.length}</div>
+                      </div>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div className="text-[10px] font-mono uppercase text-blue-700">Qualified / Demo</div>
+                        <div className="text-xl font-bold text-blue-950 mt-0.5">
+                          {inquiriesList.filter(i => i.status === "Qualified" || i.status === "Demo Scheduled").length}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div className="text-[10px] font-mono uppercase text-amber-700">Follow-Up Tasks</div>
+                        <div className="text-xl font-bold text-amber-950 mt-0.5">
+                          {inquiriesList.filter(i => Boolean(i.followUpTask || (i.message && i.message.includes("Follow-Up:")))).length}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <div className="text-[10px] font-mono uppercase text-emerald-700">App Downloads</div>
+                        <div className="text-xl font-bold text-emerald-950 mt-0.5">{appRegistrationsList.length}</div>
+                      </div>
+                    </div>
+                    <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                      <div className="font-bold text-slate-900">Verified Product Portfolio Summary</div>
+                      <p className="text-slate-600 leading-relaxed">
+                        {saasProductsData.length} Enterprise SaaS Products • {aiAgentsData.length} Autonomous AI Agent Systems • {otherServicesData.length} Engineering &amp; Cloud Services. All metrics above are computed directly from actual stored records in Firestore and the CRM database.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

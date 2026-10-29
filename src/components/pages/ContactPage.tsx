@@ -14,6 +14,7 @@ import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { triggerSuccessFeedback, dispatchActivityPing } from "../ActivityPingsAndTour";
 
 interface ContactPageProps {
   onOpenLeadsModal?: () => void;
@@ -29,7 +30,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
   const [email, setEmail] = useState("");
   const [framework, setFramework] = useState("General Company Inquiry");
   const [requirements, setRequirements] = useState("");
-  const [consent, setConsent] = useState(true);
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -80,7 +81,25 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
         })
       }).catch(() => {});
 
-      setSubmitted(true);
+      setFullName("");
+      setPhone("+91 ");
+      setEmail("");
+      setFramework("General Company Inquiry");
+      setRequirements("");
+      setConsent(false);
+      setSubmitted(false);
+      triggerSuccessFeedback({
+        title: "Successfully Saved!",
+        message: `Your inquiry for ${framework} has been recorded. Our engineering desk will call you shortly.`,
+        actionLabel: "Explore Software Suites",
+        actionPath: "/software/"
+      });
+      dispatchActivityPing({
+        category: "New Enquiry Received",
+        message: `Enquiry recorded for ${framework}`,
+        timestampLabel: "Just now",
+        targetPath: "/software/"
+      });
     } catch (err: any) {
       setErrorMessage("Failed to transmit requisition. Please contact our direct phone line +91 92885 17027.");
     } finally {
@@ -227,21 +246,6 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
             <Send className="w-4 h-4" />
             <span>{submitting ? "SUBMITTING..." : "SUBMIT"}</span>
           </button>
-
-          {/* Database Icon Button (Without Text / Leads Content) */}
-          {onOpenLeadsModal && (
-            <div className="pt-1.5 flex justify-end">
-              <button
-                type="button"
-                onClick={onOpenLeadsModal}
-                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
-                title="Database"
-                aria-label="Database"
-              >
-                <Database className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </form>
       )}
     </div>
@@ -369,6 +373,21 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
                 </div>
 
               </div>
+
+              {/* Database Icon Button at bottom-left corner of Director Desk */}
+              {onOpenLeadsModal && (
+                <div className="pt-1 flex justify-start">
+                  <button
+                    type="button"
+                    onClick={onOpenLeadsModal}
+                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                    title="Database"
+                    aria-label="Database"
+                  >
+                    <Database className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* ==================================================== */}

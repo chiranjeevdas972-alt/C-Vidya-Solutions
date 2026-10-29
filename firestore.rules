@@ -12,14 +12,16 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == "chiranjeevdas972@gmail.com" ||
-        request.auth.token.email == "cvidyasolutions@gmail.com" ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == "chiranjeevdas972@gmail.com" ||
+          request.auth.token.email == "cvidyasolutions@gmail.com" ||
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
     }
 
-    // Strict validation for inquiry payloads to protect against malicious injections
+    // Strict validation for inquiry payloads to protect against malicious injections and status spoofing
     function isValidInquiry(data) {
       return data != null
         && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
@@ -27,7 +29,9 @@ service cloud.firestore {
         && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
         && (!('service' in data) || (data.service is string && data.service.size() <= 200))
         && (!('message' in data) || (data.message is string && data.message.size() <= 5000))
-        && (!('status' in data) || (data.status is string && data.status.size() <= 100));
+        && (!('status' in data) || isAdmin() || data.status in ["New", "New Lead", "Pending Callback", "registered", "Forwarded to cvidyasolutions@gmail.com"])
+        && !('isAdmin' in data)
+        && !('admin' in data);
     }
 
     // Strict validation for job application submissions
@@ -45,7 +49,10 @@ service cloud.firestore {
         && (!('resumeFileName' in data) || (data.resumeFileName is string && data.resumeFileName.size() <= 250))
         && (!('resumeFileSize' in data) || (data.resumeFileSize is string && data.resumeFileSize.size() <= 50))
         && (!('resumeUrl' in data) || (data.resumeUrl is string && data.resumeUrl.size() <= 2000))
-        && (!('resumeData' in data) || (data.resumeData is string && data.resumeData.size() <= 800000));
+        && (!('resumeData' in data) || (data.resumeData is string && data.resumeData.size() <= 800000))
+        && (!('status' in data) || isAdmin() || data.status in ["New", "received", "Submitted / Under Review"])
+        && !('isAdmin' in data)
+        && !('admin' in data);
     }
 
     // Global Default-Deny Catch-All
@@ -53,10 +60,20 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Admins registry collection
+    // Admins registry & owner security vault collection
+    function isValidAdminVaultRecord(data, adminId) {
+      return data != null
+        && data.keys().hasOnly(['uid', 'email', 'passwordHash', 'updatedAt'])
+        && 'uid' in data && data.uid is string && data.uid == adminId
+        && 'email' in data && data.email is string && (data.email == "chiranjeevdas972@gmail.com" || data.email == "cvidyasolutions@gmail.com")
+        && 'passwordHash' in data && data.passwordHash is string && data.passwordHash.size() == 64 && data.passwordHash.matches('^[a-f0-9]{64}$')
+        && 'updatedAt' in data && data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 64;
+    }
+
     match /admins/{adminId} {
-      allow read: if isAdmin();
-      allow write: if false;
+      allow read: if isAdmin() && request.auth.uid == adminId;
+      allow create, update: if isAdmin() && request.auth.uid == adminId && isValidAdminVaultRecord(request.resource.data, adminId);
+      allow delete: if false;
     }
 
     // Strict validation for mobile app download registrations
@@ -67,10 +84,12 @@ service cloud.firestore {
         && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
         && 'platform' in data && data.platform is string && (data.platform == "android" || data.platform == "ios")
         && 'privacyConsent' in data && data.privacyConsent == true
-        && (!('status' in data) || (data.status is string && data.status.size() <= 100))
+        && (!('status' in data) || isAdmin() || data.status == "registered")
         && (!('privacyPolicyVersion' in data) || (data.privacyPolicyVersion is string && data.privacyPolicyVersion.size() <= 50))
         && (!('clientTimestamp' in data) || (data.clientTimestamp is string && data.clientTimestamp.size() <= 100))
-        && (!('userAgent' in data) || (data.userAgent is string && data.userAgent.size() <= 300));
+        && (!('userAgent' in data) || (data.userAgent is string && data.userAgent.size() <= 300))
+        && !('isAdmin' in data)
+        && !('admin' in data);
     }
 
     // Inquiries collection: Public can submit verified leads, ONLY authenticated admins can read (PII Isolation)
@@ -87,12 +106,75 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Legacy job applications collection compatibility: Same strict protection as job_applications
+    match /applications/{applicationId} {
+      allow create: if isValidId(applicationId) && isValidApplication(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
     // Mobile app registrations collection: Public can submit valid registration; ONLY authenticated admins can read/manage (Zero Public Read)
     match /app_download_registrations/{regId} {
       allow create: if isValidId(regId) && isValidAppRegistration(request.resource.data);
       allow read: if isAdmin();
       allow update, delete: if isAdmin();
     }
+
+    // Strict validation for AI Calling logs
+    function isValidCallLog(data) {
+      return data != null
+        && 'callId' in data && data.callId is string && data.callId.size() >= 2 && data.callId.size() <= 128
+        && 'leadName' in data && data.leadName is string && data.leadName.size() >= 2 && data.leadName.size() <= 150
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'direction' in data && data.direction is string && (data.direction == "Inbound" || data.direction == "Outbound")
+        && 'outcome' in data && data.outcome is string && data.outcome.size() >= 2 && data.outcome.size() <= 100
+        && 'timestamp' in data && data.timestamp is string && data.timestamp.size() >= 10 && data.timestamp.size() <= 64;
+    }
+
+    // Strict validation for Demo Bookings
+    function isValidDemoBooking(data) {
+      return data != null
+        && 'bookingId' in data && data.bookingId is string && data.bookingId is string && data.bookingId.size() >= 2 && data.bookingId.size() <= 128
+        && 'leadName' in data && data.leadName is string && data.leadName.size() >= 2 && data.leadName.size() <= 150
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'product' in data && data.product is string && data.product.size() >= 2 && data.product.size() <= 200
+        && 'preferredDate' in data && data.preferredDate is string && data.preferredDate.size() >= 4 && data.preferredDate.size() <= 50
+        && 'preferredTimeSlot' in data && data.preferredTimeSlot is string && data.preferredTimeSlot.size() >= 2 && data.preferredTimeSlot.size() <= 100
+        && 'status' in data && data.status is string && data.status.size() >= 2 && data.status.size() <= 60
+        && 'createdAt' in data && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
+    }
+
+    // Strict validation for Human Handoff Tickets
+    function isValidHandoffTicket(data) {
+      return data != null
+        && 'ticketId' in data && data.ticketId is string && data.ticketId.size() >= 2 && data.ticketId.size() <= 128
+        && 'leadName' in data && data.leadName is string && data.leadName.size() >= 2 && data.leadName.size() <= 150
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'reason' in data && data.reason is string && data.reason.size() >= 2 && data.reason.size() <= 2000
+        && 'urgency' in data && data.urgency is string && (data.urgency == "Immediate" || data.urgency == "High" || data.urgency == "Normal")
+        && 'targetDepartment' in data && data.targetDepartment is string && data.targetDepartment.size() >= 2 && data.targetDepartment.size() <= 100
+        && 'status' in data && data.status is string && (data.status == "Open" || data.status == "In Progress" || data.status == "Resolved")
+        && 'createdAt' in data && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
+    }
+
+    // AI Calling logs collection: Admin-only create, read, update, delete
+    match /call_logs/{callId} {
+      allow create: if isValidId(callId) && isValidCallLog(request.resource.data) && isAdmin();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Demo bookings collection: Public/Admin validated booking creation, ONLY authenticated admins can read/manage
+    match /demo_bookings/{bookingId} {
+      allow create: if isValidId(bookingId) && isValidDemoBooking(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Human handoff tickets collection: Validated ticket creation, ONLY authenticated admins can read/manage
+    match /handoff_tickets/{ticketId} {
+      allow create: if isValidId(ticketId) && isValidHandoffTicket(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
   }
 }
+
 

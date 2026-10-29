@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { saasProductsData, aiAgentsData, otherServicesData } from "../../src/data.ts";
+import {
+  saasProductsData,
+  aiAgentsData,
+  otherServicesData,
+  HERO_ROTATING_PHRASES,
+  TESTIMONIALS_DATA,
+  WORKFLOW_STEPS_DATA,
+  BEFORE_AFTER_DATA,
+  US_VS_THEM_DATA,
+} from "../../src/data.ts";
 
 describe("Data Integrity & Software Catalog Regression Test Suite", () => {
   it("should have distinct and non-empty product catalogs", () => {
@@ -39,4 +48,14 @@ describe("Data Integrity & Software Catalog Regression Test Suite", () => {
       expect(agent.tagline).toBeTruthy();
     }
   });
+
+  it("should validate interactive UI/UX feature configuration data (Word Rotator, Testimonials, Workflow, Before/After, Us vs Them)", () => {
+    expect(HERO_ROTATING_PHRASES.length).toBeGreaterThanOrEqual(4);
+    expect(HERO_ROTATING_PHRASES).toContain("Manage Your Business");
+    expect(TESTIMONIALS_DATA.length).toBeGreaterThanOrEqual(3);
+    expect(WORKFLOW_STEPS_DATA.length).toBe(5);
+    expect(BEFORE_AFTER_DATA.beforeItems.length).toBe(BEFORE_AFTER_DATA.afterItems.length);
+    expect(US_VS_THEM_DATA.length).toBeGreaterThanOrEqual(5);
+  });
 });
+

@@ -106,6 +106,7 @@ export default function Header({
             </a>
 
             <button
+              id="nav-book-demo-btn"
               type="button"
               onClick={onOpenConsultation || (() => onOpenHub("/contact/?mode=demo"))}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"

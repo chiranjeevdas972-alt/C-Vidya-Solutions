@@ -1,119 +1,97 @@
 import React, { useState, useRef, useEffect } from "react";
 import { 
-  Bot, 
   X, 
   Send, 
-  Sparkles, 
-  HelpCircle, 
   User, 
-  ExternalLink,
-  PhoneCall,
-  Phone,
-  Mail,
-  CheckCircle2, 
-  ChevronDown, 
-  ChevronUp 
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Square,
+  AlertCircle,
+  ChevronDown,
+  Check
 } from "lucide-react";
 import Logo from "./Logo";
-import { ChatMessage } from "../types";
-import { getSmartAssistantResponse } from "../utils/aiResponder";
+import { ChatMessage, VoiceAgentStatus } from "../types";
+import { getSmartAssistantResponse, detectLanguageMode, isGenericCatchAllReply, extractStructuredLeadFromChat } from "../utils/aiResponder";
+import { speechInputService, SupportedVoiceLocale, normalizeSpokenCvidyaText } from "../services/speechInputService";
+import { ttsService, VoiceGender } from "../services/ttsService";
 
 interface AiAssistantProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const PRESET_CATEGORIES = [
-  {
-    category: "7 SaaS Suites",
-    questions: [
-      "What software does C Vidya Solutions provide?",
-      "Tell me about C Vidya Library Management",
-      "How does C Vidya Fitness Zone biometric gate work?",
-      "Explain C Vidya Institute Management ERP",
-      "How does Coaching OMR mock test grading work?",
-      "Explain AgriFusion multi-farm management",
-      "Tell me about C Vidya Jewelers Management",
-      "How does C Vidya Enterprises CRM work?"
-    ]
-  },
-  {
-    category: "4 AI Agents",
-    questions: [
-      "What are the 4 Autonomous AI Agents?",
-      "Tell me about C Vidya Social Media Agent",
-      "How does C Vidya AI Customer Support Agent work?",
-      "Tell me about Business Sales Flow AI Agent",
-      "Explain AI Marketing for B2B SaaS Companies"
-    ]
-  },
-  {
-    category: "Specialized Services",
-    questions: [
-      "Tell me about Petrol Pump Cloud Software",
-      "Explain Care Plus Healthcare System",
-      "How does C Vidya PDF & Media Tools SaaS work?",
-      "How can I request a live demo or sandbox access?",
-      "What is your modular pricing model?",
-      "Do you provide 100% GST compliant invoices?"
-    ]
-  },
-  {
-    category: "Company & FAQs",
-    questions: [
-      "Who is the founder and leadership team?",
-      "Where are your headquarters and STPI branch located?",
-      "How long does turnkey software deployment take?",
-      "Can we migrate our existing Excel or CSV data?",
-      "What job positions are currently open?"
-    ]
-  },
-  {
-    category: "Hinglish Qs 🇮🇳",
-    questions: [
-      "Gym software me biometric turnstile gate kaise kaam karta hai?",
-      "Library software ka live demo dikhao",
-      "Coaching software me OMR sheet scanner kaise check karta hai?",
-      "Petrol pump software credit khata kaise chalega?",
-      "Chiranjeev Das kaun hain aur office kahan hai?",
-      "Software lagane me kitne din ka time lagega?",
-      "Kya purana Excel data software me import ho jayega?",
-      "Pricing plans aur GST bill ki details bataiye"
-    ]
-  }
-];
+type ChatLanguageChoice = "en" | "hi";
+
+function formatCleanHumanReply(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "");
+}
 
 export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "model",
-      content: `Hello! 👋 Welcome to **C Vidya Solutions**.
-
-I am your official **C-Vidya AI Customer Support Assistant**, deeply trained on our official website **www.cvidyasolutions.com**, all software platforms, and cloud architecture.
-
-I can guide you through:
-• **7 Flagship SaaS Products**: Library Management, Fitness Zone, Institutes ERP, Coaching Management, AgriFusion, Jewelers Management, and Enterprises CRM.
-• **4 Autonomous AI Agents**: AI Social Media Agent, AI Customer Support Agent, SalesFlow AI Agent, and B2B SaaS Marketing Agent.
-• **3 Specialized Platforms**: Cloud Petrol Pump Software, Care Plus Healthcare System, and PDF & Media Tools SaaS.
-• **Turnkey Deployment, Pricing, Free Live Demos & Onboarding Support**.
-
-Feel free to ask any question in **English** or **Hinglish**!
-*(Aap Hindi ya Hinglish me bhi pooch sakte hain jaise: 'Gym software me kya features hai?', 'Petrol pump ka credit khata kaise chalega?', 'Chiranjeev Das kaun hai?', 'Live demo dikhao')*`,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    }
-  ]);
+  // Open blank chatbot with no pre-written message content
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
-  const [showQuickTopics, setShowQuickTopics] = useState(false);
+
+  // Voice Agent & Language Pop-up State
+  const [voiceStatus, setVoiceStatus] = useState<VoiceAgentStatus>("idle");
+  const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => ttsService.getVoiceGender());
+  const [languageChoice, setLanguageChoice] = useState<ChatLanguageChoice>("en");
+  const [showGenderPopup, setShowGenderPopup] = useState(false);
+  const [showLangPopup, setShowLangPopup] = useState(false);
+  const [ttsMuted, setTtsMuted] = useState<boolean>(() => ttsService.isMuted());
+  const [voiceError, setVoiceError] = useState<string>("");
+  const [interimTranscript, setInterimTranscript] = useState<string>("");
+  const speechSupported = speechInputService.isSupported();
+  const ttsSupported = ttsService.isSupported();
+
+  const voiceLocale: SupportedVoiceLocale = languageChoice === "hi" ? "hi-IN" : "en-IN";
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  const headerControlsRef = useRef<HTMLDivElement>(null);
+  const isListeningRef = useRef<boolean>(false);
+
+  const clearComposerInput = () => {
+    setInput("");
+    setInterimTranscript("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // Close pop-ups when clicking outside header dropdowns
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (headerControlsRef.current && !headerControlsRef.current.contains(e.target as Node)) {
+        setShowGenderPopup(false);
+        setShowLangPopup(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
+          setShowGenderPopup(false);
+          setShowLangPopup(false);
+          isListeningRef.current = false;
+          speechInputService.stopListening();
+          ttsService.stop();
+          clearComposerInput();
           onClose();
         }
       };
@@ -123,50 +101,236 @@ Feel free to ask any question in **English** or **Hinglish**!
         inputRef.current?.focus();
       }, 150);
       return () => window.removeEventListener("keydown", handleKeyDown);
+    } else {
+      setShowGenderPopup(false);
+      setShowLangPopup(false);
+      isListeningRef.current = false;
+      speechInputService.stopListening();
+      ttsService.stop();
+      setVoiceStatus("idle");
+      clearComposerInput();
     }
   }, [isOpen, messages, isTyping, onClose]);
 
-  const handleSendMessage = async (textToSend: string) => {
-    if (!textToSend.trim()) return;
+  const speakAssistantReply = (text: string, genderOverride?: VoiceGender) => {
+    if (ttsMuted || !ttsSupported) {
+      setVoiceStatus("idle");
+      return;
+    }
+    const langMode = detectLanguageMode(text);
+    const preferredLang: "hi-IN" | "en-IN" = langMode === "hi" || voiceLocale === "hi-IN" ? "hi-IN" : "en-IN";
+    ttsService.speak(
+      text,
+      preferredLang,
+      {
+        onStart: () => setVoiceStatus("speaking"),
+        onEnd: () => {
+          setVoiceStatus("idle");
+          if (!isListeningRef.current) {
+            setInterimTranscript("");
+          }
+        },
+        onError: () => {
+          setVoiceStatus("idle");
+          if (!isListeningRef.current) {
+            setInterimTranscript("");
+          }
+        }
+      },
+      genderOverride || voiceGender
+    );
+  };
+
+  const handleSelectVoiceGender = (nextGender: VoiceGender) => {
+    setVoiceGender(nextGender);
+    ttsService.setVoiceGender(nextGender);
+    setShowGenderPopup(false);
+    // If currently speaking, immediately switch to the selected Male/Female human voice
+    if (voiceStatus === "speaking") {
+      const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
+      if (lastModelMsg) {
+        speakAssistantReply(lastModelMsg.content, nextGender);
+      }
+    }
+  };
+
+  const handleSelectLanguage = (nextLang: ChatLanguageChoice) => {
+    setLanguageChoice(nextLang);
+    setShowLangPopup(false);
+  };
+
+  const handleToggleListening = () => {
+    setVoiceError("");
+    setShowGenderPopup(false);
+    setShowLangPopup(false);
+
+    if (voiceStatus === "listening" || speechInputService.getIsListening() || isListeningRef.current) {
+      const pendingText = normalizeSpokenCvidyaText(interimTranscript || input).trim();
+      isListeningRef.current = false;
+      speechInputService.stopListening();
+      setVoiceStatus("idle");
+      clearComposerInput();
+      if (pendingText) {
+        handleSendMessage(pendingText, true);
+      }
+      return;
+    }
+
+    if (!speechSupported) {
+      setVoiceStatus("error");
+      setVoiceError(
+        "Browser speech recognition is not supported in this browser. Text chat remains fully operational."
+      );
+      return;
+    }
+
+    ttsService.stop();
+    isListeningRef.current = true;
+    clearComposerInput();
+
+    speechInputService.startListening(voiceLocale, {
+      onStateChange: (listening) => {
+        isListeningRef.current = listening;
+        setVoiceStatus(listening ? "listening" : "idle");
+        if (!listening) {
+          setInterimTranscript("");
+        }
+      },
+      onInterimResult: (transcript) => {
+        if (!isListeningRef.current || !speechInputService.getIsListening()) return;
+        const cleaned = normalizeSpokenCvidyaText(transcript);
+        setInterimTranscript(cleaned);
+        setInput(cleaned);
+      },
+      onFinalResult: (finalText) => {
+        isListeningRef.current = false;
+        speechInputService.stopListening();
+        const cleaned = normalizeSpokenCvidyaText(finalText).trim();
+        clearComposerInput();
+        if (cleaned) {
+          handleSendMessage(cleaned, true);
+        } else {
+          setVoiceStatus("idle");
+        }
+      },
+      onError: (msg) => {
+        isListeningRef.current = false;
+        clearComposerInput();
+        setVoiceStatus("error");
+        setVoiceError(msg);
+      }
+    });
+  };
+
+  const handleToggleMute = () => {
+    const nextMuted = !ttsMuted;
+    setTtsMuted(nextMuted);
+    ttsService.setMuted(nextMuted);
+    if (nextMuted && voiceStatus === "speaking") {
+      setVoiceStatus("idle");
+    }
+  };
+
+  const handleStopSpeaking = () => {
+    ttsService.stop();
+    if (voiceStatus === "speaking") {
+      setVoiceStatus("idle");
+    }
+  };
+
+  const handleSendMessage = async (textToSend: string, triggeredByVoice = false) => {
+    const normalizedInput = normalizeSpokenCvidyaText(textToSend).trim();
+    if (!normalizedInput) {
+      clearComposerInput();
+      return;
+    }
+
+    setShowGenderPopup(false);
+    setShowLangPopup(false);
+    isListeningRef.current = false;
+    speechInputService.stopListening();
+    ttsService.stop();
+    clearComposerInput();
+    setVoiceError("");
 
     const userMessage: ChatMessage = {
       id: `msg_${Math.random().toString(36).substr(2, 9)}`,
       role: "user",
-      content: textToSend,
+      content: normalizedInput,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput("");
+    const currentHistory = [...messagesRef.current, userMessage];
+    messagesRef.current = currentHistory;
+    setMessages(currentHistory);
     setIsTyping(true);
+    setVoiceStatus("processing");
+
+    const formattedHistory = currentHistory.map(m => ({
+      role: m.role === "model" || m.role === "assistant" ? "model" : "user",
+      content: m.content
+    }));
 
     try {
-      const formattedHistory = [...messages, userMessage].map(m => ({
-        role: m.role === "model" || m.role === "assistant" ? "model" : "user",
-        content: m.content
-      }));
+      // 1. Check instant verified C Vidya Software & Business Knowledge Base (<1ms latency)
+      const instantLocalReply = getSmartAssistantResponse(formattedHistory, {
+        gender: voiceGender,
+        preferredLanguage: languageChoice
+      });
 
+      const isKnownSoftwareOrBusinessQuery = !isGenericCatchAllReply(instantLocalReply);
       let assistantText = "";
 
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: formattedHistory })
-        });
+      if (isKnownSoftwareOrBusinessQuery) {
+        // Instant reply for all software, AI agents, pricing, demos, greetings, support & company queries
+        assistantText = instantLocalReply;
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.text) {
-            assistantText = data.text;
-          }
+        // If user shared phone/email/demo intent, sync lead in background without blocking the instant reply
+        const leadCheck = extractStructuredLeadFromChat(formattedHistory);
+        if (leadCheck.hasContactOrIntent && typeof fetch === "function") {
+          fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: formattedHistory,
+              voiceGender,
+              preferredLanguage: languageChoice
+            })
+          }).catch(() => {});
         }
-      } catch (e) {
-        console.warn("Backend chat endpoint unreachable, using local AI responder:", e);
-      }
+      } else {
+        // Open-ended general query: query fast Gemini endpoint with tight 1300ms timeout
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1300);
 
-      if (!assistantText) {
-        assistantText = getSmartAssistantResponse(formattedHistory);
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: formattedHistory,
+              voiceGender,
+              preferredLanguage: languageChoice
+            }),
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          const contentType = response.headers.get("content-type") || "";
+          if (response.ok && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data && typeof data.text === "string" && data.text.trim()) {
+              assistantText = data.text.trim();
+            }
+          }
+        } catch (_) {
+          // Instant local fallback on timeout
+        }
+
+        if (!assistantText) {
+          assistantText = instantLocalReply;
+        }
       }
       
       const assistantMessage: ChatMessage = {
@@ -176,49 +340,59 @@ Feel free to ask any question in **English** or **Hinglish**!
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => {
+        const updated = [...prev, assistantMessage];
+        messagesRef.current = updated;
+        return updated;
+      });
+
+      clearComposerInput();
+
+      if (triggeredByVoice || !ttsMuted) {
+        speakAssistantReply(assistantText);
+      } else {
+        setVoiceStatus("idle");
+      }
 
     } catch (error: any) {
-      const fallbackText = getSmartAssistantResponse([...messages, userMessage]);
+      const fallbackText = getSmartAssistantResponse(formattedHistory, {
+        gender: voiceGender,
+        preferredLanguage: languageChoice
+      });
       const errorMessage: ChatMessage = {
         id: `msg_err_${Math.random().toString(36).substr(2, 9)}`,
         role: "model",
         content: fallbackText,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => {
+        const updated = [...prev, errorMessage];
+        messagesRef.current = updated;
+        return updated;
+      });
+      clearComposerInput();
+      setVoiceStatus("idle");
     } finally {
       setIsTyping(false);
+      if (!isListeningRef.current) {
+        clearComposerInput();
+      }
     }
   };
 
-  const resetChat = () => {
-    setMessages([
-      {
-        id: "welcome",
-        role: "model",
-        content: `Hello! 👋 Welcome to **C Vidya Solutions**.
-
-I am your **C-Vidya AI Customer Support Agent**. I can help you with:
-
-• **7 Flagship SaaS Suites** (Library, Gym, Institutes, Coaching, AgriFusion, Jewelry, CRM)
-• **4 Autonomous AI Agents** (Social Media, Support, SalesFlow, B2B SaaS Marketing)
-• **Live Cloud Demos & Sandbox Access**
-• **Custom Pricing & Turnkey Onboarding**
-
-How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      }
-    ]);
-  };
-
   if (!isOpen) return null;
+
+  const languageLabel = languageChoice === "hi" ? "Hindi" : "English";
 
   return (
     <>
       {/* Backdrop overlay for focus and dismiss */}
       <div 
-        onClick={onClose}
+        onClick={() => {
+          speechInputService.stopListening();
+          ttsService.stop();
+          onClose();
+        }}
         className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs transition-opacity"
         aria-hidden="true"
       />
@@ -228,31 +402,185 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
         role="dialog"
         aria-modal="true"
         aria-label="C-Vidya AI Assistant"
-        className="fixed inset-0 sm:inset-y-0 sm:right-0 sm:left-auto w-full sm:w-[440px] md:w-[460px] lg:w-[480px] max-w-full h-[100dvh] bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col justify-between font-sans text-slate-900 pb-[env(safe-area-inset-bottom,0px)] overflow-hidden"
+        className="fixed inset-0 sm:inset-y-0 sm:right-0 sm:left-auto w-full sm:w-[400px] md:w-[440px] lg:w-[460px] xl:w-[480px] max-w-[100vw] h-full max-h-[100dvh] sm:h-[100dvh] bg-white sm:border-l border-slate-200 shadow-2xl z-50 flex flex-col justify-between font-sans text-slate-900 pb-[env(safe-area-inset-bottom,0px)] overflow-hidden"
       >
       
       {/* Drawer Header Block */}
-      <div className="p-3 sm:p-4 bg-brand-navy-900 border-b border-brand-gold-500/20 flex justify-between items-center relative shrink-0">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-gold-500/10 border border-brand-gold-400 flex items-center justify-center animate-pulse shrink-0">
-            <Logo size={24} showText={false} className="shrink-0" />
+      <div className="px-2.5 sm:px-4 py-2.5 sm:py-3.5 pt-[max(0.625rem,env(safe-area-inset-top,0.625rem))] sm:pt-3.5 bg-brand-navy-900 border-b border-brand-gold-500/20 flex justify-between items-center gap-1.5 sm:gap-2 relative shrink-0 z-20">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-brand-gold-500/10 border border-brand-gold-400 flex items-center justify-center animate-pulse shrink-0">
+            <Logo size={22} showText={false} className="shrink-0" />
           </div>
           <div className="min-w-0">
-            <div className="font-display font-black text-sm sm:text-base tracking-wider text-brand-gold-400 truncate">
-              <span>C-VIDYA AI</span>
+            <div className="font-display font-black text-xs min-[375px]:text-sm sm:text-base tracking-wider text-brand-gold-400 flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <span className="truncate">C-VIDYA AI</span>
+              <span
+                aria-live="polite"
+                className={`text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 ${
+                  voiceStatus === "listening"
+                    ? "bg-rose-500/20 border-rose-400 text-rose-200 animate-pulse"
+                    : voiceStatus === "processing"
+                    ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                    : voiceStatus === "speaking"
+                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
+                    : "bg-slate-800 border-slate-700 text-slate-300"
+                }`}
+              >
+                {voiceStatus === "listening"
+                  ? "Listening..."
+                  : voiceStatus === "processing"
+                  ? "Processing..."
+                  : voiceStatus === "speaking"
+                  ? "Speaking..."
+                  : "Idle"}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div ref={headerControlsRef} className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {/* Male / Female Voice Pop-up Selector */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowGenderPopup((prev) => !prev);
+                setShowLangPopup(false);
+              }}
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-mono font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 cursor-pointer transition-colors whitespace-nowrap"
+              title="Select Male or Female Real Human Voice"
+              aria-expanded={showGenderPopup}
+              aria-haspopup="menu"
+            >
+              <span>{voiceGender === "female" ? "Female" : "Male"}</span>
+              <ChevronDown className={`w-3 h-3 text-brand-gold-400 transition-transform ${showGenderPopup ? "rotate-180" : ""}`} />
+            </button>
+
+            {showGenderPopup && (
+              <div
+                role="menu"
+                aria-label="Select Voice Gender"
+                className="absolute right-0 mt-1.5 w-36 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 text-xs font-sans overflow-hidden"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectVoiceGender("female")}
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
+                    voiceGender === "female"
+                      ? "bg-brand-gold-500/20 text-brand-gold-400 font-bold"
+                      : "text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  <span>Female</span>
+                  {voiceGender === "female" && <Check className="w-3.5 h-3.5 text-brand-gold-400" />}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectVoiceGender("male")}
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
+                    voiceGender === "male"
+                      ? "bg-brand-gold-500/20 text-brand-gold-400 font-bold"
+                      : "text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  <span>Male</span>
+                  {voiceGender === "male" && <Check className="w-3.5 h-3.5 text-brand-gold-400" />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* English / Hindi Language Pop-up Selector */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowLangPopup((prev) => !prev);
+                setShowGenderPopup(false);
+              }}
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-mono font-bold rounded-lg bg-slate-800 hover:bg-slate-700 text-brand-gold-400 border border-slate-700 cursor-pointer transition-colors whitespace-nowrap"
+              title="Select Language (English, Hindi)"
+              aria-expanded={showLangPopup}
+              aria-haspopup="menu"
+            >
+              <span>{languageLabel}</span>
+              <ChevronDown className={`w-3 h-3 text-brand-gold-400 transition-transform ${showLangPopup ? "rotate-180" : ""}`} />
+            </button>
+
+            {showLangPopup && (
+              <div
+                role="menu"
+                aria-label="Select Language"
+                className="absolute right-0 mt-1.5 w-40 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 text-xs font-sans overflow-hidden"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectLanguage("en")}
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
+                    languageChoice === "en"
+                      ? "bg-brand-gold-500/20 text-brand-gold-400 font-bold"
+                      : "text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  <span>English</span>
+                  {languageChoice === "en" && <Check className="w-3.5 h-3.5 text-brand-gold-400" />}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectLanguage("hi")}
+                  className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors cursor-pointer ${
+                    languageChoice === "hi"
+                      ? "bg-brand-gold-500/20 text-brand-gold-400 font-bold"
+                      : "text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  <span>Hindi (हिंदी)</span>
+                  {languageChoice === "hi" && <Check className="w-3.5 h-3.5 text-brand-gold-400" />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Stop Speaking button when speaking */}
+          {voiceStatus === "speaking" && (
+            <button
+              type="button"
+              onClick={handleStopSpeaking}
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-rose-600/20 hover:bg-rose-600/40 border border-rose-400/50 rounded-lg text-rose-200 transition-colors cursor-pointer shrink-0"
+              title="Stop speaking"
+              aria-label="Stop speaking"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+            </button>
+          )}
+
+          {/* Mute / Unmute TTS Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleMute}
+            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            title={ttsMuted ? "Unmute voice responses" : "Mute voice responses"}
+            aria-label={ttsMuted ? "Unmute voice responses" : "Mute voice responses"}
+          >
+            {ttsMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+          </button>
+
           <button 
             type="button"
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer"
+            onClick={() => {
+              speechInputService.stopListening();
+              ttsService.stop();
+              onClose();
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title="Close Assistant"
             aria-label="Close Assistant"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
@@ -260,29 +588,42 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-gold-400 to-[#d69e2e]" />
       </div>
 
-      {/* Main Dialogue Box Scroll Window */}
-      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 sm:space-y-4 custom-scroll-panel bg-white">
-        
-        {/* Knowledge & Scope Indicator */}
-        <div className="text-center">
-          <span className="inline-flex items-center gap-1.5 bg-slate-100 text-[9.5px] sm:text-[10px] font-mono text-slate-700 px-3 sm:px-3.5 py-1.5 rounded-full border border-slate-200 shadow-2xs max-w-full">
-            <Sparkles className="w-3.5 h-3.5 text-brand-navy-900 shrink-0" />
-            <span className="truncate">Trained on 7 SaaS Products, 4 AI Agents & Specialized Cloud Services</span>
-          </span>
-        </div>
+      {/* Main Dialogue Box Scroll Window (Starts Blank until User Sends or Speaks) */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3 sm:space-y-4 custom-scroll-panel bg-white">
+        {/* Voice Error / Browser Compatibility Notice */}
+        {voiceError && (
+          <div
+            role="alert"
+            className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start justify-between gap-2"
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>{voiceError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setVoiceError("")}
+              className="text-amber-700 hover:text-amber-950 font-bold text-xs cursor-pointer"
+              aria-label="Dismiss voice notice"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Conversation Message List */}
         {messages.map((m) => {
           const isModel = m.role === "model" || m.role === "assistant";
+          const displayContent = isModel ? formatCleanHumanReply(m.content) : m.content;
           return (
             <div 
               key={m.id} 
-              className={`flex items-start gap-2.5 max-w-[90%] sm:max-w-[85%] ${
+              className={`flex items-start gap-2 sm:gap-2.5 max-w-[92%] sm:max-w-[85%] ${
                 isModel ? "mr-auto" : "ml-auto flex-row-reverse"
               }`}
             >
               {/* Profile Avatar */}
-              <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center border text-xs font-mono font-bold shadow-2xs ${
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 flex items-center justify-center border text-xs font-mono font-bold shadow-2xs ${
                 isModel 
                   ? "bg-brand-navy-900 border-brand-gold-400/40 text-brand-gold-400" 
                   : "bg-brand-navy-900 border-brand-navy-800 text-white"
@@ -292,19 +633,29 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
 
               {/* Message Dialog Bubble */}
               <div className="space-y-1 min-w-0">
-                <div className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-[13px] leading-relaxed break-words shadow-2xs ${
+                <div className={`p-3 sm:p-4 rounded-2xl text-xs sm:text-[13px] leading-relaxed break-words shadow-2xs ${
                   isModel 
                     ? "bg-slate-100 text-slate-900 border border-slate-200/90 rounded-tl-none font-sans" 
                     : "bg-brand-navy-900 text-white font-medium rounded-tr-none"
                 }`}>
                   <p className="whitespace-pre-line leading-relaxed">
-                    {m.content}
+                    {displayContent}
                   </p>
                 </div>
-                <div className={`text-[9px] text-slate-400 font-mono ${
-                  isModel ? "text-left" : "text-right"
+                <div className={`flex items-center gap-2 text-[9px] text-slate-400 font-mono ${
+                  isModel ? "justify-start" : "justify-end"
                 }`}>
-                  {m.timestamp}
+                  <span>{m.timestamp}</span>
+                  {isModel && ttsSupported && (
+                    <button
+                      type="button"
+                      onClick={() => speakAssistantReply(m.content)}
+                      className="text-blue-600 hover:underline cursor-pointer"
+                      title="Listen in human voice"
+                    >
+                      Speak ({voiceGender === "female" ? "Female" : "Male"})
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -312,17 +663,17 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
           );
         })}
 
-        {/* AI Typing Pulse Indicator */}
+        {/* Typing Indicator */}
         {isTyping && (
-          <div className="flex items-start gap-2.5 max-w-[90%] sm:max-w-[85%] mr-auto">
-            <div className="w-8 h-8 rounded-full bg-brand-navy-900 border border-brand-gold-400/40 text-brand-gold-400 flex items-center justify-center animate-bounce shrink-0">
+          <div className="flex items-start gap-2 sm:gap-2.5 max-w-[92%] sm:max-w-[85%] mr-auto">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-navy-900 border border-brand-gold-400/40 text-brand-gold-400 flex items-center justify-center animate-bounce shrink-0">
               <Logo size={18} showText={false} className="shrink-0" />
             </div>
             <div className="bg-slate-100 border border-slate-200 p-3.5 rounded-2xl rounded-tl-none text-xs text-slate-800 shadow-2xs">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-brand-navy-900 rounded-full animate-ping" />
                 <span className="font-mono text-[11px] text-brand-navy-950 font-bold">
-                  C-Vidya AI is typing an answer...
+                  Typing...
                 </span>
               </div>
             </div>
@@ -332,91 +683,49 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick Topics Collapsible Bar with Arrow Toggle */}
-      <div className="shrink-0 bg-[#090e18] border-t border-slate-800/90">
-        <button
-          type="button"
-          onClick={() => setShowQuickTopics(!showQuickTopics)}
-          className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between text-left hover:bg-slate-900/80 transition-colors group cursor-pointer"
-          aria-expanded={showQuickTopics}
-          aria-label={showQuickTopics ? "Hide quick topics and suggested questions" : "Show quick topics and suggested questions"}
-        >
-          <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono font-bold text-slate-300 group-hover:text-brand-gold-400 transition-colors">
-            <HelpCircle className="w-3.5 h-3.5 text-brand-gold-400 shrink-0" />
-            <span>QUICK TOPICS & QUESTIONS</span>
-          </div>
-          
-          <div className="flex items-center gap-1.5 text-brand-gold-400">
-            <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-300">
-              {showQuickTopics ? "Hide" : "Open"}
-            </span>
-            <div className="p-1 rounded-md bg-slate-800 group-hover:bg-slate-700 text-brand-gold-400 transition-all flex items-center justify-center">
-              {showQuickTopics ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronUp className="w-3.5 h-3.5" />
-              )}
-            </div>
-          </div>
-        </button>
-
-        {/* Collapsible Content: Opened only when user clicks the arrow */}
-        {showQuickTopics && (
-          <div className="px-3 sm:px-4 pb-3 pt-1 space-y-2.5 max-h-56 sm:max-h-64 overflow-y-auto custom-scroll-panel border-t border-slate-800/60 bg-[#0a0f19] animate-in fade-in duration-150">
-            <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1">
-              <span className="text-[9.5px] text-slate-400 font-mono font-bold tracking-wider uppercase">
-                CATEGORY:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {PRESET_CATEGORIES.map((cat, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveCategoryIndex(idx)}
-                    className={`text-[9.5px] font-mono px-2 py-0.5 rounded-md transition-all cursor-pointer ${
-                      activeCategoryIndex === idx 
-                        ? "bg-brand-gold-500 text-slate-950 font-bold shadow-xs" 
-                        : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
-                    }`}
-                  >
-                    {cat.category}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_CATEGORIES[activeCategoryIndex].questions.map((q, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleSendMessage(q)}
-                  className="text-[10.5px] sm:text-[11px] bg-[#121a2b] hover:bg-brand-gold-500 hover:text-slate-950 border border-slate-800 hover:border-brand-gold-500 rounded-xl px-2.5 py-1.5 sm:px-3 text-slate-300 font-medium transition-all cursor-pointer text-left active:scale-95"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
+      {/* Input Message & Voice Agent Control Bar */}
+      <div className="p-2.5 sm:p-4 bg-brand-navy-900 border-t border-brand-gold-500/20 flex flex-col gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
+        {voiceStatus === "listening" && interimTranscript && (
+          <div className="text-[11px] font-mono text-brand-gold-400 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-brand-gold-500/30 truncate">
+            🎙️ Listening ({languageLabel}): &ldquo;{interimTranscript}&rdquo;
           </div>
         )}
-      </div>
 
-      {/* Input Message Form Panel */}
-      <div className="p-3 sm:p-4 bg-brand-navy-900 border-t border-brand-gold-500/20 flex flex-col gap-2 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSendMessage(input);
           }}
-          className="flex gap-2 items-center"
+          className="flex gap-2 items-center w-full"
         >
+          {/* Microphone Start / Stop Listening Button */}
+          <button
+            type="button"
+            onClick={handleToggleListening}
+            disabled={isTyping}
+            className={`min-w-[44px] min-h-[44px] p-2.5 sm:p-3 rounded-xl border transition-all cursor-pointer shrink-0 flex items-center justify-center ${
+              voiceStatus === "listening"
+                ? "bg-rose-600 hover:bg-rose-500 border-rose-400 text-white animate-pulse shadow-lg"
+                : "bg-[#0d1524] hover:bg-slate-800 border-slate-700 text-brand-gold-400"
+            }`}
+            title={voiceStatus === "listening" ? "Stop voice listening" : "Start voice input (English, Hindi)"}
+            aria-label={voiceStatus === "listening" ? "Stop voice listening" : "Start voice input"}
+            aria-pressed={voiceStatus === "listening"}
+          >
+            {voiceStatus === "listening" ? (
+              <MicOff className="w-4 h-4" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </button>
+
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask in English or Hinglish (e.g. Gym software ke features kya hain?)..."
-            className="flex-1 text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#0d1524] border border-slate-700/80 rounded-xl focus:border-brand-gold-400 focus:ring-1 focus:ring-brand-gold-400 outline-none text-slate-100 placeholder-slate-500 font-medium shadow-inner min-h-[44px]"
+            placeholder="Ask or speak in English or Hindi..."
+            className="flex-1 min-w-0 text-[16px] sm:text-sm px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#0d1524] border border-slate-700/80 rounded-xl focus:border-brand-gold-400 focus:ring-1 focus:ring-brand-gold-400 outline-none text-slate-100 placeholder-slate-500 font-medium shadow-inner min-h-[44px]"
             disabled={isTyping}
           />
           <button
@@ -429,14 +738,11 @@ How can I help you today? Feel free to ask in English, Hindi, or Hinglish!`,
             <Send className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
-
-        <div className="flex items-center gap-1.5 text-[9.5px] text-slate-400 font-mono">
-          <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-          <span className="truncate">Official C Vidya Solutions Support</span>
-        </div>
       </div>
 
     </div>
     </>
   );
 }
+
+

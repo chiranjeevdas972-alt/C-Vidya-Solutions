@@ -1,6 +1,6 @@
 {
   "name": "C Vidya Solutions",
   "description": "High-fidelity interactive technology services portal for C Vidya Solutions, featuring integrated digital product suite previews, inquiry capture, and an AI product assistant.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

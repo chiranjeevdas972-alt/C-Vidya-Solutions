@@ -29,6 +29,7 @@ import {
   validateRegistration 
 } from "../services/appRegistrationService";
 import { MOBILE_APP_CONFIG, PlatformConfig } from "../services/appDownloadConfig";
+import { triggerSuccessFeedback, dispatchActivityPing } from "./ActivityPingsAndTour";
 
 interface AppDownloadRegistrationFormProps {
   selectedPlatform: "android" | "ios";
@@ -81,6 +82,15 @@ export default function AppDownloadRegistrationForm({
       if (res.success) {
         setIsSuccess(true);
         setRegistrationId(res.registrationId || null);
+        triggerSuccessFeedback({
+          title: "Registration Completed!",
+          message: `Your ${selectedPlatform === "android" ? "Android" : "iOS"} mobile app access registration has been saved.`
+        });
+        dispatchActivityPing({
+          category: "New App Registration",
+          message: `Mobile App registration completed (${selectedPlatform === "android" ? "Android" : "iOS"})`,
+          timestampLabel: "Just now"
+        });
       } else {
         setSubmitError(res.errorMessage || "Submission could not be completed. Please try again.");
       }

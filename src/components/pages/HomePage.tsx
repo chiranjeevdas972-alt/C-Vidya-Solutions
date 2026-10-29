@@ -32,11 +32,22 @@ import {
   Receipt,
   Server
 } from "lucide-react";
+import { motion } from "motion/react";
 import Logo from "../Logo";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
 import { coreCompanyServices, saasProductsData, aiAgentsData, type CoreServiceItem } from "../../data";
 import CoreServiceDetailModal from "../CoreServiceDetailModal";
+import {
+  WordRotator,
+  CountUpNumber,
+  CountUpStatsSection,
+  BentoFeaturesSection,
+  ProcessWorkflowSection,
+  BeforeAfterComparisonSection,
+  UsVsThemComparisonSection,
+  ReviewShuffleSection
+} from "../InteractiveHomeSections";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -105,24 +116,47 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Left Content */}
+            {/* Left Content — FEATURE 01: Progressive Hero Reveal + FEATURE 02: Word Rotator */}
             <div className="lg:col-span-7 space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <WordRotator />
+              </motion.div>
 
               {/* Headline */}
-              <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]">
+              <motion.h1
+                id="hero-heading"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.05 }}
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-950 leading-[1.12]"
+              >
                 C Vidya Solutions:{" "}
                 <span className="text-blue-600">Cloud Business Software</span>{" "}
                 &amp; Autonomous{" "}
                 <span className="text-blue-600">AI Agents</span>.
-              </h1>
+              </motion.h1>
 
               {/* Subtitle */}
-              <p className="text-lg text-slate-600 max-w-2xl leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.12 }}
+                className="text-lg text-slate-600 max-w-2xl leading-relaxed"
+              >
                 Architecting modern digital infrastructure. Explore 10 flagship multi-tenant SaaS software suites for campus, retail, and commercial operations, alongside 4 specialized autonomous AI agents delivering 24/7 business execution.
-              </p>
+              </motion.p>
 
               {/* CTAs */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+                className="flex flex-wrap items-center gap-4 pt-2"
+              >
                 <a
                   href="/software/"
                   onClick={(e) => handleLink(e, "/software/")}
@@ -147,12 +181,17 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                 >
                   <span>Case Studies</span>
                 </a>
-              </div>
+              </motion.div>
 
             </div>
 
             {/* Right Card / Visual */}
-            <div className="lg:col-span-5 flex justify-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.14 }}
+              className="lg:col-span-5 flex justify-center"
+            >
               <div className="relative w-full max-w-md bg-white border border-blue-200/80 rounded-2xl p-10 shadow-xl shadow-blue-500/5 flex flex-col items-center justify-center min-h-[380px]">
                 
                 {/* Central Brand Illustration */}
@@ -174,11 +213,14 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                 </div>
 
               </div>
-            </div>
+            </motion.div>
 
           </div>
         </div>
       </section>
+
+      {/* 1B. FEATURE 05: COUNT-UP STATS BAR */}
+      <CountUpStatsSection />
 
       {/* 2. CORE SOLUTIONS & DUAL ENGINE SECTION */}
       <section className="py-20 bg-slate-50/70 border-y border-slate-200/60" aria-labelledby="solutions-heading">
@@ -872,7 +914,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
               {/* Stat Card: 150+ Enterprise Deployments */}
               <div className="bg-slate-100/80 border border-slate-200/80 rounded-xl p-6 flex flex-col items-center justify-center text-center">
                 <div className="text-4xl sm:text-5xl font-black text-blue-600 font-mono tracking-tight">
-                  150+
+                  <CountUpNumber endValue={150} suffix="+" />
                 </div>
                 <div className="text-xs font-mono font-bold tracking-wider text-slate-500 uppercase mt-2">
                   ENTERPRISE DEPLOYMENTS
@@ -885,6 +927,21 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
 
         </div>
       </section>
+
+      {/* 3B. FEATURE 06: BENTO FEATURE BUILD (Real Software Modules) */}
+      <BentoFeaturesSection onNavigate={onNavigate} onOpenSoftware={onOpenSoftware} />
+
+      {/* 3C. FEATURE 08: STEP-BY-STEP WORKFLOW */}
+      <ProcessWorkflowSection onNavigate={onNavigate} />
+
+      {/* 3D. FEATURE 09: BEFORE / AFTER COMPARISON */}
+      <BeforeAfterComparisonSection />
+
+      {/* 3E. FEATURE 11: US VS THEM COMPARISON TABLE */}
+      <UsVsThemComparisonSection />
+
+      {/* 3F. FEATURE 04: REVIEW / TESTIMONIAL SHUFFLE */}
+      <ReviewShuffleSection onNavigate={onNavigate} />
 
       {/* 4. INDUSTRIES SERVED SECTION */}
       <section className="py-16 bg-slate-50 border-t border-slate-200/80" aria-labelledby="industries-heading">

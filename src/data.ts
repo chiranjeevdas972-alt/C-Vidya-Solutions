@@ -766,3 +766,207 @@ export const coreCompanyServices: CoreServiceItem[] = [
     ]
   }
 ];
+
+// ==========================================
+// 4. INTERACTIVE UI/UX CONFIGURATION DATA
+// ==========================================
+
+export const HERO_ROTATING_PHRASES: string[] = [
+  "Manage Your Business",
+  "Grow Your Business",
+  "Automate Your Business",
+  "Organize Your Business"
+];
+
+export interface TestimonialItem {
+  id: string;
+  author: string;
+  role: string;
+  organization: string;
+  moduleUsed: string;
+  moduleLink: string;
+  quote: string;
+  outcomeMetric: string;
+}
+
+export const TESTIMONIALS_DATA: TestimonialItem[] = [
+  {
+    id: "rev-library",
+    author: "Dr. R. K. Sinha",
+    role: "Chief Librarian & Academic Coordinator",
+    organization: "Central Academic Reading Hub, Dhanbad",
+    moduleUsed: "C Vidya Library Management",
+    moduleLink: "/software/library-management/",
+    quote: "Transitioning from manual paper issue registers to C Vidya Library Management eliminated book circulation bottlenecks. ISBN barcode scanning and automated WhatsApp overdue reminders keep our 12,450+ catalog organized effortlessly.",
+    outcomeMetric: "12,450+ Books Cataloged · Zero Ledger Discrepancies"
+  },
+  {
+    id: "rev-fitness",
+    author: "Vikramaditya Singh",
+    role: "Managing Partner",
+    organization: "Apex Iron & Fitness Studio",
+    moduleUsed: "C Vidya Fitness Zone",
+    moduleLink: "/software/fitness-zone/",
+    quote: "Before C Vidya Fitness Zone, tracking expiring monthly gym plans and turnstile access required constant front-desk supervision. Now biometric check-ins and automated renewal invoices run seamlessly.",
+    outcomeMetric: "612+ Active Gym Members · 100% Automated Renewals"
+  },
+  {
+    id: "rev-coaching",
+    author: "Prof. K. Verma",
+    role: "Director of Academics",
+    organization: "Sankalp Competitive Academy",
+    moduleUsed: "C Vidya Coaching Management",
+    moduleLink: "/software/coaching-management/",
+    quote: "Managing 18 JEE and NEET batches alongside OMR test grading used to take days. With C Vidya Coaching Management, parent attendance SMS alerts and batch rank analytics are generated in minutes.",
+    outcomeMetric: "480+ Enrolled Aspirants · Instant OMR Analytics"
+  },
+  {
+    id: "rev-petrol",
+    author: "Rajeshwar Prasad",
+    role: "Station Proprietor",
+    organization: "Highway Fuel & Energy Station",
+    moduleUsed: "C Vidya Petrol Pump Suite",
+    moduleLink: "/software/petrol-pump-management/",
+    quote: "Daily nozzle meter readings, underground dip-tank stock calculation, and fleet credit khata reconciliation are now completely centralized. Shift handovers that took two hours now finish in ten minutes.",
+    outcomeMetric: "Multi-Nozzle Shift Sync · 100% Audit-Ready Ledgers"
+  },
+  {
+    id: "rev-crm",
+    author: "Ananya Chatterjee",
+    role: "VP of Operations",
+    organization: "Eastern Enterprise Distributors",
+    moduleUsed: "C Vidya Enterprise CRM & AI Support",
+    moduleLink: "/software/enterprise-crm/",
+    quote: "Combining C Vidya Enterprise CRM with the 24/7 AI Customer Support Agent unified our entire sales pipeline and reduced response times across regional client accounts.",
+    outcomeMetric: "24/7 Autonomous Triage · Unified Sales Pipeline"
+  }
+];
+
+export interface WorkflowStepItem {
+  stepNumber: string;
+  title: string;
+  description: string;
+  moduleTag: string;
+}
+
+export const WORKFLOW_STEPS_DATA: WorkflowStepItem[] = [
+  {
+    stepNumber: "01",
+    title: "Add Customer, Student or Member",
+    description: "Onboard students, library readers, gym members, or enterprise clients into a centralized digital profile with QR/RFID or biometric ID.",
+    moduleTag: "Admissions & Onboarding"
+  },
+  {
+    stepNumber: "02",
+    title: "Create Plan, Batch or Catalog",
+    description: "Assign academic batches, gym subscription plans, book circulation rules, fuel shift rosters, or retail inventory SKUs.",
+    moduleTag: "Plan & Inventory Setup"
+  },
+  {
+    stepNumber: "03",
+    title: "Record Payment & GST Billing",
+    description: "Generate 100% GST-compliant invoices, thermal POS receipts, and automated WhatsApp payment confirmations across Cash, UPI, or Card.",
+    moduleTag: "Accounting & POS"
+  },
+  {
+    stepNumber: "04",
+    title: "Manage Daily Activity & AI Workflows",
+    description: "Track live attendance, book checkouts, nozzle readings, and let 24/7 Autonomous AI Agents handle support queries and lead follow-ups.",
+    moduleTag: "Live Operations & AI"
+  },
+  {
+    stepNumber: "05",
+    title: "Generate Audit-Ready Reports",
+    description: "Export real-time P&L statements, overdue ledgers, batch performance analytics, and tax summaries in one click (CSV / PDF / Excel).",
+    moduleTag: "Analytics & Exports"
+  }
+];
+
+export const BEFORE_AFTER_DATA = {
+  beforeTitle: "Before C Vidya Software (Manual Operations)",
+  afterTitle: "After C Vidya Cloud Platform (Digital Automation)",
+  beforeItems: [
+    {
+      label: "Manual Work & Paper Registers",
+      detail: "Handwritten attendance logs, physical receipt books, and disconnected spreadsheets prone to calculation errors."
+    },
+    {
+      label: "Difficult Multi-Counter Tracking",
+      detail: "No real-time visibility into overdue library books, expiring gym memberships, or shift-wise fuel nozzle variances."
+    },
+    {
+      label: "Repetitive Follow-Up Tasks",
+      detail: "Hours spent manually calling or messaging students, parents, and customers for fee reminders and support queries."
+    },
+    {
+      label: "Delayed Financial Reporting",
+      detail: "Compiling monthly GST returns, cashbook balances, and inventory stock takes days of manual reconciliation."
+    },
+    {
+      label: "Scattered Information",
+      detail: "Customer records, billing history, and operational logs spread across multiple files and physical registers."
+    }
+  ],
+  afterItems: [
+    {
+      label: "Centralized Digital Management",
+      detail: "Cloud-synchronized multi-tenant records with instant barcode, QR pass, and biometric turnstile capture."
+    },
+    {
+      label: "Real-Time Operational Tracking",
+      detail: "Live dashboards showing active memberships, book circulation, batch attendance, and stock levels from any device."
+    },
+    {
+      label: "Automated Alerts & 24/7 AI Agents",
+      detail: "Automated WhatsApp/SMS notifications and autonomous AI agents handling customer support and lead nurturing."
+    },
+    {
+      label: "Instant 1-Click GST & Audit Reports",
+      detail: "Real-time cashbooks, thermal receipts, GSTR-ready tax ledgers, and instant CSV/PDF data exports."
+    },
+    {
+      label: "Unified Single-System Architecture",
+      detail: "Every branch, counter, member, invoice, and analytics metric accessible securely inside one platform."
+    }
+  ]
+};
+
+export interface ComparisonRowItem {
+  aspect: string;
+  traditional: string;
+  ourSoftware: string;
+}
+
+export const US_VS_THEM_DATA: ComparisonRowItem[] = [
+  {
+    aspect: "Record Keeping",
+    traditional: "Manual paper registers and fragmented local spreadsheets",
+    ourSoftware: "Centralized, encrypted cloud database with instant search"
+  },
+  {
+    aspect: "Paperwork & Data Entry",
+    traditional: "High paperwork with repetitive manual data entry across counters",
+    ourSoftware: "Less paperwork via ISBN barcode, QR code, and biometric capture"
+  },
+  {
+    aspect: "Operational Tracking",
+    traditional: "Difficult tracking of overdue fees, renewals, and shift stock",
+    ourSoftware: "Easy real-time tracking with automated status alerts"
+  },
+  {
+    aspect: "Financial & GST Reports",
+    traditional: "Slow manual compilation at the end of every week or month",
+    ourSoftware: "Quick 1-click GST invoices, cashbooks, and exportable reports"
+  },
+  {
+    aspect: "Data Accessibility",
+    traditional: "Information scattered in multiple physical files and systems",
+    ourSoftware: "Centralized information accessible securely on desktop and mobile"
+  },
+  {
+    aspect: "Time & Customer Support",
+    traditional: "More time required for routine inquiries and manual follow-ups",
+    ourSoftware: "Faster management with 24/7 Autonomous AI Agents & automation"
+  }
+];
+

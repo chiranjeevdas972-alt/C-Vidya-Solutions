@@ -16,6 +16,7 @@ import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { triggerSuccessFeedback, dispatchActivityPing } from "../ActivityPingsAndTour";
 
 interface CareersPageProps {
   onNavigate?: (page: string) => void;
@@ -105,6 +106,15 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
       }).catch(() => {});
 
       setAppliedSuccess(true);
+      triggerSuccessFeedback({
+        title: "Application Submitted Successfully",
+        message: `Your application for ${selectedJob?.title || "C Vidya Engineering"} has been recorded.`
+      });
+      dispatchActivityPing({
+        category: "Career Application",
+        message: `New application received for ${selectedJob?.title || "Engineering Role"}`,
+        timestampLabel: "Just now",
+      });
     } catch (err) {
       setJobError("Unable to submit application right now. Please email careers@cvidyasolutions.com");
     } finally {

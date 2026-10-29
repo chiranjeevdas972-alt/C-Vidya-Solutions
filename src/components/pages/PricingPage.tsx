@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Check, 
   HelpCircle, 
@@ -11,6 +12,7 @@ import {
 import Breadcrumb from "../Breadcrumb";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
+import { UsVsThemComparisonSection } from "../InteractiveHomeSections";
 
 interface PricingPageProps {
   onNavigate: (path: string) => void;
@@ -19,14 +21,16 @@ interface PricingPageProps {
 
 export default function PricingPage({ onNavigate, onOpenConsultation }: PricingPageProps) {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
 
   const pricingTiers = [
     {
       name: "Starter / Single Branch",
       badge: "Single Location",
       tagline: "Designed for single-branch libraries, local fitness studios, small clinics, and individual farms.",
-      price: "Modular",
-      period: "per module / billed annually",
+      price: billingCycle === "yearly" ? "Modular" : "Modular Monthly",
+      period: billingCycle === "yearly" ? "per module / billed annually" : "per module / billed monthly",
+      cycleNote: billingCycle === "yearly" ? "Annual cycle · Priority setup & data migration included" : "Flexible month-to-month modular subscription",
       popular: false,
       features: [
         "Single-branch database deployment",
@@ -42,8 +46,9 @@ export default function PricingPage({ onNavigate, onOpenConsultation }: PricingP
       name: "Growth / Professional",
       badge: "Most Popular",
       tagline: "Built for multi-batch coaching centers, high-traffic fuel stations, jewelry retailers, and clinics.",
-      price: "Custom Growth",
-      period: "based on operational volume",
+      price: billingCycle === "yearly" ? "Custom Growth" : "Custom Monthly",
+      period: billingCycle === "yearly" ? "based on operational volume (annual)" : "based on operational volume (monthly)",
+      cycleNote: billingCycle === "yearly" ? "Annual volume economies · Dedicated onboarding" : "Monthly volume-based modular billing",
       popular: true,
       features: [
         "Multi-counter & multi-batch capacity",
@@ -60,7 +65,8 @@ export default function PricingPage({ onNavigate, onOpenConsultation }: PricingP
       badge: "Multi-Campus & Chains",
       tagline: "Tailored for multi-branch academic campuses, hospital chains, and dedicated enterprise pipelines.",
       price: "Tailored SLA",
-      period: "custom multi-tenant deployment",
+      period: billingCycle === "yearly" ? "custom multi-tenant annual deployment" : "custom multi-tenant monthly deployment",
+      cycleNote: billingCycle === "yearly" ? "Multi-year or annual enterprise SLA contract" : "Custom monthly enterprise retainer",
       popular: false,
       features: [
         "Unlimited branch sites & centralized super-admin",
@@ -133,15 +139,57 @@ export default function PricingPage({ onNavigate, onOpenConsultation }: PricingP
         <Breadcrumb items={[{ name: "Pricing", url: "/pricing/" }]} onNavigate={onNavigate} />
       </div>
 
-      {/* Header */}
+      {/* Header + FEATURE 10: PRICE ROLL / PRICING TOGGLE (MONTHLY <-> YEARLY) */}
       <section className="bg-white border-b border-slate-200 py-12 md:py-16 px-4 sm:px-6 lg:px-8 text-center">
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-6">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight">
             {CORE_PAGES_SEO.pricing.h1}
           </h1>
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
             Modular software suites and autonomous AI automation tailored to your operational scale. No arbitrary lock-ins or bloated contracts.
           </p>
+
+          {/* Monthly <-> Yearly Segmented Toggle */}
+          <div className="pt-2 flex flex-col items-center gap-2">
+            <div
+              role="group"
+              aria-label="Billing frequency toggle"
+              className="inline-flex items-center p-1 bg-slate-100 border border-slate-200 rounded-xl"
+            >
+              <button
+                type="button"
+                onClick={() => setBillingCycle("monthly")}
+                aria-pressed={billingCycle === "monthly"}
+                className={`px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  billingCycle === "monthly"
+                    ? "bg-white text-slate-950 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Monthly Billing
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle("yearly")}
+                aria-pressed={billingCycle === "yearly"}
+                className={`px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  billingCycle === "yearly"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>Yearly Billing</span>
+                <span className={`text-[10px] font-mono uppercase ${billingCycle === "yearly" ? "text-blue-100" : "text-blue-600"}`}>
+                  · Volume Economies
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-slate-500">
+              {billingCycle === "yearly"
+                ? "Showing annual billing plans with priority setup, staff training, and volume economies."
+                : "Showing flexible month-to-month modular billing plans."}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -168,12 +216,25 @@ export default function PricingPage({ onNavigate, onOpenConsultation }: PricingP
                   <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
                     {tier.name}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-950 mt-2">
-                    {tier.price}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    {tier.period}
-                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`${tier.name}-${billingCycle}`}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.16 }}
+                    >
+                      <div className="text-2xl sm:text-3xl font-black text-slate-950 mt-2">
+                        {tier.price}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {tier.period}
+                      </div>
+                      <div className="text-[11px] font-medium text-blue-600 mt-1">
+                        {tier.cycleNote}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
 
                 <p className="text-xs text-slate-600 leading-relaxed min-h-[48px]">
@@ -253,6 +314,9 @@ export default function PricingPage({ onNavigate, onOpenConsultation }: PricingP
           </div>
         </div>
       </section>
+
+      {/* FEATURE 11: US VS THEM COMPARISON */}
+      <UsVsThemComparisonSection />
 
       {/* FAQs */}
       <section className="py-14 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">

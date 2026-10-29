@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Send, CheckCircle, Database, MailOpen, Trash2, Building, GraduationCap, AlertCircle } from "lucide-react";
-import { db } from "../firebase";
+import {
+  db,
+  auth,
+  getAdminAuthHeaders,
+  getStoredAdminToken,
+  setStoredAdminToken,
+  verifyAdminPasscodeWithServer,
+  isAuthorizedAdminUser,
+} from "../firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
+import { triggerSuccessFeedback, dispatchActivityPing } from "./ActivityPingsAndTour";
 
 interface InquiryFormProps {
   onInquirySubmitted?: () => void;
@@ -23,38 +32,38 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
   const [activePanelTab, setActivePanelTab] = useState<"inquiries" | "applications">("inquiries");
   const [showInquiriesPanel, setShowInquiriesPanel] = useState(false);
   const [ownerPassword, setOwnerPassword] = useState(() => {
-    return localStorage.getItem("cvidya_owner_pass") || "";
+    return getStoredAdminToken();
   });
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Fetch inquiries from Firebase Firestore directly with local & server fallback
+  // Fetch inquiries from Firebase Firestore and authenticated Backend API
   const fetchInquiries = async (passToCheck?: string) => {
-    const password = passToCheck !== undefined ? passToCheck : ownerPassword;
-    if (!password) {
+    const candidateToken = passToCheck !== undefined ? passToCheck.trim() : ownerPassword;
+    const isFirebaseAdmin = isAuthorizedAdminUser(auth.currentUser);
+
+    if (!candidateToken && !isFirebaseAdmin) {
       setSubmittedInquiries([]);
       setIsAuthorized(false);
       return;
     }
 
-    const validPasswords = ["cvidya2025", "cvidya", "admin", "director", "8987766981"];
-    const isPassValid = validPasswords.includes(password.trim().toLowerCase()) || password.trim().length >= 4;
-
-    if (!isPassValid) {
-      setIsAuthorized(false);
-      if (passToCheck !== undefined) {
-        setAuthError("Unauthorized access. Invalid owner password.");
+    if (passToCheck !== undefined && !isFirebaseAdmin) {
+      const verification = await verifyAdminPasscodeWithServer(candidateToken);
+      if (!verification.authorized) {
+        setIsAuthorized(false);
+        setAuthError(verification.message || "Unauthorized access. Invalid administrator credentials.");
+        return;
       }
-      return;
     }
 
     try {
       let combinedLeads: any[] = [];
       let combinedApps: any[] = [];
 
-      // 1. Fetch inquiries directly from Firebase Firestore
+      // 1. Fetch inquiries directly from Firebase Firestore (succeeds when signed in via Firebase Admin Auth)
       try {
         const inqCol = collection(db, "inquiries");
         const querySnapshot = await getDocs(inqCol);
@@ -89,9 +98,22 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
         // Safe backward-compat fallback
       }
 
-      // 2. Fetch from Backend API if accessible
+      // 2. Fetch from Backend API using authenticated admin headers
+      const authHeaders = await getAdminAuthHeaders();
+      if (candidateToken && !authHeaders["Authorization"]) {
+        authHeaders["Authorization"] = `Bearer ${candidateToken}`;
+        authHeaders["X-Admin-Passcode"] = candidateToken;
+      }
+
       try {
-        const res = await fetch(`/api/inquiries?password=${encodeURIComponent(password)}`);
+        const res = await fetch(`/api/inquiries`, {
+          headers: authHeaders,
+        });
+        if (res.status === 401 && !isFirebaseAdmin) {
+          setIsAuthorized(false);
+          setAuthError("Unauthorized access. Invalid administrator credentials.");
+          return;
+        }
         if (res.ok) {
           const contentType = res.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
@@ -110,7 +132,9 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
       }
 
       try {
-        const resApp = await fetch(`/api/applications?password=${encodeURIComponent(password)}`);
+        const resApp = await fetch(`/api/applications`, {
+          headers: authHeaders,
+        });
         if (resApp.ok) {
           const contentType = resApp.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
@@ -161,16 +185,16 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
       setAuthError("");
       if (passToCheck) {
         setOwnerPassword(passToCheck);
-        localStorage.setItem("cvidya_owner_pass", passToCheck);
+        setStoredAdminToken(passToCheck);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
-      setIsAuthorized(true); // Don't block authenticated owner if list is empty
+      setIsAuthorized(true);
     }
   };
 
   useEffect(() => {
-    if (ownerPassword) {
+    if (ownerPassword || isAuthorizedAdminUser(auth.currentUser)) {
       fetchInquiries();
     }
   }, []);
@@ -262,6 +286,15 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
       setSubmitResult({
         success: true,
         message: "Thank you! Your requisition has been logged securely in our system. A technical advisor will contact you shortly."
+      });
+      triggerSuccessFeedback({
+        title: "Successfully Saved!",
+        message: `Your callback requisition for ${recordPayload.service} has been completed.`
+      });
+      dispatchActivityPing({
+        category: "New Enquiry Received",
+        message: `Enquiry recorded for ${recordPayload.service}`,
+        timestampLabel: "Just now"
       });
       // Clear form
       setFormData({ name: "", email: "", phone: "", service: "General Inquiry", message: "" });

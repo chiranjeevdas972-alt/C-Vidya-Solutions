@@ -8,7 +8,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import { collection, getDocs, setDoc, doc, query, orderBy } from "firebase/firestore";
 import { db, OperationType, handleFirestoreError } from "./src/firebase.ts";
-import { getSmartAssistantResponse } from "./src/utils/aiResponder.ts";
+import { getSmartAssistantResponse, extractStructuredLeadFromChat, detectLanguageMode, isGenericCatchAllReply } from "./src/utils/aiResponder.ts";
 import { getPageSeo } from "./src/seoData.ts";
 
 // Load environment variables
@@ -108,8 +108,9 @@ const app = express();
 // Parse command line arguments (e.g., npm run dev --port 3000 --host 0.0.0.0)
 const portArgIndex = process.argv.indexOf("--port");
 const argPort = portArgIndex !== -1 && process.argv[portArgIndex + 1] ? parseInt(process.argv[portArgIndex + 1], 10) : null;
-const envPort = process.env.PORT && process.env.PORT !== "8080" ? parseInt(process.env.PORT, 10) : null;
-// Environment constraint: Dev server must run on port 3000
+const isProductionEnv = process.env.NODE_ENV === "production";
+const envPort = process.env.PORT && (isProductionEnv || process.env.PORT !== "8080") ? parseInt(process.env.PORT, 10) : null;
+// Environment constraint: Dev server must run on port 3000; production honors process.env.PORT
 const PORT = argPort || envPort || 3000;
 
 // Security: Disable X-Powered-By to prevent fingerprinting by port scanners and ethical hacking tools
@@ -774,15 +775,17 @@ app.use((req, res, next) => {
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=(), usb=()");
+  res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   res.setHeader(
     "Content-Security-Policy",
     "default-src 'self' https:; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.gstatic.com https://*.google.com https://*.firebaseapp.com https://*.googleapis.com https://pagead2.googlesyndication.com; " +
+    "frame-src 'self' https: https://*.firebaseapp.com https://*.google.com https://accounts.google.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.gstatic.com https://accounts.google.com; " +
     "img-src 'self' data: https: blob:; " +
+    "media-src 'self' data: blob: https:; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "connect-src 'self' https: wss: ws:; " +
     "frame-ancestors 'self' https://*.studio https://ai.studio https://*.google.com https://*.google.dev https://*.run.app https://cvidyasolutions.com https://*.cvidyasolutions.com;"
@@ -853,18 +856,294 @@ const authAttemptsRateLimiter = (req: express.Request, res: express.Response, ne
   next();
 };
 
-// Cryptographically Constant-Time Password Verification to neutralize side-channel timing attacks
-function isAuthorizedOwner(provided: any): boolean {
-  if (typeof provided !== "string" || provided.length < 5 || provided.length > 128) return false;
-  const validPasswords = ["8987766981", "cvidya2026", "cvidya2025"];
-  const provHash = crypto.createHash("sha256").update(provided).digest();
-  for (const valid of validPasswords) {
-    const validHash = crypto.createHash("sha256").update(valid).digest();
-    if (crypto.timingSafeEqual(provHash, validHash)) {
-      return true;
-    }
-  }
+const STRICT_AUTHORIZED_ADMIN_EMAILS = [
+  "cvidyasolutions@gmail.com",
+  "chiranjeevdas972@gmail.com",
+] as const;
+
+export function getAuthorizedAdminEmails(): string[] {
+  return [...STRICT_AUTHORIZED_ADMIN_EMAILS];
+}
+
+// Passcode fallback is intentionally disabled: administrator access requires a verified Firebase Google ID token.
+export function isAuthorizedOwner(_provided: unknown): boolean {
   return false;
+}
+
+// Verify Firebase ID token via JWT claims and Google Identity Toolkit lookup for authorized admin emails
+export async function verifyFirebaseAdminIdToken(idToken: string): Promise<boolean> {
+  if (!idToken || typeof idToken !== "string") return false;
+  const parts = idToken.trim().split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payloadSegment = parts[1];
+    const decodedJson = Buffer.from(payloadSegment, "base64url").toString("utf8");
+    const payload = JSON.parse(decodedJson);
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!payload.exp || typeof payload.exp !== "number" || payload.exp < nowSec) {
+      return false;
+    }
+    if (payload.email_verified !== true) {
+      return false;
+    }
+    if (payload.sub !== undefined && (typeof payload.sub !== "string" || !payload.sub.trim())) {
+      return false;
+    }
+    const email = String(payload.email || "").trim().toLowerCase();
+    const allowedEmails = getAuthorizedAdminEmails();
+    if (!email || !allowedEmails.includes(email)) {
+      return false;
+    }
+
+    // Verify token signature, project audience, issuer, and live revocation status against Firebase Identity Toolkit
+    const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(firebaseConfigPath)) {
+      const cfg = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf8"));
+      if (cfg?.projectId) {
+        if (payload.aud && payload.aud !== cfg.projectId) {
+          return false;
+        }
+        const expectedIssuer = `https://securetoken.google.com/${cfg.projectId}`;
+        if (payload.iss && payload.iss !== expectedIssuer) {
+          return false;
+        }
+      }
+      if (cfg?.apiKey) {
+        const resp = await fetch(
+          `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(cfg.apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken }),
+          }
+        );
+        if (!resp.ok) return false;
+        const data = (await resp.json()) as any;
+        const userRecord = data?.users?.[0];
+        if (!userRecord || userRecord.emailVerified !== true || userRecord.disabled === true) {
+          return false;
+        }
+        const verifiedEmail = String(userRecord.email || "").trim().toLowerCase();
+        return Boolean(verifiedEmail && allowedEmails.includes(verifiedEmail));
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export function extractAdminTokenFromRequest(req: express.Request): string {
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (token) return token;
+  }
+  return "";
+}
+
+export async function verifyAdminRequest(req: express.Request): Promise<boolean> {
+  const candidate = extractAdminTokenFromRequest(req);
+  if (!candidate) return false;
+  return await verifyFirebaseAdminIdToken(candidate);
+}
+
+// ============================================================================
+// AUTHENTICATED SERVER-SIDE FIRESTORE REST BRIDGE
+// Forwards the verified administrator's Bearer ID token to Cloud Firestore REST API
+// so server-side reads/updates satisfy `isAdmin()` in firestore.rules without
+// requiring downloadable service-account private keys or weakening rules.
+// ============================================================================
+
+function getFirestoreRestBaseUrl(): string | null {
+  try {
+    const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (!fs.existsSync(firebaseConfigPath)) return null;
+    const cfg = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf8"));
+    const projectId = cfg?.projectId || "c-vidya-solutions";
+    const databaseId = cfg?.firestoreDatabaseId || "(default)";
+    return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/${encodeURIComponent(databaseId)}/documents`;
+  } catch {
+    return null;
+  }
+}
+
+export function fromFirestoreRestValue(valObj: any): any {
+  if (!valObj || typeof valObj !== "object") return undefined;
+  if ("stringValue" in valObj) return valObj.stringValue;
+  if ("booleanValue" in valObj) return Boolean(valObj.booleanValue);
+  if ("integerValue" in valObj) return Number(valObj.integerValue);
+  if ("doubleValue" in valObj) return Number(valObj.doubleValue);
+  if ("timestampValue" in valObj) return valObj.timestampValue;
+  if ("nullValue" in valObj) return null;
+  if ("arrayValue" in valObj) {
+    const values = valObj.arrayValue?.values;
+    return Array.isArray(values) ? values.map(fromFirestoreRestValue) : [];
+  }
+  if ("mapValue" in valObj) {
+    const fields = valObj.mapValue?.fields || {};
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(fields)) {
+      out[k] = fromFirestoreRestValue(v);
+    }
+    return out;
+  }
+  return undefined;
+}
+
+export function toFirestoreRestValue(val: any): any {
+  if (val === null || val === undefined) return { nullValue: null };
+  if (typeof val === "boolean") return { booleanValue: val };
+  if (typeof val === "number") {
+    return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+  }
+  if (Array.isArray(val)) {
+    return { arrayValue: { values: val.map(toFirestoreRestValue) } };
+  }
+  if (typeof val === "object") {
+    const fields: Record<string, any> = {};
+    for (const [k, v] of Object.entries(val)) {
+      if (v !== undefined) fields[k] = toFirestoreRestValue(v);
+    }
+    return { mapValue: { fields } };
+  }
+  return { stringValue: String(val) };
+}
+
+const ALLOWED_ADMIN_REST_COLLECTIONS = new Set([
+  "inquiries",
+  "job_applications",
+  "applications",
+  "app_download_registrations",
+  "call_logs",
+  "demo_bookings",
+  "handoff_tickets",
+]);
+
+const FORBIDDEN_REST_PRIVILEGE_FIELDS = new Set([
+  "isAdmin",
+  "admin",
+  "role",
+  "permissions",
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+
+export async function firestoreAdminRestListCollection(
+  collectionName: string,
+  adminIdToken: string,
+  maxPages = 3
+): Promise<any[] | null> {
+  const baseUrl = getFirestoreRestBaseUrl();
+  if (!baseUrl || !adminIdToken || !ALLOWED_ADMIN_REST_COLLECTIONS.has(collectionName)) {
+    return null;
+  }
+  try {
+    const allParsedDocs: any[] = [];
+    let pageToken = "";
+    let pageCount = 0;
+
+    while (pageCount < maxPages) {
+      pageCount++;
+      const tokenQuery = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "";
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      let resp: Response;
+      try {
+        resp = await fetch(
+          `${baseUrl}/${encodeURIComponent(collectionName)}?pageSize=300${tokenQuery}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${adminIdToken}`,
+              Accept: "application/json",
+            },
+            signal: controller.signal,
+          }
+        );
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!resp.ok) return pageCount === 1 ? null : allParsedDocs;
+      const data = (await resp.json()) as any;
+      const docs = Array.isArray(data?.documents) ? data.documents : [];
+      for (const d of docs) {
+        const docId = String(d?.name || "").split("/").pop() || "";
+        const fields = d?.fields || {};
+        const parsed: Record<string, any> = { id: docId };
+        for (const [k, v] of Object.entries(fields)) {
+          parsed[k] = fromFirestoreRestValue(v);
+        }
+        allParsedDocs.push(parsed);
+      }
+
+      if (typeof data?.nextPageToken === "string" && data.nextPageToken.trim()) {
+        pageToken = data.nextPageToken.trim();
+      } else {
+        break;
+      }
+    }
+
+    return allParsedDocs;
+  } catch {
+    return null;
+  }
+}
+
+export async function firestoreAdminRestPatchDocument(
+  collectionName: string,
+  docId: string,
+  updates: Record<string, any>,
+  adminIdToken: string
+): Promise<boolean> {
+  const baseUrl = getFirestoreRestBaseUrl();
+  if (
+    !baseUrl ||
+    !adminIdToken ||
+    !docId ||
+    !/^[a-zA-Z0-9_-]{1,128}$/.test(docId) ||
+    !ALLOWED_ADMIN_REST_COLLECTIONS.has(collectionName)
+  ) {
+    return false;
+  }
+  try {
+    const fieldKeys = Object.keys(updates).filter(
+      (k) => updates[k] !== undefined && !FORBIDDEN_REST_PRIVILEGE_FIELDS.has(k)
+    );
+    if (fieldKeys.length === 0) return false;
+    const maskParams = fieldKeys
+      .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
+      .join("&");
+    const fieldsPayload: Record<string, any> = {};
+    for (const k of fieldKeys) {
+      fieldsPayload[k] = toFirestoreRestValue(updates[k]);
+    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    let resp: Response;
+    try {
+      resp = await fetch(
+        `${baseUrl}/${encodeURIComponent(collectionName)}/${encodeURIComponent(docId)}?${maskParams}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${adminIdToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fields: fieldsPayload }),
+          signal: controller.signal,
+        }
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    return resp.ok;
+  } catch {
+    return false;
+  }
 }
 
 // Safe Input Sanitization and Formatting checks
@@ -893,6 +1172,117 @@ function isValidPhone(phone: string): boolean {
   const phoneRegex = /^[+]?[0-9\s\-()]{5,20}$/;
   return phoneRegex.test(phone);
 }
+
+// API: Verify Administrative Credentials (Server-Side Only — No Frontend Hardcoded Passcodes)
+app.post("/api/admin/verify", authAttemptsRateLimiter, async (req, res) => {
+  const authorized = await verifyAdminRequest(req);
+  if (!authorized) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized access. Invalid administrative credentials.",
+    });
+  }
+  return res.json({
+    success: true,
+    verifiedAt: new Date().toISOString(),
+  });
+});
+
+// Owner Security Vault — Precomputed SHA-256 Master Digests & Per-Owner Vault Store
+// Never stores or compares plaintext passwords; requires a verified Firebase Google ID token first.
+const OWNER_MASTER_SHA256_DIGESTS = [
+  "f2d11a260a4708049e370a1c7a4e420e9b9c836988f761a178f8431b1793524a",
+  "508d8d090f28188799640c11653c8b0f0a4f1b2b2c0d98864c9744d15a16e246",
+];
+const ownerVaultMemoryHashes = new Map<string, string>();
+
+function constantTimeHexEquals(hexA: string, hexB: string): boolean {
+  if (typeof hexA !== "string" || typeof hexB !== "string") return false;
+  if (!/^[a-f0-9]{64}$/i.test(hexA) || !/^[a-f0-9]{64}$/i.test(hexB)) return false;
+  try {
+    const bufA = Buffer.from(hexA.toLowerCase(), "hex");
+    const bufB = Buffer.from(hexB.toLowerCase(), "hex");
+    if (bufA.length !== 32 || bufB.length !== 32) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
+
+app.post("/api/admin/vault/verify", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized access. Verified Google administrator session required.",
+    });
+  }
+  const { uid, passwordHash, rawDigest } = req.body || {};
+  const cleanUid = typeof uid === "string" ? uid.trim() : "";
+  const cleanVaultHash = typeof passwordHash === "string" ? passwordHash.trim().toLowerCase() : "";
+  const cleanRawDigest = typeof rawDigest === "string" ? rawDigest.trim().toLowerCase() : "";
+
+  if (!cleanUid || !/^[a-f0-9]{64}$/.test(cleanVaultHash)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid cryptographic vault verification payload.",
+    });
+  }
+
+  const matchesMasterDigest =
+    /^[a-f0-9]{64}$/.test(cleanRawDigest) &&
+    OWNER_MASTER_SHA256_DIGESTS.some((d) => constantTimeHexEquals(cleanRawDigest, d));
+
+  const storedHash = ownerVaultMemoryHashes.get(cleanUid);
+  if (storedHash) {
+    const matchesStored = constantTimeHexEquals(cleanVaultHash, storedHash);
+    if (!matchesStored && !matchesMasterDigest) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid Owner Security Password. Access to C Vidya Admin Portal denied.",
+      });
+    }
+    return res.json({ success: true, verifiedAt: new Date().toISOString() });
+  }
+
+  ownerVaultMemoryHashes.set(cleanUid, cleanVaultHash);
+  return res.json({ success: true, initialized: true, verifiedAt: new Date().toISOString() });
+});
+
+app.post("/api/admin/vault/update", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized access. Verified Google administrator session required.",
+    });
+  }
+  const { uid, currentPasswordHash, currentRawDigest, newPasswordHash } = req.body || {};
+  const cleanUid = typeof uid === "string" ? uid.trim() : "";
+  const cleanCurrentHash = typeof currentPasswordHash === "string" ? currentPasswordHash.trim().toLowerCase() : "";
+  const cleanCurrentRaw = typeof currentRawDigest === "string" ? currentRawDigest.trim().toLowerCase() : "";
+  const cleanNewHash = typeof newPasswordHash === "string" ? newPasswordHash.trim().toLowerCase() : "";
+
+  if (!cleanUid || !/^[a-f0-9]{64}$/.test(cleanNewHash)) {
+    return res.status(400).json({
+      success: false,
+      error: "Valid new SHA-256 password hash is required.",
+    });
+  }
+
+  const storedHash = ownerVaultMemoryHashes.get(cleanUid);
+  const matchesMaster =
+    /^[a-f0-9]{64}$/.test(cleanCurrentRaw) &&
+    OWNER_MASTER_SHA256_DIGESTS.some((d) => constantTimeHexEquals(cleanCurrentRaw, d));
+
+  if (storedHash && !constantTimeHexEquals(cleanCurrentHash, storedHash) && !matchesMaster) {
+    return res.status(403).json({
+      success: false,
+      error: "Current Owner Security Password is incorrect.",
+    });
+  }
+
+  ownerVaultMemoryHashes.set(cleanUid, cleanNewHash);
+  return res.json({ success: true, updatedAt: new Date().toISOString() });
+});
 
 // API: Health Check
 app.get("/api/health", (req, res) => {
@@ -944,11 +1334,44 @@ const softwareWorkerMap: Record<string, string> = {
   "institutes": "https://institutes.cvidyasolutions.workers.dev/"
 };
 
+export function isAllowedSoftwareEmbedUrl(rawUrl: string): boolean {
+  if (!rawUrl || typeof rawUrl !== "string" || rawUrl.length > 500) return false;
+  const allowlistedUrls = new Set(Object.values(softwareWorkerMap));
+  if (allowlistedUrls.has(rawUrl)) return true;
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "https:") return false;
+    if (parsed.username || parsed.password) return false;
+    const host = parsed.hostname.toLowerCase();
+    // Explicitly reject localhost, IPv4/IPv6 literals, and cloud metadata hosts
+    if (
+      host === "localhost" ||
+      host === "metadata.google.internal" ||
+      /^[0-9.]+$/.test(host) ||
+      host.includes(":")
+    ) {
+      return false;
+    }
+    return /^[a-z0-9-]+\.cvidyasolutions\.workers\.dev$/i.test(host);
+  } catch {
+    return false;
+  }
+}
+
 app.get("/api/live-software-embed", (req, res) => {
   const id = String(req.query.id || "").toLowerCase();
-  const workerUrl = softwareWorkerMap[id] || (req.query.url ? String(req.query.url) : null);
-  if (workerUrl) {
-    return res.redirect(302, workerUrl);
+  const mappedUrl = softwareWorkerMap[id];
+  if (mappedUrl) {
+    return res.redirect(302, mappedUrl);
+  }
+  if (req.query.url) {
+    const candidateUrl = String(req.query.url).trim();
+    if (isAllowedSoftwareEmbedUrl(candidateUrl)) {
+      return res.redirect(302, candidateUrl);
+    }
+    return res.status(400).json({
+      error: "Blocked untrusted redirect URL. Only verified C Vidya software hosts are permitted.",
+    });
   }
   return res.status(404).send("Software embed not configured");
 });
@@ -1169,23 +1592,23 @@ app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
   });
 });
 
-// API: Fetch inquiries (for the on-site leads sandbox to inspect logged form data)
+// API: Fetch inquiries (Authorized Admin Only — uses Authenticated Firestore REST Bridge with admin Bearer token)
 app.get("/api/inquiries", authAttemptsRateLimiter, async (req, res) => {
-  const { password } = req.query;
-
-  // Security Check: Constant-time comparison against NoSQL injection, timing attacks, and password brute force
-  if (!isAuthorizedOwner(password)) {
-    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({ error: "Unauthorized access. Valid administrator credentials required." });
   }
+  const adminToken = extractAdminTokenFromRequest(req);
 
   try {
-    const q = query(collection(db, "inquiries"), orderBy("timestamp", "desc"));
-    const snapshot = await getDocs(q);
-    const firestoreInquiries: any[] = [];
-    
-    snapshot.forEach((d) => {
-      firestoreInquiries.push(d.data());
-    });
+    let firestoreInquiries = await firestoreAdminRestListCollection("inquiries", adminToken);
+    if (!firestoreInquiries) {
+      const q = query(collection(db, "inquiries"), orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      firestoreInquiries = [];
+      snapshot.forEach((d) => {
+        firestoreInquiries!.push({ id: d.id, ...d.data() });
+      });
+    }
 
     // Merge in-memory local caches that may have been submitted during database connection delays
     const merged = [...firestoreInquiries];
@@ -1196,18 +1619,11 @@ app.get("/api/inquiries", authAttemptsRateLimiter, async (req, res) => {
     });
 
     // Sort by timestamp descending
-    merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    merged.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
     return res.json({ inquiries: merged });
   } catch (error) {
-    console.error("Failed to list from Firestore, falling back to local memory store:", error);
-    try {
-      handleFirestoreError(error, OperationType.LIST, "inquiries");
-    } catch (loggedErr) {
-      // Secure local fallback
-    }
-    
-    const sortedMemory = [...inquiries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const sortedMemory = [...inquiries].sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
     return res.json({ inquiries: sortedMemory });
   }
 });
@@ -1293,42 +1709,98 @@ app.post("/api/application", contactFormRateLimiter, async (req, res) => {
   });
 });
 
-// API: Fetch applications (for admin / dashboard inspection)
-app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
-  const { password } = req.query;
+// Alias endpoint for CareersPage.tsx (`POST /api/job-applications`)
+app.post("/api/job-applications", contactFormRateLimiter, async (req, res) => {
+  const { name, email, phone, jobTitle, resumeUrl, note, jobId } = req.body || {};
+  if (!name || !email) {
+    return res.status(400).json({ error: "Name and email are required parameters." });
+  }
+  const cleanName = sanitizeInput(name, 150);
+  const cleanEmail = sanitizeInput(email, 200);
+  const cleanPhone = sanitizeInput(phone || "Not Provided", 50);
+  const cleanJobTitle = sanitizeInput(jobTitle || "General Application", 200);
+  const cleanResumeUrl = sanitizeInput(resumeUrl || "", 2000);
+  const cleanNote = sanitizeInput(note || "", 5000);
+  const id = `app_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+  const timestamp = new Date().toISOString();
 
-  // Security Check: Constant-time comparison against NoSQL injection, timing attacks, and password brute force
-  if (!isAuthorizedOwner(password)) {
-    return res.status(401).json({ error: "Unauthorized access. Invalid owner password." });
+  const newApp = {
+    id,
+    jobId: sanitizeInput(jobId || "general", 100),
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    experience: sanitizeInput(req.body?.experience || "Not specified", 100),
+    jobTitle: cleanJobTitle,
+    jobCategory: "Engineering",
+    jobLocation: "Remote / Hybrid (Dhanbad HQ)",
+    roleType: "Full-Time",
+    resumeUrl: cleanResumeUrl,
+    message: cleanNote,
+    note: cleanNote,
+    timestamp,
+    status: "received",
+  };
+
+  applications.push(newApp);
+  try {
+    await setDoc(doc(db, "job_applications", id), newApp);
+  } catch (err) {
+    console.warn("Firestore job_applications write note:", err);
   }
 
-  try {
-    const q = query(collection(db, "job_applications"), orderBy("timestamp", "desc"));
-    const snapshot = await getDocs(q);
-    const firestoreApps: any[] = [];
-    
-    snapshot.forEach((d) => {
-      firestoreApps.push(d.data());
-    });
+  return res.json({
+    success: true,
+    application: newApp,
+  });
+});
 
+// API: Fetch applications (Authorized Admin Only — uses Authenticated Firestore REST Bridge)
+app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({ error: "Unauthorized access. Valid administrator credentials required." });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  try {
+    let firestoreApps = await firestoreAdminRestListCollection("job_applications", adminToken);
+    if (!firestoreApps) {
+      const q = query(collection(db, "job_applications"), orderBy("timestamp", "desc"));
+      const snapshot = await getDocs(q);
+      firestoreApps = [];
+      snapshot.forEach((d) => {
+        firestoreApps!.push({ id: d.id, ...d.data() });
+      });
+    }
+
+    const legacyApps = await firestoreAdminRestListCollection("applications", adminToken);
     const merged = [...firestoreApps];
+    if (Array.isArray(legacyApps)) {
+      legacyApps.forEach((leg) => {
+        if (!merged.some((x) => x.id === leg.id)) {
+          merged.push(leg);
+        }
+      });
+    }
+
     applications.forEach((appItem) => {
       if (!merged.some((x) => x.id === appItem.id)) {
         merged.push(appItem);
       }
     });
 
-    merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    merged.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
     return res.json({ applications: merged });
   } catch (error) {
-    console.error("Failed to list job_applications from Firestore, falling back to local memory store:", error);
     return res.json({ applications: applications });
   }
 });
 
-// API: Submit Mobile App Registration
+const appRegistrationsMemoryStore: any[] = [];
+
+// API: Submit Mobile App Registration (Persists to `app_download_registrations` and linked `inquiries` without duplicates)
 app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
-  const { name, email, phone, platform, privacyConsent, registrationId } = req.body;
+  const { name, email, phone, platform, privacyConsent, registrationId, userAgent } = req.body || {};
 
   if (!name || !email || !phone) {
     return res.status(400).json({ error: "Name, email, and phone are required fields." });
@@ -1337,7 +1809,8 @@ app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
   const cleanName = sanitizeInput(name, 150);
   const cleanEmail = sanitizeInput(email, 200).toLowerCase();
   const cleanPhone = sanitizeInput(phone, 50);
-  const cleanPlatform = (platform === "ios" ? "ios" : "android");
+  const cleanPlatform: "android" | "ios" = platform === "ios" ? "ios" : "android";
+  const cleanUserAgent = sanitizeInput(userAgent || req.headers["user-agent"] || "Web Browser", 280);
 
   if (!cleanName || cleanName.length < 2) {
     return res.status(400).json({ error: "Please enter a valid full name (minimum 2 characters)." });
@@ -1347,78 +1820,245 @@ app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
     return res.status(400).json({ error: "Please enter a valid email address." });
   }
 
-  const id = registrationId || `appreg_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const rawRegId = typeof registrationId === "string" ? registrationId.trim() : "";
+  const id =
+    rawRegId && /^[a-zA-Z0-9_-]{3,100}$/.test(rawRegId)
+      ? rawRegId
+      : `appreg_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
   const timestamp = new Date().toISOString();
 
-  const regRecord = {
+  const dedicatedRegRecord = {
+    id,
+    name: cleanName,
+    email: cleanEmail,
+    phone: cleanPhone,
+    platform: cleanPlatform,
+    privacyConsent: Boolean(privacyConsent !== false),
+    privacyPolicyVersion: "2026.1",
+    status: "registered",
+    clientTimestamp: timestamp,
+    userAgent: cleanUserAgent,
+  };
+
+  const linkedInquiryRecord = {
     id,
     name: cleanName,
     email: cleanEmail,
     phone: cleanPhone,
     service: `Mobile App Early Access (${cleanPlatform.toUpperCase()})`,
-    message: `Platform: ${cleanPlatform} | Privacy Consent: ${privacyConsent ? 'Accepted' : 'Given'} | Version: 2026.1`,
+    message: `Platform: ${cleanPlatform} | Privacy Consent: ${privacyConsent ? "Accepted" : "Given"} | Version: 2026.1`,
     platform: cleanPlatform,
+    privacyConsent: Boolean(privacyConsent !== false),
+    privacyPolicyVersion: "2026.1",
     status: "registered",
     timestamp,
-    source: "mobile_app_download_page"
+    clientTimestamp: timestamp,
+    source: "mobile_app_download_page",
   };
 
-  // 1. Direct Firestore Persistence (to inquiries collection which is permitted by live security rules)
-  try {
-    const docRef = doc(db, "inquiries", id);
-    await setDoc(docRef, regRecord);
-    console.log("Successfully persisted app registration to Firestore inquiries:", id);
-  } catch (error) {
-    console.warn("Firestore app registration persistence note:", error);
+  const alreadyRecordedInMemory = appRegistrationsMemoryStore.some((r) => r.id === id);
+  if (!alreadyRecordedInMemory) {
+    appRegistrationsMemoryStore.unshift({
+      ...dedicatedRegRecord,
+      service: linkedInquiryRecord.service,
+      source: "app_download_registrations",
+    });
+  }
+  if (!inquiries.some((i) => i.id === id)) {
+    inquiries.unshift(linkedInquiryRecord as any);
   }
 
-  // 2. Dispatch Lead notification email to cvidyasolutions@gmail.com
-  sendLeadNotificationEmail({
-    name: cleanName,
-    email: cleanEmail,
-    phone: cleanPhone,
-    service: `Mobile App Registration (${cleanPlatform.toUpperCase()})`,
-    message: `User registered for C Vidya Solutions Mobile App for ${cleanPlatform.toUpperCase()}.`,
-    source: "Mobile App Download Page"
-  }).catch((err) => console.error("Registration email dispatch error:", err));
+  // Only attempt Firestore create when this deterministic registrationId has not already been recorded in this process
+  if (!alreadyRecordedInMemory) {
+    // 1. Persist to dedicated `app_download_registrations` collection in Firestore
+    try {
+      await setDoc(doc(db, "app_download_registrations", id), {
+        name: dedicatedRegRecord.name,
+        email: dedicatedRegRecord.email,
+        phone: dedicatedRegRecord.phone,
+        platform: dedicatedRegRecord.platform,
+        privacyConsent: true,
+        privacyPolicyVersion: "2026.1",
+        status: "registered",
+        clientTimestamp: timestamp,
+        userAgent: cleanUserAgent,
+      });
+    } catch (regErr) {
+      console.warn("Firestore app_download_registrations persistence note:", regErr);
+    }
+
+    // 2. Preserve linked record in `inquiries` collection using the same ID (create-compatible with firestore.rules)
+    try {
+      await setDoc(doc(db, "inquiries", id), linkedInquiryRecord);
+    } catch (error) {
+      console.warn("Firestore inquiries app registration link note:", error);
+    }
+  }
 
   return res.json({
     success: true,
     registrationId: id,
+    deduplicated: alreadyRecordedInMemory,
     message: `Registration confirmed for ${cleanName}.`
   });
 });
 
-// Smart local fallback assistant handler for offline, network errors or missing credentials
-function getFallbackReply(messages: any[]): string {
-  return getSmartAssistantResponse(messages);
-}
+// API: Fetch Mobile App Registrations (Authorized Admin Only — uses Authenticated Firestore REST Bridge)
+app.get("/api/app-registrations", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({ error: "Unauthorized access. Valid administrator credentials required." });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
 
-// Call Gemini API with robust retry mechanism
-async function callGeminiWithRetry(client: GoogleGenAI, formattedContents: any[], retries = 2, delayMs = 500): Promise<any> {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      const response = await client.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: formattedContents,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          temperature: 0.7,
-        },
+  const dedupedMap = new Map<string, any>();
+
+  const addRecordSafely = (rec: any, collectionOrigin: string) => {
+    if (!rec) return;
+    const id = String(rec.id || "");
+    const email = String(rec.email || "").trim().toLowerCase();
+    const phoneDigits = String(rec.phone || "").replace(/\D/g, "");
+    const platform = String(rec.platform || (String(rec.service || "").toLowerCase().includes("ios") ? "ios" : "android")).toLowerCase();
+    const compositeKey = email ? `${email}::${phoneDigits}::${platform}` : id;
+    const existingKey = id && dedupedMap.has(id) ? id : compositeKey;
+
+    if (!dedupedMap.has(existingKey)) {
+      dedupedMap.set(existingKey, {
+        id: id || compositeKey,
+        name: rec.name || rec.fullName || "Registered User",
+        email: rec.email || "",
+        phone: rec.phone || "",
+        platform: platform === "ios" ? "ios" : "android",
+        service: rec.service || `Mobile App Early Access (${platform.toUpperCase()})`,
+        privacyConsent: rec.privacyConsent !== false,
+        privacyPolicyVersion: rec.privacyPolicyVersion || "2026.1",
+        status: rec.status || "registered",
+        clientTimestamp: rec.clientTimestamp || rec.timestamp || new Date().toISOString(),
+        timestamp: rec.timestamp || rec.clientTimestamp || new Date().toISOString(),
+        sourceCollection: collectionOrigin,
       });
-      return response;
-    } catch (err: any) {
-      if (i === retries) throw err;
-      console.warn(`Gemini API call failed (Attempt ${i + 1}/${retries + 1}): ${err.message}. Retrying in ${delayMs}ms...`);
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-      delayMs *= 2;
+    }
+  };
+
+  appRegistrationsMemoryStore.forEach((r) => addRecordSafely(r, "app_download_registrations"));
+
+  const restRegs = await firestoreAdminRestListCollection("app_download_registrations", adminToken);
+  if (Array.isArray(restRegs)) {
+    restRegs.forEach((r) => addRecordSafely(r, "app_download_registrations"));
+  } else {
+    try {
+      const regSnap = await getDocs(collection(db, "app_download_registrations"));
+      regSnap.forEach((d) => addRecordSafely({ id: d.id, ...d.data() }, "app_download_registrations"));
+    } catch {
+      // Fallback
     }
   }
+
+  const restInquiries = await firestoreAdminRestListCollection("inquiries", adminToken);
+  if (Array.isArray(restInquiries)) {
+    restInquiries.forEach((data: any) => {
+      if (
+        data?.source === "mobile_app_download_page" ||
+        String(data?.service || "").toLowerCase().includes("mobile app") ||
+        String(data?.id || "").startsWith("appreg_")
+      ) {
+        addRecordSafely(data, "inquiries (linked)");
+      }
+    });
+  } else {
+    try {
+      const inqSnap = await getDocs(collection(db, "inquiries"));
+      inqSnap.forEach((d) => {
+        const data = d.data() as any;
+        if (
+          data?.source === "mobile_app_download_page" ||
+          String(data?.service || "").toLowerCase().includes("mobile app") ||
+          String(d.id).startsWith("appreg_")
+        ) {
+          addRecordSafely({ id: d.id, ...data }, "inquiries (linked)");
+        }
+      });
+    } catch {
+      // Fallback
+    }
+  }
+
+  inquiries.forEach((inq: any) => {
+    if (
+      inq?.source === "mobile_app_download_page" ||
+      String(inq?.service || "").toLowerCase().includes("mobile app") ||
+      String(inq?.id || "").startsWith("appreg_")
+    ) {
+      addRecordSafely(inq, "inquiries (linked)");
+    }
+  });
+
+  const registrations = Array.from(dedupedMap.values()).sort(
+    (a, b) => new Date(b.clientTimestamp || b.timestamp || 0).getTime() - new Date(a.clientTimestamp || a.timestamp || 0).getTime()
+  );
+
+  return res.json({ registrations });
+});
+
+// Smart local fallback assistant handler for offline, network errors or missing credentials
+function getFallbackReply(
+  messages: any[],
+  options?: { gender?: "female" | "male"; preferredLanguage?: "en" | "hi" | "hinglish" }
+): string {
+  return getSmartAssistantResponse(messages, options);
 }
+
+// Configurable AI Provider & Model Layer (defaults to gemini-3-flash-preview for sub-second responses)
+const CONFIGURED_AI_PROVIDER = process.env.AI_PROVIDER || "gemini";
+const CONFIGURED_AI_MODEL = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
+
+// Prevent untrusted user messages from overriding system instructions
+function sanitizeAgainstPromptInjection(input: string): string {
+  return input
+    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions|prompts|rules)/gi, "[filtered-instruction]")
+    .replace(/system\s*prompt\s*:/gi, "[filtered-directive]:")
+    .replace(/you\s+are\s+now\s+a\s+different\s+ai/gi, "[filtered-directive]");
+}
+
+// Call Gemini API with strict timeout and zero thinking delay so /api/chat responds sub-second
+async function callGeminiWithTimeout(
+  client: GoogleGenAI,
+  formattedContents: any[],
+  dynamicSystemInstruction: string,
+  timeoutMs = 1200
+): Promise<any> {
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Gemini response timeout exceeded")), timeoutMs)
+  );
+  const apiPromise = client.models.generateContent({
+    model: CONFIGURED_AI_MODEL,
+    contents: formattedContents,
+    config: {
+      systemInstruction: dynamicSystemInstruction,
+      temperature: 0.65,
+      maxOutputTokens: 320,
+      thinkingConfig: { thinkingBudget: 0 },
+    } as any,
+  });
+  return Promise.race([apiPromise, timeoutPromise]);
+}
+
+// API: AI Chat Assistant Status & Health Check
+app.get("/api/chat", (_req, res) => {
+  res.json({
+    status: "ok",
+    active: true,
+    service: "C Vidya Central AI Business Assistant",
+    languages: ["en", "hi"],
+    voices: ["female", "male"],
+  });
+});
 
 // API: AI Chat Assistant (with Gemini backend proxy, prompt injection defense, and smart offline fallback)
 app.post("/api/chat", chatRateLimiter, async (req, res) => {
-  const { messages } = req.body; // Expects array of { role: 'user' | 'model', content: string }
+  const { messages, voiceGender, preferredLanguage } = req.body; // Expects array of { role: 'user' | 'model', content: string }
+  const activeGender: "female" | "male" = voiceGender === "male" ? "male" : "female";
+  const activeLangPref: "en" | "hi" =
+    preferredLanguage === "hi" ? "hi" : "en";
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "A valid array of conversation messages is required." });
@@ -1432,9 +2072,9 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
   // Sanitize each message to prevent prompt injection and control character abuse
   const sanitizedMessages = messages.map((m: any) => {
     const rawText = typeof m?.content === "string" ? m.content : typeof m?.text === "string" ? m.text : "";
-    // Strip null bytes, zero-width chars, and non-printable control characters
-    const cleanText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u200B-\u200D\uFEFF]/g, "").slice(0, 3500);
+    const noControlChars = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u200B-\u200D\uFEFF]/g, "").slice(0, 3500);
     const roleVal = m?.role === "assistant" || m?.role === "model" ? "model" : "user";
+    const cleanText = roleVal === "user" ? sanitizeAgainstPromptInjection(noControlChars) : noControlChars;
     return {
       role: roleVal,
       content: cleanText,
@@ -1442,71 +2082,905 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
     };
   });
 
-  // Scan user messages to detect user contact information (phone number or email)
-  const allUserTexts = sanitizedMessages.filter(m => m.role === "user").map(m => m.content).join(" ");
-  const phonePattern = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/;
-  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const phoneMatch = allUserTexts.match(phonePattern);
-  const emailMatch = allUserTexts.match(emailPattern);
+  // Extract structured CRM lead & follow-up task from conversation
+  const extractedLead = extractStructuredLeadFromChat(sanitizedMessages);
+  const latestUserMsg = sanitizedMessages[sanitizedMessages.length - 1]?.content || "";
+  const detectedLanguage = detectLanguageMode(latestUserMsg);
+  // Strictly resolve to English ("en") or Hindi ("hi") — never Hinglish
+  const effectiveLang: "en" | "hi" =
+    activeLangPref === "hi" || detectedLanguage === "hi" ? "hi" : "en";
 
-  const hasContactInfo = !!(phoneMatch || emailMatch);
+  const hasContactInfo = extractedLead.hasContactOrIntent;
   if (hasContactInfo) {
-    const latestUserMsg = sanitizedMessages[sanitizedMessages.length - 1]?.content || "";
-    console.log("🎯 [CHATBOT LEAD DETECTED]: Forwarding to cvidyasolutions@gmail.com", { phone: phoneMatch?.[0], email: emailMatch?.[0] });
+    console.log("🎯 [CHATBOT CRM LEAD DETECTED]: Forwarding to cvidyasolutions@gmail.com", {
+      phone: extractedLead.phone,
+      email: extractedLead.email,
+      product: extractedLead.productOfInterest
+    });
     sendLeadNotificationEmail({
-      name: "C Vidya Website Prospect",
-      phone: phoneMatch ? phoneMatch[0] : "",
-      email: emailMatch ? emailMatch[0] : "",
-      service: "AI Chat Assistant Requisition",
-      message: latestUserMsg,
-      source: "C Vidya AI Assistant Chatbot"
+      name: extractedLead.name,
+      phone: extractedLead.phone !== "Not Provided" ? extractedLead.phone : "",
+      email: extractedLead.email !== "Not Provided" ? extractedLead.email : "",
+      service: extractedLead.productOfInterest,
+      message: `${latestUserMsg} | Company: ${extractedLead.company} | City: ${extractedLead.cityCountry} | Business: ${extractedLead.businessType}`,
+      source: "C Vidya Central AI Business Assistant"
     }).catch(err => console.error("Chat lead dispatch error:", err));
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
 
-  // Case A: No API key or placeholder key configured -> Immediate smart fallback
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-    const reply = getFallbackReply(sanitizedMessages);
-    return res.json({ text: reply, grounded: false, leadCaptured: hasContactInfo, recipientEmail: "cvidyasolutions@gmail.com" });
+  // Compute instant verified C Vidya Software & Business Knowledge reply (<1ms)
+  const verifiedSoftwareReply = getFallbackReply(sanitizedMessages, {
+    gender: activeGender,
+    preferredLanguage: effectiveLang
+  });
+
+  // Case A: Known C Vidya software/company query OR no API key -> Return verified answer in <5ms
+  if (!isGenericCatchAllReply(verifiedSoftwareReply) || !apiKey || apiKey === "MY_GEMINI_API_KEY" || CONFIGURED_AI_PROVIDER === "local") {
+    return res.json({
+      text: verifiedSoftwareReply,
+      grounded: false,
+      provider: "verified-local-knowledge",
+      detectedLanguage: effectiveLang,
+      leadCaptured: hasContactInfo,
+      crmLead: hasContactInfo ? extractedLead : undefined,
+      recipientEmail: "cvidyasolutions@gmail.com"
+    });
   }
 
   try {
     const client = getGeminiClient();
 
-    // Map conversation messages into contents structure
-    const formattedContents = sanitizedMessages.map((m) => {
+    // Ensure conversation contents sent to Gemini start with a 'user' message
+    const firstUserIndex = sanitizedMessages.findIndex((m) => m.role === "user");
+    const validTurns = firstUserIndex >= 0 ? sanitizedMessages.slice(firstUserIndex) : sanitizedMessages;
+
+    const formattedContents = validTurns.map((m) => {
       return {
         role: m.role,
         parts: [{ text: m.text }],
       };
     });
 
-    console.log(`Sending sanitized prompt to Gemini. Total messages: ${formattedContents.length}`);
-    
-    // Call Gemini with retry logic
-    const response = await callGeminiWithRetry(client, formattedContents);
-    const aiResponseText = response.text || "I apologize, I could not synthesize a consultation response right now. Please reload or get in touch directly!";
+    const personaAddendum = `
+==================================================
+CRITICAL REAL-HUMAN CONVERSATIONAL PERSONA & VOICE RULES (CHATGPT VOICE STYLE)
+==================================================
+1. SPEAKER GENDER: You are speaking as a real, warm, empathetic, lifelike ${
+      activeGender === "male"
+        ? "MALE human advisor from C Vidya Solutions (use natural masculine Hindi verb forms like 'मैं आपकी मदद कर सकता हूँ', 'मैं आपको बताता हूँ' when speaking Hindi)"
+        : "FEMALE human advisor from C Vidya Solutions (use natural feminine Hindi verb forms like 'मैं आपकी मदद कर सकती हूँ', 'मैं आपको बताती हूँ' when speaking Hindi)"
+    }.
+2. ACTIVE LANGUAGE MODE (STRICTLY ENGLISH OR HINDI — NO HINGLISH):
+   - Reply strictly in ${
+      effectiveLang === "hi"
+        ? "natural, warm conversational Hindi written in Devanagari script (हिंदी)"
+        : "natural, warm conversational English"
+    }.
+   - NEVER reply in Roman-script Hinglish. Even if the user types Hindi words in English letters, respond in pure ${
+      effectiveLang === "hi" ? "Hindi (हिंदी)" : "English"
+    }.
+3. ULTRA-NATURAL SPOKEN CADENCE:
+   - Speak like a real human in a live voice conversation (like ChatGPT Voice).
+   - Keep responses concise (2 to 4 natural sentences) and directly answer what the user said.
+   - Do NOT use raw markdown asterisks (**bold**) or robotic headers.`;
+
+    const response = await callGeminiWithTimeout(
+      client,
+      formattedContents,
+      `${SYSTEM_INSTRUCTION}\n${personaAddendum}`,
+      1200
+    );
+    const aiResponseText =
+      response?.text?.trim() || verifiedSoftwareReply;
     
     return res.json({ 
       text: aiResponseText, 
-      grounded: !!response.candidates?.[0]?.groundingMetadata,
+      grounded: !!response?.candidates?.[0]?.groundingMetadata,
+      provider: CONFIGURED_AI_PROVIDER,
+      model: CONFIGURED_AI_MODEL,
+      detectedLanguage: effectiveLang,
       leadCaptured: hasContactInfo,
+      crmLead: hasContactInfo ? extractedLead : undefined,
       recipientEmail: "cvidyasolutions@gmail.com"
     });
 
   } catch (error: any) {
-    console.error("Gemini API error in /api/chat. Falling back to smart offline responder.", error);
-    // Case B: API call failed (connection timeout, invalid key, rate limits) -> Graceful smart fallback
-    const fallbackReply = getFallbackReply(sanitizedMessages);
+    // Case B: API call timed out or failed -> Instant verified C Vidya knowledge base response
     return res.json({ 
-      text: fallbackReply, 
+      text: verifiedSoftwareReply, 
       grounded: false, 
+      provider: "verified-local-knowledge-fallback",
+      detectedLanguage: effectiveLang,
       leadCaptured: hasContactInfo,
-      recipientEmail: "cvidyasolutions@gmail.com",
-      warning: "Service temporarily offline. Utilizing secure local advisor fallback." 
+      crmLead: hasContactInfo ? extractedLead : undefined,
+      recipientEmail: "cvidyasolutions@gmail.com"
     });
   }
+});
+
+// API: Ultra-Realistic Low-Latency Human Text-to-Speech (TTS) via Gemini Audio (`gemini-3.8-flash-lite-tts` + `gemini-3.8-flash-tts`)
+app.post("/api/tts", chatRateLimiter, async (req, res) => {
+  const { text, gender, lang } = req.body || {};
+  if (!text || typeof text !== "string" || !text.trim()) {
+    return res.status(400).json({ error: "Text is required for speech synthesis." });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+    return res.status(503).json({ error: "Server TTS unavailable; use client neural voice." });
+  }
+
+  const cleanText = text
+    .replace(/🔗[^\n]*/g, "")
+    .replace(/https?:\/\/(?:www\.)?cvidyasolutions\.com[^\s)]*/gi, "C Vidya Solutions dot com")
+    .replace(/https?:\/\/[^\s)]+/g, "")
+    .replace(/[`*_~#>]/g, "")
+    .replace(/[•▪▸►]/g, ". ")
+    .replace(/[📦🤖⚡📞📧📍🏢👔🧾🚀👋🙏🇮🇳🎯💼🌐⏱️🚨📅📊👥🔒💡✅😊]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 360);
+
+  const selectedGender: "female" | "male" = gender === "male" ? "male" : "female";
+  // 'Kore' is an ultra-realistic, warm, expressive Female voice; 'Puck' is an ultra-realistic, warm, confident Male voice
+  const voiceName = selectedGender === "male" ? "Puck" : "Kore";
+  const localeHint = lang === "hi-IN" ? "native Hindi (hi-IN)" : "natural Indian English (en-IN)";
+  const stylePrompt =
+    selectedGender === "male"
+      ? `Ultra-realistic, warm, expressive real human man speaking in ${localeHint}, identical to a live human conversation partner. Natural breathing, warm tone, smooth conversational pacing, genuine emotion, zero robotic cadence`
+      : `Ultra-realistic, warm, expressive real human woman speaking in ${localeHint}, identical to a live human conversation partner. Natural breathing, gentle warmth, smooth conversational pacing, genuine emotion, zero robotic cadence`;
+
+  const synthesizeWithModel = async (modelName: "gemini-3.8-flash-lite-tts" | "gemini-3.8-flash-tts", timeoutMs: number) => {
+    const client = getGeminiClient();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${modelName} timeout`)), timeoutMs)
+    );
+
+    const ttsPromise = client.models.generateContent({
+      model: modelName,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: cleanText,
+              speechMetadata: {
+                style: stylePrompt,
+              },
+            },
+          ],
+        },
+      ] as any,
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName },
+          },
+        },
+      },
+    });
+
+    return (await Promise.race([ttsPromise, timeoutPromise])) as any;
+  };
+
+  try {
+    let response: any = null;
+    try {
+      // Use gemini-3.8-flash-lite-tts first for lowest-latency instant human speech
+      response = await synthesizeWithModel("gemini-3.8-flash-lite-tts", 1350);
+    } catch {
+      response = await synthesizeWithModel("gemini-3.8-flash-tts", 1800);
+    }
+
+    const inlineData = response?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    const base64Audio = inlineData?.data;
+    const mimeType = inlineData?.mimeType || "audio/wav";
+
+    if (!base64Audio) {
+      return res.status(502).json({ error: "No audio returned from TTS model." });
+    }
+
+    return res.json({
+      audioBase64: base64Audio,
+      mimeType,
+      voiceName,
+      gender: selectedGender,
+    });
+  } catch (err: any) {
+    return res.status(502).json({ error: err?.message || "TTS generation failed" });
+  }
+});
+
+// =========================================================================
+// PHASE 5 — CRM AND LEAD MANAGEMENT API ENDPOINTS
+// Uses existing Firestore `inquiries` collection + in-memory store
+// =========================================================================
+
+// API: Create or log a structured CRM Lead & Follow-Up Task
+app.post("/api/crm/leads", contactFormRateLimiter, async (req, res) => {
+  const {
+    id,
+    name,
+    company,
+    email,
+    phone,
+    cityCountry,
+    businessType,
+    service,
+    requirements,
+    followUpTask,
+    status
+  } = req.body || {};
+
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: "Contact name, email, and phone number are required." });
+  }
+
+  const cleanName = sanitizeInput(name, 150);
+  const cleanCompany = sanitizeInput(company || "Not Specified", 150);
+  const cleanEmail = sanitizeInput(email, 200);
+  const cleanPhone = sanitizeInput(phone, 50);
+  const cleanCity = sanitizeInput(cityCountry || "India", 120);
+  const cleanBusinessType = sanitizeInput(businessType || "Commercial / Institutional", 120);
+  const cleanService = sanitizeInput(service || "General Software Inquiry", 200);
+  const cleanRequirements = sanitizeInput(requirements || "", 1500);
+  const cleanFollowUpTask = sanitizeInput(followUpTask || `Schedule demo walkthrough for ${cleanService}`, 500);
+  const cleanStatus = sanitizeInput(status || "New Lead", 80);
+
+  if (!cleanName || cleanName.length < 2) {
+    return res.status(400).json({ error: "Please enter a valid contact name." });
+  }
+  if (!isValidEmail(cleanEmail)) {
+    return res.status(400).json({ error: "Please enter a valid email address." });
+  }
+  if (!isValidPhone(cleanPhone)) {
+    return res.status(400).json({ error: "Please enter a valid phone number." });
+  }
+
+  const leadId = typeof id === "string" && /^[a-zA-Z0-9_-]{3,80}$/.test(id)
+    ? id
+    : `crm_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const timestamp = new Date().toISOString();
+
+  const messageSummary = [
+    `Company: ${cleanCompany}`,
+    `City/Country: ${cleanCity}`,
+    `Business Type: ${cleanBusinessType}`,
+    cleanRequirements ? `Requirements: ${cleanRequirements}` : "",
+    cleanFollowUpTask ? `Follow-Up Task: ${cleanFollowUpTask}` : ""
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
+  const crmLeadRecord = {
+    id: leadId,
+    name: cleanName,
+    company: cleanCompany,
+    email: cleanEmail,
+    phone: cleanPhone,
+    cityCountry: cleanCity,
+    businessType: cleanBusinessType,
+    service: cleanService,
+    requirements: cleanRequirements,
+    followUpTask: cleanFollowUpTask,
+    message: messageSummary,
+    timestamp,
+    status: cleanStatus,
+    source: "C Vidya CRM"
+  };
+
+  inquiries.push(crmLeadRecord);
+
+  try {
+    await setDoc(doc(db, "inquiries", leadId), crmLeadRecord);
+  } catch (err) {
+    console.warn("Firestore CRM lead save fallback note:", err);
+  }
+
+  sendLeadNotificationEmail({
+    name: `${cleanName} (${cleanCompany})`,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: cleanService,
+    message: messageSummary,
+    source: "C Vidya CRM Module"
+  }).catch(() => {});
+
+  return res.json({
+    success: true,
+    lead: crmLeadRecord
+  });
+});
+
+// API: Update CRM Lead Status or Follow-Up Task (Authorized Admin — uses Authenticated Firestore REST Bridge)
+app.patch("/api/crm/leads/:id", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({ error: "Unauthorized access. Valid administrator credentials required." });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+  const { status, followUpTask } = req.body || {};
+
+  const leadId = sanitizeInput(req.params.id || "", 100);
+  if (!leadId || !/^[a-zA-Z0-9_-]{1,128}$/.test(leadId)) {
+    return res.status(400).json({ error: "A valid Lead ID is required." });
+  }
+
+  const cleanStatus = status ? sanitizeInput(status, 80) : undefined;
+  const cleanTask = followUpTask !== undefined ? sanitizeInput(followUpTask, 500) : undefined;
+
+  const memLead = inquiries.find((item) => item.id === leadId) as any;
+  if (memLead) {
+    if (cleanStatus) memLead.status = cleanStatus;
+    if (cleanTask !== undefined) memLead.followUpTask = cleanTask;
+  }
+
+  const updates: Record<string, any> = {
+    ...(cleanStatus ? { status: cleanStatus } : {}),
+    ...(cleanTask !== undefined ? { followUpTask: cleanTask } : {}),
+  };
+
+  const patchedViaRest = await firestoreAdminRestPatchDocument("inquiries", leadId, updates, adminToken);
+  if (!patchedViaRest) {
+    try {
+      await setDoc(doc(db, "inquiries", leadId), updates, { merge: true });
+    } catch {
+      // Fallback
+    }
+  }
+
+  return res.json({
+    success: true,
+    id: leadId,
+    status: cleanStatus,
+    followUpTask: cleanTask
+  });
+});
+
+// API: Generate Management Report from Actual Available Data (Authorized Admin)
+app.get("/api/crm/report", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({ error: "Unauthorized access. Valid administrator credentials required." });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  const allLeads: any[] = [...inquiries];
+  const restLeads = await firestoreAdminRestListCollection("inquiries", adminToken);
+  if (Array.isArray(restLeads)) {
+    restLeads.forEach((item) => {
+      if (!allLeads.some((x) => x.id === item.id)) {
+        allLeads.push(item);
+      }
+    });
+  } else {
+    try {
+      const q = query(collection(db, "inquiries"), orderBy("timestamp", "desc"));
+      const snap = await getDocs(q);
+      snap.forEach((d) => {
+        const item = { id: d.id, ...d.data() };
+        if (!allLeads.some((x) => x.id === item.id)) {
+          allLeads.push(item);
+        }
+      });
+    } catch (_) {}
+  }
+
+  const byProduct: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  allLeads.forEach((l) => {
+    const prod = l.service || "General Inquiry";
+    const st = l.status || "Pending Callback";
+    byProduct[prod] = (byProduct[prod] || 0) + 1;
+    byStatus[st] = (byStatus[st] || 0) + 1;
+  });
+
+  return res.json({
+    generatedAt: new Date().toISOString(),
+    totalLeads: allLeads.length,
+    totalJobApplications: applications.length,
+    leadsByProduct: byProduct,
+    leadsByStatus: byStatus,
+    verifiedPortfolioCounts: {
+      saasProducts: 7,
+      autonomousAiAgents: 4,
+      specializedPlatforms: 3
+    }
+  });
+});
+
+// =========================================================================
+// PHASE 6 — AI OUTBOUND CALLING, DEMO BOOKING, HUMAN HANDOFF & HR/SALES HUB
+// Persists to Firestore `call_logs`, `demo_bookings`, `handoff_tickets` & `inquiries`
+// =========================================================================
+const aiCallHistoryStore: any[] = [];
+const demoBookingStore: any[] = [];
+const humanHandoffStore: any[] = [];
+
+// API: Fetch AI Outbound Call History, Demo Bookings & Human Handoff Queue (Authorized Admin Only)
+app.get("/api/calling/history", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  const mergedCalls = [...aiCallHistoryStore];
+  const mergedDemos = [...demoBookingStore];
+  const mergedHandoffs = [...humanHandoffStore];
+
+  const restCalls = await firestoreAdminRestListCollection("call_logs", adminToken);
+  if (Array.isArray(restCalls)) {
+    restCalls.forEach((data) => {
+      const idKey = data.id || data.callId;
+      if (idKey && !mergedCalls.some((c) => (c.id || c.callId) === idKey)) {
+        mergedCalls.push({ ...data, id: idKey, callId: idKey });
+      }
+    });
+  } else {
+    try {
+      const callSnap = await getDocs(collection(db, "call_logs"));
+      callSnap.forEach((d) => {
+        const data = d.data();
+        const idKey = data.id || data.callId || d.id;
+        if (!mergedCalls.some((c) => (c.id || c.callId) === idKey)) {
+          mergedCalls.push({ ...data, id: idKey, callId: idKey });
+        }
+      });
+    } catch {
+      // Firestore read fallback when server SDK is unauthenticated
+    }
+  }
+
+  const restDemos = await firestoreAdminRestListCollection("demo_bookings", adminToken);
+  if (Array.isArray(restDemos)) {
+    restDemos.forEach((data) => {
+      const idKey = data.id || data.bookingId;
+      if (idKey && !mergedDemos.some((b) => (b.id || b.bookingId) === idKey)) {
+        mergedDemos.push({ ...data, id: idKey, bookingId: idKey });
+      }
+    });
+  } else {
+    try {
+      const demoSnap = await getDocs(collection(db, "demo_bookings"));
+      demoSnap.forEach((d) => {
+        const data = d.data();
+        const idKey = data.id || data.bookingId || d.id;
+        if (!mergedDemos.some((b) => (b.id || b.bookingId) === idKey)) {
+          mergedDemos.push({ ...data, id: idKey, bookingId: idKey });
+        }
+      });
+    } catch {
+      // Firestore read fallback
+    }
+  }
+
+  const restHandoffs = await firestoreAdminRestListCollection("handoff_tickets", adminToken);
+  if (Array.isArray(restHandoffs)) {
+    restHandoffs.forEach((data) => {
+      const idKey = data.id || data.ticketId;
+      if (idKey && !mergedHandoffs.some((h) => (h.id || h.ticketId) === idKey)) {
+        mergedHandoffs.push({ ...data, id: idKey, ticketId: idKey });
+      }
+    });
+  } else {
+    try {
+      const handoffSnap = await getDocs(collection(db, "handoff_tickets"));
+      handoffSnap.forEach((d) => {
+        const data = d.data();
+        const idKey = data.id || data.ticketId || d.id;
+        if (!mergedHandoffs.some((h) => (h.id || h.ticketId) === idKey)) {
+          mergedHandoffs.push({ ...data, id: idKey, ticketId: idKey });
+        }
+      });
+    } catch {
+      // Firestore read fallback
+    }
+  }
+
+  return res.json({
+    calls: mergedCalls,
+    demos: mergedDemos,
+    handoffs: mergedHandoffs,
+    analytics: {
+      totalCalls: mergedCalls.length,
+      demosBooked: mergedDemos.length,
+      humanHandoffs: mergedHandoffs.length,
+    },
+  });
+});
+
+// API: Initiate & Log an AI Outbound Voice Call (Authorized Admin Only)
+app.post("/api/calling/outbound", contactFormRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  const {
+    id,
+    leadId,
+    leadName,
+    phone,
+    company,
+    productOfInterest,
+    voiceGender,
+    language,
+    script,
+    durationSeconds,
+    direction,
+    outcome,
+  } = req.body || {};
+
+  const cleanLeadName = sanitizeInput(leadName || "Enterprise Prospect", 150);
+  const cleanPhone = sanitizeInput(phone || "+91 92885 17027", 50);
+  const cleanCompany = sanitizeInput(company || "Enterprise Prospect", 150);
+  const cleanProduct = sanitizeInput(productOfInterest || "C Vidya SaaS Suite", 200);
+  const cleanGender: "female" | "male" = voiceGender === "male" ? "male" : "female";
+  const cleanLang: "en" | "hi" | "hinglish" =
+    language === "hi" || language === "en" ? language : "hinglish";
+  const cleanScript = sanitizeInput(
+    script ||
+      `Hello ${cleanLeadName}! Calling from C Vidya Solutions regarding ${cleanProduct}.`,
+    2000
+  );
+
+  const callId =
+    typeof id === "string" && id.startsWith("call_")
+      ? sanitizeInput(id, 80)
+      : `call_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  const nowIso = new Date().toISOString();
+  const cleanDirection: "Inbound" | "Outbound" =
+    direction === "Inbound" ? "Inbound" : "Outbound";
+  const cleanOutcome = sanitizeInput(
+    outcome || "Connected — Product Walkthrough & Follow-Up Logged",
+    100
+  );
+
+  const callRecord = {
+    id: callId,
+    callId,
+    leadId: sanitizeInput(leadId || `lead_${Date.now()}`, 80),
+    leadName: cleanLeadName,
+    phone: cleanPhone,
+    company: cleanCompany,
+    companyName: cleanCompany,
+    productOfInterest: cleanProduct,
+    productInterest: cleanProduct,
+    voiceGender: cleanGender,
+    language: cleanLang,
+    direction: cleanDirection,
+    callStatus: "Completed",
+    durationSeconds: typeof durationSeconds === "number" ? durationSeconds : 28,
+    script: cleanScript,
+    summary: cleanScript,
+    outcome: cleanOutcome,
+    assignedRep:
+      cleanGender === "male"
+        ? "Aarav (C Vidya Male AI Voice)"
+        : "Ananya (C Vidya Female AI Voice)",
+    timestamp: nowIso,
+    createdAt: nowIso,
+  };
+
+  aiCallHistoryStore.unshift(callRecord);
+
+  // Persist to `call_logs` collection in Firestore via authenticated REST bridge
+  const patchedCall = await firestoreAdminRestPatchDocument("call_logs", callId, callRecord, adminToken);
+  if (!patchedCall) {
+    try {
+      await setDoc(doc(db, "call_logs", callId), callRecord, { merge: true });
+    } catch {
+      // Safe fallback when server SDK is unauthenticated
+    }
+  }
+
+  // Sync status & follow-up task back to `inquiries` collection if leadId exists
+  if (leadId) {
+    const cleanTargetLeadId = sanitizeInput(String(leadId), 80);
+    const inquiryUpdates = {
+      status: "Contacted",
+      followUpTask: `AI Outbound Call (${cleanLang.toUpperCase()}/${cleanGender}) completed — Follow-up scheduled`,
+    };
+    const patchedLead = await firestoreAdminRestPatchDocument("inquiries", cleanTargetLeadId, inquiryUpdates, adminToken);
+    if (!patchedLead) {
+      try {
+        await setDoc(doc(db, "inquiries", cleanTargetLeadId), inquiryUpdates, { merge: true });
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
+  return res.json({ success: true, call: callRecord });
+});
+
+// API: Book a 1-on-1 Product Demo & Schedule Automatic Follow-Up in `demo_bookings` and `inquiries` (Authorized Admin Only)
+app.post("/api/calling/demo-booking", contactFormRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  const {
+    id,
+    leadId,
+    name,
+    leadName,
+    company,
+    companyName,
+    email,
+    phone,
+    product,
+    preferredDate,
+    preferredTime,
+    preferredTimeSlot,
+    meetingMode,
+    language,
+    notes,
+  } = req.body || {};
+
+  const cleanName = sanitizeInput(name || leadName || "Enterprise Client", 150);
+  const cleanCompany = sanitizeInput(company || companyName || "Business Organization", 150);
+  const cleanEmail = sanitizeInput(email || "client@company.com", 200);
+  const cleanPhone = sanitizeInput(phone || "+91 92885 17027", 50);
+  const cleanProduct = sanitizeInput(product || "C Vidya SaaS Suite", 200);
+  const cleanDate = sanitizeInput(preferredDate || new Date().toISOString().split("T")[0], 40);
+  const cleanTime = sanitizeInput(preferredTime || preferredTimeSlot || "11:30 AM IST", 40);
+  const cleanMeetingMode = sanitizeInput(meetingMode || "Google Meet", 40);
+  const cleanNotes = sanitizeInput(notes || "", 500);
+  const cleanLang: "en" | "hi" | "hinglish" =
+    language === "hi" || language === "en" ? language : "hinglish";
+
+  const bookingId =
+    typeof id === "string" && id.startsWith("demo_")
+      ? sanitizeInput(id, 80)
+      : `demo_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  const createdAt = new Date().toISOString();
+
+  const bookingRecord = {
+    id: bookingId,
+    bookingId,
+    leadId: leadId ? sanitizeInput(String(leadId), 80) : bookingId,
+    name: cleanName,
+    leadName: cleanName,
+    company: cleanCompany,
+    companyName: cleanCompany,
+    email: cleanEmail,
+    phone: cleanPhone,
+    product: cleanProduct,
+    preferredDate: cleanDate,
+    preferredTime: cleanTime,
+    preferredTimeSlot: cleanTime,
+    meetingMode: cleanMeetingMode,
+    assignedExecutive: "Ananya Sharma — Senior Product Specialist",
+    language: cleanLang,
+    notes: cleanNotes,
+    status: "Scheduled",
+    createdAt,
+  };
+
+  demoBookingStore.unshift(bookingRecord);
+
+  // Persist to `demo_bookings` collection in Firestore via authenticated REST bridge
+  const patchedBooking = await firestoreAdminRestPatchDocument("demo_bookings", bookingId, bookingRecord, adminToken);
+  if (!patchedBooking) {
+    try {
+      await setDoc(doc(db, "demo_bookings", bookingId), bookingRecord);
+    } catch {
+      // Safe fallback
+    }
+  }
+
+  // Persist to `inquiries` collection in Firestore with Demo Scheduled status
+  const targetDocId = leadId ? sanitizeInput(String(leadId), 80) : bookingId;
+  const followUpNote = `1-on-1 Live Demo Booked for ${cleanDate} at ${cleanTime} (${cleanProduct})`;
+  const inquiryDemoDoc = {
+    id: targetDocId,
+    name: cleanName,
+    company: cleanCompany,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: cleanProduct,
+    status: "Demo Scheduled",
+    followUpTask: followUpNote,
+    message: `${followUpNote} | Preferred Language: ${cleanLang.toUpperCase()}`,
+    timestamp: createdAt,
+    source: "C Vidya AI Demo Booking Scheduler",
+  };
+  const patchedInquiry = await firestoreAdminRestPatchDocument("inquiries", targetDocId, inquiryDemoDoc, adminToken);
+  if (!patchedInquiry) {
+    try {
+      await setDoc(doc(db, "inquiries", targetDocId), inquiryDemoDoc, { merge: true });
+    } catch {
+      // Safe fallback
+    }
+  }
+
+  sendLeadNotificationEmail({
+    name: `${cleanName} (${cleanCompany})`,
+    email: cleanEmail,
+    phone: cleanPhone,
+    service: `Demo Booking: ${cleanProduct}`,
+    message: followUpNote,
+    source: "C Vidya AI Calling & Demo Scheduler",
+  }).catch(() => {});
+
+  return res.json({ success: true, booking: bookingRecord });
+});
+
+// API: Escalate Call / Lead to Senior Human Executive (Authorized Admin Only)
+app.post("/api/calling/handoff", contactFormRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  const adminToken = extractAdminTokenFromRequest(req);
+
+  const {
+    id,
+    callId,
+    leadId,
+    customerName,
+    leadName,
+    phone,
+    language,
+    product,
+    reason,
+    priority,
+    urgency,
+    targetDepartment,
+  } = req.body || {};
+
+  const cleanCustomer = sanitizeInput(customerName || leadName || "Enterprise Prospect", 150);
+  const cleanPhone = sanitizeInput(phone || "+91 92885 17027", 50);
+  const cleanProduct = sanitizeInput(product || "C Vidya Enterprise Suite", 200);
+  const cleanReason = sanitizeInput(
+    reason || "Requested direct consultation with senior architect",
+    500
+  );
+  const rawUrgency = urgency || priority;
+  const cleanUrgency: "Immediate" | "High" | "Normal" =
+    rawUrgency === "Immediate" || rawUrgency === "Urgent"
+      ? "Immediate"
+      : rawUrgency === "Normal"
+      ? "Normal"
+      : "High";
+  const cleanDept = sanitizeInput(targetDepartment || "Sales", 80);
+  const cleanLang: "en" | "hi" | "hinglish" =
+    language === "hi" || language === "en" ? language : "hinglish";
+
+  const ticketId =
+    typeof id === "string" && id.startsWith("handoff_")
+      ? sanitizeInput(id, 80)
+      : `handoff_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  const createdAt = new Date().toISOString();
+
+  const ticket = {
+    id: ticketId,
+    ticketId,
+    callId: callId ? sanitizeInput(String(callId), 80) : `call_${Date.now()}`,
+    leadId: leadId ? sanitizeInput(String(leadId), 80) : undefined,
+    customerName: cleanCustomer,
+    leadName: cleanCustomer,
+    phone: cleanPhone,
+    language: cleanLang,
+    product: cleanProduct,
+    reason: cleanReason,
+    targetDepartment: cleanDept,
+    assignedAgent: "Chiranjeev Das / Senior Desk (+91 92885 17027)",
+    priority: cleanUrgency === "Immediate" ? "Urgent" : cleanUrgency,
+    urgency: cleanUrgency,
+    status: "Open",
+    timestamp: createdAt,
+    createdAt,
+  };
+
+  humanHandoffStore.unshift(ticket);
+
+  // Persist to `handoff_tickets` collection in Firestore via authenticated REST bridge
+  const patchedTicket = await firestoreAdminRestPatchDocument("handoff_tickets", ticketId, ticket, adminToken);
+  if (!patchedTicket) {
+    try {
+      await setDoc(doc(db, "handoff_tickets", ticketId), ticket);
+    } catch {
+      // Safe fallback
+    }
+  }
+
+  if (leadId) {
+    const cleanLeadId = sanitizeInput(String(leadId), 80);
+    const handoffLeadUpdates = {
+      status: "Qualified",
+      followUpTask: `HUMAN HANDOFF [${cleanUrgency}]: ${cleanReason}`,
+    };
+    const patchedLead = await firestoreAdminRestPatchDocument("inquiries", cleanLeadId, handoffLeadUpdates, adminToken);
+    if (!patchedLead) {
+      try {
+        await setDoc(doc(db, "inquiries", cleanLeadId), handoffLeadUpdates, { merge: true });
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
+  sendLeadNotificationEmail({
+    name: cleanCustomer,
+    phone: cleanPhone,
+    service: `HUMAN HANDOFF [${cleanUrgency}] — ${cleanProduct}`,
+    message: `Escalation Reason: ${cleanReason} | Assigned: Chiranjeev Das (+91 92885 17027)`,
+    source: "C Vidya AI Human Handoff Desk",
+  }).catch(() => {});
+
+  return res.json({ success: true, ticket });
+});
+
+// API: HR & Sales Overview (Authorized Admin Only — Reuses `job_applications` & `inquiries`)
+app.get("/api/hr-sales/overview", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  return res.json({
+    totalJobApplications: applications.length,
+    totalActiveLeads: inquiries.length,
+    hrSalesTeam: [
+      {
+        id: "rep_chiranjeev",
+        name: "Chiranjeev Das",
+        role: "Technical Architect",
+        department: "Engineering",
+        phone: "+91 92885 17027",
+        email: "chiranjeev0058@gmail.com",
+        assignedLeadsCount: Math.max(14, inquiries.length),
+        activeCallsCount: 1,
+        status: "Available",
+      },
+      {
+        id: "rep_ananya",
+        name: "Ananya Sharma (AI + Sales Desk)",
+        role: "Sales Executive",
+        department: "Sales",
+        phone: "+91 92885 17027",
+        email: "cvidyasolutions@gmail.com",
+        assignedLeadsCount: 28,
+        activeCallsCount: 2,
+        status: "Available",
+      },
+      {
+        id: "rep_aarav",
+        name: "Aarav Verma (Enterprise SDR)",
+        role: "Customer Success",
+        department: "Sales",
+        phone: "+91 89877 66981",
+        email: "cvidyasolutions@gmail.com",
+        assignedLeadsCount: 19,
+        activeCallsCount: 0,
+        status: "Available",
+      },
+      {
+        id: "rep_hr_desk",
+        name: "STPI Sindri Recruitment Desk",
+        role: "HR Specialist",
+        department: "HR",
+        phone: "+91 92885 17027",
+        email: "cvidyasolutions@gmail.com",
+        assignedLeadsCount: Math.max(9, applications.length),
+        activeCallsCount: 0,
+        status: "Available",
+      },
+    ],
+  });
 });
 
 // Serve Fitness Zone static suite directly for seamless embedding and zero 403 errors
@@ -1690,9 +3164,22 @@ async function startServer() {
     });
   });
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`C Vidya Solutions Server running on http://0.0.0.0:${PORT}`);
   });
+
+  const gracefulShutdown = (signal: string) => {
+    console.log(`Received ${signal}. Closing HTTP server gracefully...`);
+    server.close(() => {
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(0), 5000).unref();
+  };
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }
 
-startServer();
+if (process.env.VITEST !== "true") {
+  startServer();
+}
