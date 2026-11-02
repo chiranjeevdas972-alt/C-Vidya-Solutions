@@ -10,11 +10,21 @@ import {
   Square,
   AlertCircle,
   ChevronDown,
-  Check
+  Check,
+  RotateCcw
 } from "lucide-react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
 import Logo from "./Logo";
 import { ChatMessage, VoiceAgentStatus } from "../types";
-import { getSmartAssistantResponse, detectLanguageMode, isGenericCatchAllReply, extractStructuredLeadFromChat } from "../utils/aiResponder";
+import {
+  generateCustomerResponse,
+  detectLanguageMode,
+  detectCustomerLanguage,
+  isGenericCatchAllReply,
+  extractCustomerDetails,
+  adaptGenderGrammar
+} from "../utils/aiResponder";
 import { speechInputService, SupportedVoiceLocale, normalizeSpokenCvidyaText } from "../services/speechInputService";
 import { ttsService, VoiceGender } from "../services/ttsService";
 
@@ -42,6 +52,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   const [voiceStatus, setVoiceStatus] = useState<VoiceAgentStatus>("idle");
   const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => ttsService.getVoiceGender());
   const [languageChoice, setLanguageChoice] = useState<ChatLanguageChoice>("en");
+  const [manualLangOverride, setManualLangOverride] = useState<boolean>(false);
   const [showGenderPopup, setShowGenderPopup] = useState(false);
   const [showLangPopup, setShowLangPopup] = useState(false);
   const [ttsMuted, setTtsMuted] = useState<boolean>(() => ttsService.isMuted());
@@ -57,6 +68,8 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   const messagesRef = useRef<ChatMessage[]>(messages);
   const headerControlsRef = useRef<HTMLDivElement>(null);
   const isListeningRef = useRef<boolean>(false);
+  const sessionIdRef = useRef<string>(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  const submittedLeadsRef = useRef<Set<string>>(new Set());
 
   const clearComposerInput = () => {
     setInput("");
@@ -64,6 +77,17 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     if (inputRef.current) {
       inputRef.current.value = "";
     }
+  };
+
+  const handleClearConversation = () => {
+    speechInputService.stopListening();
+    ttsService.stop();
+    setVoiceStatus("idle");
+    setVoiceError("");
+    clearComposerInput();
+    messagesRef.current = [];
+    setMessages([]);
+    sessionIdRef.current = `chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   };
 
   useEffect(() => {
@@ -112,10 +136,14 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     }
   }, [isOpen, messages, isTyping, onClose]);
 
-  const speakAssistantReply = (text: string, genderOverride?: VoiceGender) => {
-    if (ttsMuted || !ttsSupported) {
+  const speakAssistantReply = (text: string, genderOverride?: VoiceGender, forceSpeak = false) => {
+    if ((!forceSpeak && ttsMuted) || !ttsSupported) {
       setVoiceStatus("idle");
       return;
+    }
+    if (forceSpeak && ttsMuted) {
+      setTtsMuted(false);
+      ttsService.setMuted(false);
     }
     const langMode = detectLanguageMode(text);
     const preferredLang: "hi-IN" | "en-IN" = langMode === "hi" || voiceLocale === "hi-IN" ? "hi-IN" : "en-IN";
@@ -142,24 +170,26 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   };
 
   const handleSelectVoiceGender = (nextGender: VoiceGender) => {
+    ttsService.unlockAudio();
     setVoiceGender(nextGender);
     ttsService.setVoiceGender(nextGender);
     setShowGenderPopup(false);
-    // If currently speaking, immediately switch to the selected Male/Female human voice
-    if (voiceStatus === "speaking") {
-      const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
-      if (lastModelMsg) {
-        speakAssistantReply(lastModelMsg.content, nextGender);
-      }
+    // If there is a message on screen or currently speaking, speak it in the selected Male/Female human voice
+    const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
+    if (lastModelMsg && (voiceStatus === "speaking" || !ttsMuted)) {
+      speakAssistantReply(lastModelMsg.content, nextGender);
     }
   };
 
   const handleSelectLanguage = (nextLang: ChatLanguageChoice) => {
+    ttsService.unlockAudio();
     setLanguageChoice(nextLang);
+    setManualLangOverride(true);
     setShowLangPopup(false);
   };
 
   const handleToggleListening = () => {
+    ttsService.unlockAudio();
     setVoiceError("");
     setShowGenderPopup(false);
     setShowLangPopup(false);
@@ -223,11 +253,17 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   };
 
   const handleToggleMute = () => {
+    ttsService.unlockAudio();
     const nextMuted = !ttsMuted;
     setTtsMuted(nextMuted);
     ttsService.setMuted(nextMuted);
     if (nextMuted && voiceStatus === "speaking") {
       setVoiceStatus("idle");
+    } else if (!nextMuted) {
+      const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
+      if (lastModelMsg) {
+        speakAssistantReply(lastModelMsg.content, voiceGender, true);
+      }
     }
   };
 
@@ -239,6 +275,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   };
 
   const handleSendMessage = async (textToSend: string, triggeredByVoice = false) => {
+    ttsService.unlockAudio();
     const normalizedInput = normalizeSpokenCvidyaText(textToSend).trim();
     if (!normalizedInput) {
       clearComposerInput();
@@ -271,11 +308,25 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       content: m.content
     }));
 
+    // Automatic Bilingual Detection: Hindi/Hinglish -> 'hi', English -> 'en'
+    const autoDetectedLang = detectCustomerLanguage(normalizedInput, formattedHistory);
+    const activeLang: ChatLanguageChoice =
+      autoDetectedLang === "hi"
+        ? "hi"
+        : manualLangOverride
+        ? languageChoice
+        : autoDetectedLang;
+
+    if (autoDetectedLang === "hi" && languageChoice !== "hi") {
+      setLanguageChoice("hi");
+    }
+
     try {
       // 1. Check instant verified C Vidya Software & Business Knowledge Base (<1ms latency)
-      const instantLocalReply = getSmartAssistantResponse(formattedHistory, {
+      const instantLocalReply = generateCustomerResponse(formattedHistory, {
         gender: voiceGender,
-        preferredLanguage: languageChoice
+        preferredLanguage: activeLang,
+        respondInHindiForHinglish: true
       });
 
       const isKnownSoftwareOrBusinessQuery = !isGenericCatchAllReply(instantLocalReply);
@@ -285,32 +336,59 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         // Instant reply for all software, AI agents, pricing, demos, greetings, support & company queries
         assistantText = instantLocalReply;
 
-        // If user shared phone/email/demo intent, sync lead in background without blocking the instant reply
-        const leadCheck = extractStructuredLeadFromChat(formattedHistory);
-        if (leadCheck.hasContactOrIntent && typeof fetch === "function") {
-          fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages: formattedHistory,
-              voiceGender,
-              preferredLanguage: languageChoice
-            })
-          }).catch(() => {});
+        // Extract lead details and deduplicate before saving to backend & Firestore
+        const customerDetails = extractCustomerDetails(formattedHistory);
+        if (customerDetails.hasContactOrIntent) {
+          const dedupKey = `${customerDetails.phone}_${customerDetails.email}_${customerDetails.productOfInterest}`.toLowerCase();
+          if (!submittedLeadsRef.current.has(dedupKey)) {
+            submittedLeadsRef.current.add(dedupKey);
+            if (typeof fetch === "function") {
+              fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  sessionId: sessionIdRef.current,
+                  messages: formattedHistory,
+                  voiceGender,
+                  preferredLanguage: activeLang,
+                  leadDetails: customerDetails
+                })
+              }).catch(() => {});
+            }
+            // Also persist directly to Firestore inquiries collection for Admin Panel visibility
+            try {
+              addDoc(collection(db, "inquiries"), {
+                name: customerDetails.name || "Website Chatbot Lead",
+                phone: customerDetails.phone !== "Not Provided" ? customerDetails.phone : "",
+                email: customerDetails.email !== "Not Provided" ? customerDetails.email : "contact@cvidyasolutions.com",
+                product: customerDetails.productOfInterest || "General Software / AI Inquiry",
+                message: `[AI Chatbot • ${customerDetails.leadIntent.toUpperCase()}] ${customerDetails.requirements}`,
+                source: "website_ai_chatbot",
+                sessionId: sessionIdRef.current,
+                language: activeLang,
+                leadIntent: customerDetails.leadIntent,
+                status: customerDetails.leadIntent === "demo" ? "Demo Scheduled" : "New",
+                createdAt: serverTimestamp()
+              }).catch(() => {});
+            } catch (_) {
+              // Ignore offline/Firestore errors in test environment
+            }
+          }
         }
       } else {
-        // Open-ended general query: query fast Gemini endpoint with tight 1300ms timeout
+        // Open-ended general query: query Gemini endpoint with ultra-fast 1200ms timeout for instant reply
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1300);
+          const timeoutId = setTimeout(() => controller.abort(), 1200);
 
           const response = await fetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              sessionId: sessionIdRef.current,
               messages: formattedHistory,
               voiceGender,
-              preferredLanguage: languageChoice
+              preferredLanguage: activeLang
             }),
             signal: controller.signal
           });
@@ -329,7 +407,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         }
 
         if (!assistantText) {
-          assistantText = instantLocalReply;
+          assistantText = adaptGenderGrammar(instantLocalReply, voiceGender);
         }
       }
       
@@ -349,15 +427,16 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       clearComposerInput();
 
       if (triggeredByVoice || !ttsMuted) {
-        speakAssistantReply(assistantText);
+        speakAssistantReply(assistantText, voiceGender, triggeredByVoice);
       } else {
         setVoiceStatus("idle");
       }
 
     } catch (error: any) {
-      const fallbackText = getSmartAssistantResponse(formattedHistory, {
+      const fallbackText = generateCustomerResponse(formattedHistory, {
         gender: voiceGender,
-        preferredLanguage: languageChoice
+        preferredLanguage: activeLang,
+        respondInHindiForHinglish: true
       });
       const errorMessage: ChatMessage = {
         id: `msg_err_${Math.random().toString(36).substr(2, 9)}`,
@@ -558,6 +637,19 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             </button>
           )}
 
+          {/* Clear / New Conversation Button */}
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearConversation}
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+              title={languageChoice === "hi" ? "नया चैट शुरू करें" : "Clear conversation"}
+              aria-label="Clear conversation"
+            >
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300" />
+            </button>
+          )}
+
           {/* Mute / Unmute TTS Toggle */}
           <button
             type="button"
@@ -598,7 +690,17 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
           >
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>{voiceError}</span>
+              <div className="space-y-1.5">
+                <p>{voiceError}</p>
+                <button
+                  type="button"
+                  onClick={handleToggleListening}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-brand-navy-900 hover:bg-slate-800 text-brand-gold-400 font-semibold text-[11px] cursor-pointer transition-colors"
+                >
+                  <Mic className="w-3 h-3" />
+                  <span>Retry Mic</span>
+                </button>
+              </div>
             </div>
             <button
               type="button"
@@ -646,16 +748,6 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
                   isModel ? "justify-start" : "justify-end"
                 }`}>
                   <span>{m.timestamp}</span>
-                  {isModel && ttsSupported && (
-                    <button
-                      type="button"
-                      onClick={() => speakAssistantReply(m.content)}
-                      className="text-blue-600 hover:underline cursor-pointer"
-                      title="Listen in human voice"
-                    >
-                      Speak ({voiceGender === "female" ? "Female" : "Male"})
-                    </button>
-                  )}
                 </div>
               </div>
 

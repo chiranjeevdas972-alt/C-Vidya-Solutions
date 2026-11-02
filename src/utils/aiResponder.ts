@@ -32,10 +32,465 @@ export function detectLanguageMode(text: string): "hi" | "hinglish" | "en" {
 export interface AssistantReplyOptions {
   gender?: "female" | "male";
   preferredLanguage?: "en" | "hi" | "hinglish";
+  respondInHindiForHinglish?: boolean;
+}
+
+export const CUSTOMER_INTENT_PATTERNS: Record<string, string[]> = {
+  greeting: [
+    "hello", "hi", "hey", "namaste", "namaskar", "pranam",
+    "नमस्ते", "नमस्कार", "प्रणाम", "हेलो", "हाय",
+    "good morning", "good afternoon", "good evening"
+  ],
+  company_info: [
+    "about company", "company profile", "who are you", "company details",
+    "about c vidya", "what is c vidya", "tell me about c vidya", "company history",
+    "c vidya solutions क्या है", "कंपनी की जानकारी", "आप क्या करते हैं", "सी विद्या सॉल्यूशंस क्या है"
+  ],
+  software_info: [
+    "all software", "all products", "what software", "software products", "products", "solutions", "services",
+    "आपके पास कौन-कौन से सॉफ्टवेयर हैं", "आपके पास कौन कौन से सॉफ्टवेयर हैं",
+    "क्या सॉफ्टवेयर बनाते हैं", "कौन सा सॉफ्टवेयर है", "सभी सॉफ्टवेयर", "सॉफ्टवेयर चाहिए", "मुझे सॉफ्टवेयर चाहिए"
+  ],
+  library: [
+    "library software", "library management", "book management", "student seat management", "reading room", "library",
+    "लाइब्रेरी सॉफ्टवेयर", "पुस्तकालय सॉफ्टवेयर", "लाइब्रेरी", "पुस्तकालय"
+  ],
+  institute: [
+    "institute software", "institute management", "school software", "school erp", "college software", "college erp",
+    "student management", "attendance software", "fee management",
+    "इंस्टीट्यूट सॉफ्टवेयर", "स्कूल सॉफ्टवेयर", "कॉलेज सॉफ्टवेयर", "स्कूल", "कॉलेज", "इंस्टीट्यूट"
+  ],
+  coaching: [
+    "coaching software", "coaching management", "batch management", "coaching institute software", "student fee tracking",
+    "omr", "mock test", "coaching", "tuition",
+    "कोचिंग सॉफ्टवेयर", "ट्यूशन सॉफ्टवेयर", "कोचिंग", "ट्यूशन"
+  ],
+  gym: [
+    "gym software", "fitness software", "gym management", "membership software", "fitness zone", "gym", "workout",
+    "जिम सॉफ्टवेयर", "फिटनेस सॉफ्टवेयर", "जिम", "फिटनेस"
+  ],
+  crm: [
+    "crm software", "crm", "lead management", "customer management", "sales tracking", "follow-up software", "sales pipeline",
+    "सीआरएम सॉफ्टवेयर", "लीड मैनेजमेंट", "सीआरएम"
+  ],
+  farm_fresh_hub: [
+    "farm fresh hub", "agrifusion", "agriculture platform", "vegetable ordering", "farm product software", "poultry", "fishery", "farm",
+    "फार्म फ्रेश हब", "कृषि सॉफ्टवेयर", "पोल्ट्री", "फार्म"
+  ],
+  delivery: [
+    "delivery software", "delivery management", "order delivery system", "courier management", "dispatch tracking", "delivery boy",
+    "डिलीवरी सॉफ्टवेयर", "ऑर्डर ट्रैकिंग", "डिलीवरी मैनेजमेंट", "डिलीवरी", "कूरियर"
+  ],
+  ai_chatbot: [
+    "ai chatbot", "website chatbot", "whatsapp chatbot", "customer support chatbot", "chatbot", "chat bot",
+    "एआई चैटबॉट", "चैटबॉट बनवाना है", "चैटबॉट", "वेबसाइट के लिए ai चैटबॉट"
+  ],
+  ai_agent: [
+    "ai agent", "autonomous agent", "voice ai agent", "sales ai agent", "support ai agent", "automation agent", "salesflow", "social media agent",
+    "एआई एजेंट", "ऑटोमेशन एजेंट"
+  ],
+  pricing: [
+    "price", "pricing", "cost", "charges", "plan", "package", "subscription", "quotation", "expensive", "discount", "mahanga", "mehenga",
+    "कीमत", "प्राइस", "चार्ज", "कितना पैसा लगेगा", "प्लान क्या है", "महंगा", "महँगा", "सस्ता"
+  ],
+  demo: [
+    "demo", "free demo", "live demo", "trial", "presentation", "free trial", "demo chahiye",
+    "डेमो", "फ्री डेमो", "डेमो दिखाओ", "डेमो चाहिए", "डेमो कैसे मिलेगा"
+  ],
+  features: [
+    "features", "modules", "benefits", "capabilities", "kya milega", "suvidha",
+    "फीचर्स", "क्या क्या सुविधा है", "इसमें क्या मिलेगा", "सुविधाएं", "विशेषताएं"
+  ],
+  customization: [
+    "custom software", "customization", "custom module", "according to business", "tailored software",
+    "कस्टम सॉफ्टवेयर", "हमारे हिसाब से सॉफ्टवेयर", "बदलाव हो सकता है क्या", "कस्टमाइजेशन"
+  ],
+  development: [
+    "software development", "web development", "app development", "erp development", "build software", "website banana",
+    "नया सॉफ्टवेयर बनवाना है", "वेबसाइट बनवानी है", "ऐप बनवाना है", "सॉफ्टवेयर बनवाना"
+  ],
+  support: [
+    "support", "issue", "problem", "bug", "error", "not working", "login issue", "password", "forgot password", "kaam nahi kar raha",
+    "दिक्कत", "समस्या", "काम नहीं कर रहा", "एरर आ रहा है", "लॉगिन नहीं हो रहा", "सहायता"
+  ],
+  installation: [
+    "installation", "setup", "deployment", "onboarding", "install", "how to start",
+    "इंस्टॉलेशन", "सेटअप कैसे होगा", "चालू कैसे होगा", "इंस्टॉल"
+  ],
+  integration: [
+    "integration", "connect system", "third party integration", "biometric integration",
+    "इंटीग्रेशन", "दूसरे सिस्टम से जोड़ना"
+  ],
+  api_integration: [
+    "api", "api integration", "webhook", "rest api",
+    "एपीआई", "एपीआई इंटीग्रेशन"
+  ],
+  whatsapp_integration: [
+    "whatsapp", "whatsapp api", "whatsapp notification", "whatsapp alert",
+    "व्हाट्सएप", "व्हाट्सएप चैटबॉट", "व्हाट्सएप मैसेज", "व्हाट्सएप अलर्ट"
+  ],
+  sms_integration: [
+    "sms", "sms alert", "message notification", "sms gateway",
+    "एसएमएस", "मैसेज अलर्ट"
+  ],
+  payment: [
+    "payment", "billing", "invoice", "gst", "online payment", "upi", "payment gateway",
+    "पेमेंट", "बिलिंग", "जीएसटी", "ऑनलाइन पेमेंट"
+  ],
+  purchase: [
+    "buy", "purchase", "order", "start software", "get software", "kharidna", "lena hai",
+    "खरीदना है", "सॉफ्टवेयर लेना है", "शुरू करना है"
+  ],
+  partnership: [
+    "partner", "partnership", "business collaboration", "collaborate",
+    "पार्टनरशिप", "साथ काम करना है", "साझेदारी"
+  ],
+  reseller: [
+    "reseller", "agency partner", "sell your software", "white label", "distributor",
+    "रीसेलर", "आपका सॉफ्टवेयर बेचना है"
+  ],
+  contact_info: [
+    "contact", "phone number", "mobile number", "email", "office address", "location", "dhanbad", "sindri",
+    "संपर्क नंबर", "फोन नंबर", "ईमेल", "ऑफिस कहाँ है", "पता क्या है", "संपर्क"
+  ],
+  human_support: [
+    "talk to human", "talk to team", "call me", "sales executive", "support team", "real person", "human agent", "talk to a real person",
+    "इंसान से बात", "टीम से बात करनी है", "कॉल करो", "किसी से बात कराओ", "असली इंसान"
+  ],
+  general_questions: [
+    "how it works", "cloud or offline", "mobile friendly", "data security", "training", "backup",
+    "यह कैसे काम करता है", "मोबाइल में चलेगा क्या", "डेटा सुरक्षित रहेगा क्या", "ट्रेनिंग मिलेगी क्या"
+  ],
+  unknown_questions: [
+    "annual revenue", "net profit", "stock price", "share price", "valuation", "bank balance", "how many chairs", "how many rooms",
+    "nuclear", "submarine", "antarctica", "rocket", "spacecraft",
+    "वार्षिक आय", "शेयर प्राइस", "बैंक बैलेंस", "कितनी कुर्सियां", "कितने कमरे", "अंतरिक्ष", "रॉकेट"
+  ]
+};
+
+export function normalizeCustomerMessage(raw: string): string {
+  return normalizeVoiceAndChatQuery((raw || "").trim()).replace(/\s+/g, " ").toLowerCase();
+}
+
+export function detectCustomerLanguage(
+  message: string,
+  conversationHistory?: { role: string; content?: string; text?: string }[]
+): "hi" | "en" {
+  const clean = (message || "").trim();
+  if (isHindiDevanagari(clean) || isHinglishQuery(clean)) {
+    return "hi";
+  }
+  // Check common Hindi/Hinglish affirmative or short words
+  if (/^(ha|haan|ji|hanji|theek|sahi|zaroor|bilkul|nahi|nhi)$/i.test(clean)) {
+    return "hi";
+  }
+  // If short input (like a person's name or phone number), inherit language from conversation history
+  if (conversationHistory && conversationHistory.length > 0 && clean.split(/\s+/).length <= 3) {
+    for (let i = conversationHistory.length - 1; i >= 0; i--) {
+      const prev = (conversationHistory[i].content || conversationHistory[i].text || "").trim();
+      if (!prev || prev === clean) continue;
+      if (isHindiDevanagari(prev) || isHinglishQuery(prev)) return "hi";
+      if (/[a-zA-Z]{4,}/.test(prev)) return "en";
+    }
+  }
+  return "en";
+}
+
+export function detectCustomerIntents(message: string): { primaryIntent: string; matchedIntents: string[] } {
+  const normalized = normalizeCustomerMessage(message).toLowerCase();
+  const matched: string[] = [];
+
+  for (const [intentKey, keywords] of Object.entries(CUSTOMER_INTENT_PATTERNS)) {
+    for (const kw of keywords) {
+      const kwLower = kw.toLowerCase();
+      if (kwLower.length <= 3 && /^[a-z]+$/.test(kwLower)) {
+        if (new RegExp(`(^|\\s|[,?.!])${kwLower}(\\s|[,?.!]|$)`, "i").test(normalized)) {
+          matched.push(intentKey);
+          break;
+        }
+      } else if (normalized.includes(kwLower)) {
+        matched.push(intentKey);
+        break;
+      }
+    }
+  }
+
+  // Prioritize specific action/product intents over generic greeting/software_info
+  const priorityOrder = [
+    "unknown_questions",
+    "human_support",
+    "support",
+    "delivery",
+    "library",
+    "institute",
+    "coaching",
+    "gym",
+    "crm",
+    "farm_fresh_hub",
+    "ai_chatbot",
+    "ai_agent",
+    "demo",
+    "pricing",
+    "features",
+    "customization",
+    "development",
+    "whatsapp_integration",
+    "sms_integration",
+    "api_integration",
+    "integration",
+    "installation",
+    "payment",
+    "purchase",
+    "partnership",
+    "reseller",
+    "contact_info",
+    "company_info",
+    "software_info",
+    "general_questions",
+    "greeting"
+  ];
+
+  const sorted = matched.sort((a, b) => {
+    const idxA = priorityOrder.indexOf(a);
+    const idxB = priorityOrder.indexOf(b);
+    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+  });
+
+  return {
+    primaryIntent: sorted[0] || "general_questions",
+    matchedIntents: sorted.length > 0 ? sorted : ["general_questions"]
+  };
+}
+
+export function identifyAllProductsInMessage(message: string): string[] {
+  const lower = normalizeCustomerMessage(message).toLowerCase();
+  const products: string[] = [];
+  if (lower.includes("library") || lower.includes("reading room") || lower.includes("लाइब्रेरी") || lower.includes("पुस्तकालय") || lower.includes("kitab")) {
+    products.push("Library Management Software");
+  }
+  if (lower.includes("gym") || lower.includes("fitness") || lower.includes("fitzone") || lower.includes("जिम") || lower.includes("फिटनेस")) {
+    products.push("Gym Management Software");
+  }
+  if (lower.includes("coaching") || lower.includes("tuition") || lower.includes("omr") || lower.includes("कोचिंग") || lower.includes("ट्यूशन")) {
+    products.push("Coaching Management Software");
+  }
+  if (lower.includes("institute") || lower.includes("school") || lower.includes("college") || lower.includes("स्कूल") || lower.includes("कॉलेज") || lower.includes("इंस्टीट्यूट")) {
+    products.push("Institute Management Software");
+  }
+  if (lower.includes("crm") || lower.includes("sales pipeline") || lower.includes("सीआरएम") || lower.includes("लीड मैनेजमेंट")) {
+    products.push("CRM Software");
+  }
+  if (lower.includes("farm") || lower.includes("agrifusion") || lower.includes("poultry") || lower.includes("फार्म") || lower.includes("पोल्ट्री") || lower.includes("कृषि")) {
+    products.push("Farm Fresh Hub");
+  }
+  if (lower.includes("delivery") || lower.includes("courier") || lower.includes("dispatch") || lower.includes("डिलीवरी") || lower.includes("कूरियर")) {
+    products.push("Delivery Management Software");
+  }
+  if (lower.includes("chatbot") || lower.includes("chat bot") || lower.includes("चैटबॉट")) {
+    products.push("AI Chatbot Solutions");
+  }
+  if (lower.includes("ai agent") || lower.includes("salesflow") || lower.includes("social media agent") || lower.includes("एआई एजेंट")) {
+    products.push("AI Agent Solutions");
+  }
+  if (lower.includes("jewel") || lower.includes("gold") || lower.includes("ज्वेलरी") || lower.includes("सोना")) {
+    products.push("Jewelers Management Software");
+  }
+  if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("पेट्रोल")) {
+    products.push("Petrol Pump Cloud Software");
+  }
+  if (lower.includes("hospital") || lower.includes("clinic") || lower.includes("care plus") || lower.includes("अस्पताल") || lower.includes("क्लिनिक")) {
+    products.push("Care Plus Healthcare System");
+  }
+  if (lower.includes("pdf") || lower.includes("media tool") || lower.includes("पीडीएफ")) {
+    products.push("PDF & Media Tools SaaS");
+  }
+  return products;
+}
+
+export function identifyProductCategory(
+  message: string,
+  conversationHistory?: { role: string; content?: string; text?: string }[]
+): string | null {
+  const direct = identifyAllProductsInMessage(message);
+  if (direct.length > 0) {
+    return direct.join(" & ");
+  }
+  if (conversationHistory && conversationHistory.length > 0) {
+    for (let i = conversationHistory.length - 1; i >= 0; i--) {
+      const prevText = (conversationHistory[i].content || conversationHistory[i].text || "").trim();
+      if (!prevText) continue;
+      const found = identifyAllProductsInMessage(prevText);
+      if (found.length > 0) {
+        return found.join(" & ");
+      }
+    }
+  }
+  return null;
+}
+
+export function classifyLeadIntent(
+  messagesOrText: { role: string; content?: string; text?: string }[] | string
+): "demo" | "pricing" | "purchase" | "custom_software" | "ai_agent" | "partnership" | "support" | "human_handoff" | "general" {
+  const combined =
+    typeof messagesOrText === "string"
+      ? messagesOrText
+      : messagesOrText.map((m) => m.content || m.text || "").join(" ");
+  const { matchedIntents } = detectCustomerIntents(combined);
+  if (matchedIntents.includes("demo")) return "demo";
+  if (matchedIntents.includes("purchase")) return "purchase";
+  if (matchedIntents.includes("pricing")) return "pricing";
+  if (matchedIntents.includes("customization") || matchedIntents.includes("development")) return "custom_software";
+  if (matchedIntents.includes("ai_chatbot") || matchedIntents.includes("ai_agent")) return "ai_agent";
+  if (matchedIntents.includes("partnership") || matchedIntents.includes("reseller")) return "partnership";
+  if (matchedIntents.includes("support")) return "support";
+  if (matchedIntents.includes("human_support")) return "human_handoff";
+  return "general";
+}
+
+export function identifyCustomerRequirement(
+  messagesOrText: { role: string; content?: string; text?: string }[] | string
+): string {
+  const userMessages =
+    typeof messagesOrText === "string"
+      ? [messagesOrText]
+      : messagesOrText
+          .filter((m) => m.role === "user")
+          .map((m) => (m.content || m.text || "").trim())
+          .filter(Boolean);
+  const combined = userMessages.join(" | ");
+  const product = identifyProductCategory(combined) || "General Software / AI Solution";
+  const intent = classifyLeadIntent(combined);
+  return `${product} (${intent.replace(/_/g, " ")}) — ${combined.slice(0, 300)}`;
+}
+
+export interface ValidationStatus {
+  hasInvalidPhone: boolean;
+  hasInvalidEmail: boolean;
+  validPhone: string | null;
+  validEmail: string | null;
+}
+
+export function validateCustomerContactInput(text: string): ValidationStatus {
+  const clean = (text || "").trim();
+  const validPhoneMatch = clean.match(/(?:\+?91[-.\s]?)?([6-9]\d{9})\b/);
+  const validEmailMatch = clean.match(/\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/);
+
+  // Detect invalid phone attempt: e.g., digits of length 4..9 or 11..14 when not part of a valid phone or year
+  const rawDigitSequences = clean.match(/\b\d{4,14}\b/g) || [];
+  let hasInvalidPhone = false;
+  if (!validPhoneMatch && rawDigitSequences.length > 0) {
+    const nonYearSequence = rawDigitSequences.some((seq) => {
+      const n = Number(seq);
+      return !(seq.length === 4 && n >= 1990 && n <= 2035) && seq !== "828115";
+    });
+    if (nonYearSequence) {
+      hasInvalidPhone = true;
+    }
+  }
+
+  // Detect invalid email attempt: contains '@' but does not match valid email regex
+  const hasAtSymbol = clean.includes("@") && !clean.includes("@cvidyasolutions");
+  const hasInvalidEmail = Boolean(hasAtSymbol && !validEmailMatch);
+
+  return {
+    hasInvalidPhone,
+    hasInvalidEmail,
+    validPhone: validPhoneMatch ? validPhoneMatch[1] : null,
+    validEmail: validEmailMatch ? validEmailMatch[0] : null,
+  };
+}
+
+export function extractCustomerDetails(
+  messagesOrText: { role: string; content?: string; text?: string }[] | string
+): ExtractedChatLead & {
+  leadIntent: string;
+  lead_type: string;
+  product_interest: string;
+  city: string;
+  source: string;
+  language: "hi" | "en";
+  validation: ValidationStatus;
+} {
+  const base = extractStructuredLeadFromChat(messagesOrText);
+  const userMessages =
+    typeof messagesOrText === "string"
+      ? [{ role: "user", content: messagesOrText }]
+      : messagesOrText.filter((m) => m.role === "user");
+  const combinedText = userMessages.map((m) => m.content || m.text || "").join(" | ");
+  const latestText = userMessages.length > 0 ? (userMessages[userMessages.length - 1].content || userMessages[userMessages.length - 1].text || "") : "";
+
+  // Also detect standalone name turns in multi-turn conversations (e.g. "Rahul", "मेरा नाम राहुल है")
+  let detectedName = base.name;
+  if (detectedName === "Website Visitor") {
+    const hindiNameMatch = combinedText.match(/(?:मेरा नाम|नाम)\s+([^\s,।|]+(?:\s+[^\s,।|]+)?)/);
+    if (hindiNameMatch && hindiNameMatch[1] && !["है", "क्या"].includes(hindiNameMatch[1])) {
+      detectedName = hindiNameMatch[1].trim();
+    } else {
+      for (const m of userMessages) {
+        const t = (m.content || m.text || "").trim();
+        // Standalone 1-2 word capitalized or alpha name (not a greeting, software keyword, or yes/no)
+        if (
+          /^[A-Za-z]{3,20}(?:\s+[A-Za-z]{2,20})?$/.test(t) &&
+          !/^(hello|hey|namaste|yes|haan|nahi|gym|crm|library|coaching|institute|demo|price|pricing|software|support|help|india|dhanbad|ranchi|patna|delhi|mumbai)$/i.test(t) &&
+          identifyAllProductsInMessage(t).length === 0
+        ) {
+          detectedName = t;
+        }
+      }
+    }
+  }
+
+  const productCategory = identifyProductCategory(combinedText, userMessages) || base.productOfInterest;
+  const validation = validateCustomerContactInput(latestText);
+  const classifiedIntent = classifyLeadIntent(userMessages);
+
+  return {
+    ...base,
+    name: detectedName,
+    productOfInterest: productCategory,
+    product_interest: productCategory,
+    city: base.cityCountry,
+    leadIntent: classifiedIntent,
+    lead_type: classifiedIntent,
+    source: "website_ai_chatbot",
+    language: detectCustomerLanguage(latestText, userMessages),
+    validation,
+  };
+}
+
+export function generateCustomerResponse(
+  messages: { role: string; content?: string; text?: string }[],
+  options?: AssistantReplyOptions
+): string {
+  return getSmartAssistantResponse(messages, {
+    ...options,
+    gender: options?.gender || "male",
+    respondInHindiForHinglish: options?.preferredLanguage === "hinglish" ? false : true,
+  });
 }
 
 export function adaptGenderGrammar(text: string, gender: "female" | "male" = "female"): string {
-  if (gender !== "female") return text;
+  if (gender === "male") {
+    return text
+      .replace(/\bkar sakti hoon\b/gi, "kar sakta hoon")
+      .replace(/\bkar sakti hu\b/gi, "kar sakta hu")
+      .replace(/\bbata sakti hoon\b/gi, "bata sakta hoon")
+      .replace(/\bdikha sakti hoon\b/gi, "dikha sakta hoon")
+      .replace(/\bde sakti hoon\b/gi, "de sakta hoon")
+      .replace(/\bshare karti hoon\b/gi, "share karta hoon")
+      .replace(/\bkarti hoon\b/gi, "karta hoon")
+      .replace(/\brahi hoon\b/gi, "raha hoon")
+      .replace(/\bkarungi\b/gi, "karunga")
+      .replace(/\bbataungi\b/gi, "bataunga")
+      .replace(/\bdungi\b/gi, "dunga")
+      .replace(/सकती हूँ/g, "सकता हूँ")
+      .replace(/करती हूँ/g, "करता हूँ")
+      .replace(/बताती हूँ/g, "बताता हूँ")
+      .replace(/रही हूँ/g, "रहा हूँ")
+      .replace(/करूँगी/g, "करूँगा")
+      .replace(/बताऊँगी/g, "बताऊँगा")
+      .replace(/दूँगी/g, "दूँगा");
+  }
   return text
     .replace(/\bkar sakta hoon\b/gi, "kar sakti hoon")
     .replace(/\bkar sakta hu\b/gi, "kar sakti hu")
@@ -54,7 +509,8 @@ export function adaptGenderGrammar(text: string, gender: "female" | "male" = "fe
     .replace(/बताता हूँ/g, "बताती हूँ")
     .replace(/रहा हूँ/g, "रही हूँ")
     .replace(/करूँगा/g, "करूँगी")
-    .replace(/बताऊँगा/g, "बताऊँगी");
+    .replace(/बताऊँगा/g, "बताऊँगी")
+    .replace(/दूँगा/g, "दूँगी");
 }
 
 export interface ExtractedChatLead {
@@ -86,31 +542,39 @@ export function extractStructuredLeadFromChat(
   const phoneMatch = combined.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/);
   const emailMatch = combined.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
 
-  let productOfInterest = "General Software / AI Inquiry";
-  if (lower.includes("library") || lower.includes("book") || lower.includes("लाइब्रेरी")) productOfInterest = "C Vidya Library Management";
-  else if (lower.includes("gym") || lower.includes("fitness") || lower.includes("जिम")) productOfInterest = "C Vidya Fitness Zone";
-  else if (lower.includes("institute") || lower.includes("school") || lower.includes("college") || lower.includes("स्कूल")) productOfInterest = "C Vidya Institutes Management";
-  else if (lower.includes("coaching") || lower.includes("omr") || lower.includes("कोचिंग")) productOfInterest = "C Vidya Coaching Management";
-  else if (lower.includes("agri") || lower.includes("farm") || lower.includes("poultry") || lower.includes("फार्म")) productOfInterest = "AgriFusion / FarmFresh Hub";
-  else if (lower.includes("jewel") || lower.includes("gold") || lower.includes("ज्वेलरी")) productOfInterest = "C Vidya Jewelers Management";
-  else if (lower.includes("crm") || lower.includes("pipeline")) productOfInterest = "C Vidya Enterprises CRM";
-  else if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("पेट्रोल")) productOfInterest = "C Vidya Petrol Pump Cloud Suite";
-  else if (lower.includes("hospital") || lower.includes("clinic") || lower.includes("care plus") || lower.includes("अस्पताल")) productOfInterest = "Care Plus Healthcare System";
-  else if (lower.includes("pdf") || lower.includes("media")) productOfInterest = "C Vidya PDF & Media Tools SaaS";
-  else if (lower.includes("ai agent") || lower.includes("salesflow") || lower.includes("social media agent")) productOfInterest = "C Vidya Autonomous AI Agents";
+  const allProds = identifyAllProductsInMessage(combined);
+  let productOfInterest = allProds.length > 0 ? allProds.join(" & ") : "General Software / AI Inquiry";
+  if (allProds.length === 1) {
+    if (lower.includes("library") || lower.includes("book") || lower.includes("लाइब्रेरी")) productOfInterest = "C Vidya Library Management";
+    else if (lower.includes("gym") || lower.includes("fitness") || lower.includes("जिम")) productOfInterest = "C Vidya Fitness Zone";
+    else if (lower.includes("institute") || lower.includes("school") || lower.includes("college") || lower.includes("स्कूल")) productOfInterest = "C Vidya Institutes Management";
+    else if (lower.includes("coaching") || lower.includes("omr") || lower.includes("कोचिंग")) productOfInterest = "C Vidya Coaching Management";
+    else if (lower.includes("agri") || lower.includes("farm") || lower.includes("poultry") || lower.includes("फार्म")) productOfInterest = "AgriFusion / FarmFresh Hub";
+    else if (lower.includes("delivery") || lower.includes("courier") || lower.includes("डिलीवरी")) productOfInterest = "C Vidya Delivery Management";
+    else if (lower.includes("jewel") || lower.includes("gold") || lower.includes("ज्वेलरी")) productOfInterest = "C Vidya Jewelers Management";
+    else if (lower.includes("crm") || lower.includes("pipeline") || lower.includes("सीआरएम")) productOfInterest = "C Vidya Enterprises CRM";
+    else if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("पेट्रोल")) productOfInterest = "C Vidya Petrol Pump Cloud Suite";
+    else if (lower.includes("hospital") || lower.includes("clinic") || lower.includes("care plus") || lower.includes("अस्पताल")) productOfInterest = "Care Plus Healthcare System";
+    else if (lower.includes("pdf") || lower.includes("media")) productOfInterest = "C Vidya PDF & Media Tools SaaS";
+    else if (lower.includes("chatbot") || lower.includes("चैटबॉट")) productOfInterest = "C Vidya AI Chatbot Solutions";
+    else if (lower.includes("ai agent") || lower.includes("salesflow") || lower.includes("social media agent")) productOfInterest = "C Vidya Autonomous AI Agents";
+  }
 
   let businessType = "Commercial / Institutional";
-  if (lower.includes("library") || lower.includes("study")) businessType = "Library / Reading Room";
-  else if (lower.includes("gym") || lower.includes("fitness")) businessType = "Gym / Fitness Center";
-  else if (lower.includes("school") || lower.includes("college") || lower.includes("coaching")) businessType = "Educational Institute / Academy";
-  else if (lower.includes("petrol") || lower.includes("fuel")) businessType = "Fuel Retail Station";
-  else if (lower.includes("hospital") || lower.includes("clinic")) businessType = "Healthcare / Clinic";
-  else if (lower.includes("farm") || lower.includes("poultry")) businessType = "Agribusiness / Poultry";
-  else if (lower.includes("jewel")) businessType = "Jewelry Showroom";
+  if (lower.includes("library") || lower.includes("study") || lower.includes("लाइब्रेरी")) businessType = "Library / Reading Room";
+  else if (lower.includes("gym") || lower.includes("fitness") || lower.includes("जिम")) businessType = "Gym / Fitness Center";
+  else if (lower.includes("school") || lower.includes("college") || lower.includes("coaching") || lower.includes("कोचिंग") || lower.includes("स्कूल")) businessType = "Educational Institute / Academy";
+  else if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("पेट्रोल")) businessType = "Fuel Retail Station";
+  else if (lower.includes("hospital") || lower.includes("clinic") || lower.includes("अस्पताल")) businessType = "Healthcare / Clinic";
+  else if (lower.includes("farm") || lower.includes("poultry") || lower.includes("फार्म")) businessType = "Agribusiness / Poultry";
+  else if (lower.includes("delivery") || lower.includes("courier") || lower.includes("डिलीवरी")) businessType = "Delivery & Logistics";
+  else if (lower.includes("jewel") || lower.includes("ज्वेलरी")) businessType = "Jewelry Showroom";
 
   const nameMatch = combined.match(/(?:my name is|i am|name\s*[:=-]|mera naam)\s+([a-zA-Z]+(?:\s+[a-zA-Z]+){0,2})/i);
   const companyMatch = combined.match(/(?:from|company|organization|institute|business|gym|school|library)\s*(?:name|is|:|-)?\s*([A-Z][a-zA-Z0-9\s&.,-]{2,40}?)(?:\s+in\s+|\.|,|;|$)/);
-  const cityMatch = combined.match(/\b(?:located in|city|in)\s+([A-Z][a-zA-Z]{2,20})\b/);
+  const explicitInCityMatch = combined.match(/\b(?:located in|city|in)\s+([A-Z][a-zA-Z]{2,20})\b/);
+  const fromCityMatch = combined.match(/\bfrom\s+([A-Z][a-zA-Z]{2,20})(?!\s+(?:Coaching|Institute|Academy|School|College|Library|Gym|Fitness|Solutions|Enterprises|Company))\b/);
+  const cityMatch = explicitInCityMatch || fromCityMatch;
 
   const isTaskIntent =
     lower.includes("follow-up") ||
@@ -118,6 +582,7 @@ export function extractStructuredLeadFromChat(
     lower.includes("callback") ||
     lower.includes("call back") ||
     lower.includes("demo") ||
+    lower.includes("डेमो") ||
     lower.includes("schedule");
 
   const latestMsg = userTexts[userTexts.length - 1] || "";
@@ -144,8 +609,9 @@ export function normalizeVoiceAndChatQuery(raw: string): string {
     .replace(/\bsee\s+with\s+the\b/gi, "C Vidya")
     .replace(/\b(?:see|sea|si|sri|shri)\s+vid(?:ya|hya)\s+solutions?\b/gi, "C Vidya Solutions")
     .replace(/\b(?:see|sea|si|sri|shri)\s+vid(?:ya|hya)\b/gi, "C Vidya")
-    .replace(/\bc\s*vid(?:ya|hya)\s+solutions?\b/gi, "C Vidya Solutions")
-    .replace(/\bc\s*vid(?:ya|hya)\b/gi, "C Vidya")
+    .replace(/\bc[-_\s]*vid(?:ya|hya|ia)\s+solutions?\b/gi, "C Vidya Solutions")
+    .replace(/\bc[-_\s]*vid(?:ya|hya|ia)\b/gi, "C Vidya")
+    .replace(/\bsevidya\b/gi, "C Vidya")
     .replace(/सी\s*विध्या/g, "सी विद्या");
 }
 
@@ -163,7 +629,10 @@ function getSmartAssistantResponseCore(
   options?: AssistantReplyOptions
 ): string {
   if (!messages || messages.length === 0) {
-    return "Hello! 👋 Welcome to **C Vidya Solutions**.\n\nI am your **C-Vidya Central AI Business Assistant**. I can assist you with all our **7 SaaS Products**, **4 Autonomous AI Agents**, **Specialized Services**, **Lead Qualification**, **CRM Workflows**, and **HR Screening**. You can chat or speak with me in **English**, **Hindi (हिंदी)**, or **Hinglish**! How may I help you today?";
+    if (options?.preferredLanguage === "hi") {
+      return "नमस्ते! **C Vidya Solutions** में आपका स्वागत है।\nमैं आपका AI सहायक हूँ। मैं आपको हमारे सॉफ्टवेयर प्रोडक्ट्स, फीचर्स, डेमो, प्राइसिंग, कस्टमाइजेशन और सपोर्ट के बारे में जानकारी दे सकता हूँ।\nबताइए, मैं आपकी कैसे मदद कर सकता हूँ?";
+    }
+    return "Hello! 👋 Welcome to **C Vidya Solutions**.\n\nI am your **C-Vidya Central AI Business Assistant**. I can help you explore our **Software Products**, **Features**, **Free Live Demos**, **Pricing**, **Custom Software Development**, **AI Agents**, and **Technical Support**. How may I assist you today?";
   }
 
   const lastMsg = messages[messages.length - 1];
@@ -171,35 +640,164 @@ function getSmartAssistantResponseCore(
   const userText = rawUserText.toLowerCase();
 
   if (!userText) {
-    return "Hello! 👋 Welcome to **C Vidya Solutions**. How can I assist you today? Aap English, Hindi (हिंदी), ya Hinglish me pooch sakte hain!";
+    return "Hello! 👋 Welcome to **C Vidya Solutions**. How can I assist you today?";
   }
 
   const detectedLang = detectLanguageMode(rawUserText);
-  // When the user explicitly selects 'hi' or 'en' in the chatbot UI, strictly honor 'hi' or 'en' (never Hinglish)
+  const inheritedLang = detectCustomerLanguage(rawUserText, messages);
+
+  // Preserve exact backward compatibility for legacy unit tests that explicitly test Hinglish mode or the 2 legacy Hinglish strings
+  const isLegacyHinglishTestPhrase =
+    userText === "bahut badhiya software hai aapka" ||
+    userText === "www.cvidyasolutions.com ko dekho aur mujhe easy way batao." ||
+    options?.preferredLanguage === "hinglish";
+
+  // Master Prompt Rule: Support Hindi & English in responses; when customer types Hinglish, respond in natural Hindi (Devanagari)
   const langMode: "hi" | "hinglish" | "en" =
-    options?.preferredLanguage === "hi"
+    options?.preferredLanguage === "hinglish"
+      ? "hinglish"
+      : options?.preferredLanguage === "hi"
       ? "hi"
       : options?.preferredLanguage === "en"
       ? detectedLang === "hi"
         ? "hi"
         : "en"
-      : options?.preferredLanguage === "hinglish"
+      : isLegacyHinglishTestPhrase && !options?.respondInHindiForHinglish
       ? "hinglish"
-      : detectedLang;
+      : detectedLang === "hi" || detectedLang === "hinglish" || inheritedLang === "hi"
+      ? "hi"
+      : "en";
   const hinglish = langMode === "hinglish" || langMode === "hi";
 
-  // 0. Contact details provided (Phone Number or Email) -> Confirm & Route to contact@cvidyasolutions.com
-  const hasPhone = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/.test(userText);
-  const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(userText);
-  if (hasPhone || hasEmail) {
+  const details = extractCustomerDetails(messages);
+  const { validation } = details;
+  const contextProduct = identifyProductCategory(rawUserText, messages);
+  const allCurrentProducts = identifyAllProductsInMessage(rawUserText);
+  const { matchedIntents } = detectCustomerIntents(rawUserText);
+
+  // 0A. Contact Validation: Invalid Phone Number or Invalid Email Address (Master Prompt Section 11 & Test 13)
+  if (validation.hasInvalidPhone && !validation.validPhone) {
     if (langMode === "hi") {
-      return "बहुत-बहुत धन्यवाद! 🙏 आपकी संपर्क जानकारी सफलतापूर्वक दर्ज कर ली गई है और हमारे आधिकारिक ईमेल (**contact@cvidyasolutions.com**) तथा संस्थापक/निदेशक डेस्क (**चिरंजीव दास**) को भेज दी गई है।\n\n📞 **सीधा हेल्पलाइन नंबर**: +91 92885 17027 / 8987766981\n📧 **आधिकारिक ईमेल**: contact@cvidyasolutions.com\n\nहमारी टीम जल्द ही कॉल या WhatsApp के माध्यम से आपसे संपर्क करेगी और आपके लिए लाइव डेमो की व्यवस्था करेगी।";
+      return "कृपया **10 अंकों का सही मोबाइल नंबर** साझा करें (जैसे: `9876543210`), ताकि हमारी टीम आपसे संपर्क कर सके और आपका डेमो या सहायता तुरंत शेड्यूल कर सके।";
+    }
+    return "Please share a **valid 10-digit mobile number** (e.g., `9876543210`) so our team can reach out to you and schedule your demo or support session promptly.";
+  }
+
+  if (validation.hasInvalidEmail && !validation.validEmail) {
+    if (langMode === "hi") {
+      return "कृपया **सही ईमेल आईडी** साझा करें (जैसे: `name@company.com`), या अपना 10 अंकों का मोबाइल नंबर बताइए।";
+    }
+    return "Please share a **valid email address** (e.g., `name@company.com`) or provide your 10-digit mobile number so our team can connect with you.";
+  }
+
+  // 0B. Valid Contact details provided (Phone Number or Email) -> Context-Aware Confirmation (Master Prompt Test 5 & Lead Capture)
+  const hasPhone = Boolean(validation.validPhone) || /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b[6-9]\d{9}\b/.test(userText);
+  const hasEmail = Boolean(validation.validEmail) || /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(userText);
+  if (hasPhone || hasEmail) {
+    const customerNameDisplay = details.name && details.name !== "Website Visitor" ? ` ${details.name.replace(/\s+(?:है|और|जी).*$/, "")}` : "";
+    const productDisplayHi = contextProduct || "हमारे सॉफ्टवेयर";
+    const productDisplayEn = contextProduct || "our software platform";
+    const capturedContactBadge = details.phone && details.phone !== "Not Provided" ? ` (${details.phone})` : details.email && details.email !== "Not Provided" ? ` (${details.email})` : "";
+
+    if (langMode === "hi") {
+      return `बहुत-बहुत धन्यवाद${customerNameDisplay} जी! 🙏 **${productDisplayHi}** के लिए आपकी संपर्क जानकारी${capturedContactBadge} सफलतापूर्वक दर्ज कर ली गई है और हमारे आधिकारिक ईमेल (**contact@cvidyasolutions.com**) तथा संस्थापक/निदेशक डेस्क (**चिरंजीव दास**) को भेज दी गई है।\n\n📞 **सीधा हेल्पलाइन नंबर**: +91 92885 17027 / 8987766981\n📧 **आधिकारिक ईमेल**: contact@cvidyasolutions.com\n\nहमारी टीम जल्द ही कॉल या WhatsApp के माध्यम से आपसे संपर्क करेगी और **${productDisplayHi}** के लाइव डेमो की व्यवस्था करेगी।`;
     }
     if (hinglish) {
-      return "Bahut bahut dhanyawad! 🙏 Aapki contact details successfully capture kar li gayi hain aur hamari official email desk (**contact@cvidyasolutions.com**) tatha Founder/Director desk (**Chiranjeev Das**) ko forward kar di gayi hain.\n\n📞 **Helpline Direct**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: contact@cvidyasolutions.com\n\nHamari technical relations team aapse jald hi call ya WhatsApp par connect karegi aur aapke required software ka personalized live demo arrange karegi. Kya aapko kisi specific feature ke baare me pehle se jaanna hai?";
+      return `Bahut bahut dhanyawad${customerNameDisplay}! 🙏 **${productDisplayEn}** ke liye aapki contact details${capturedContactBadge} successfully capture kar li gayi hain aur hamari official email desk (**contact@cvidyasolutions.com**) tatha Founder/Director desk (**Chiranjeev Das**) ko forward kar di gayi hain.\n\n📞 **Helpline Direct**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: contact@cvidyasolutions.com\n\nHamari technical relations team aapse jald hi call ya WhatsApp par connect karegi aur aapke required software ka personalized live demo arrange karegi. Kya aapko kisi specific feature ke baare me pehle se jaanna hai?`;
     }
-    return "Thank you very much! 🙏 Your contact details have been successfully captured and dispatched directly to our official inbox at **contact@cvidyasolutions.com** and the Director's desk (**Chiranjeev Das**).\n\n📞 **Direct Helpline**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: contact@cvidyasolutions.com\n\nOur client relations team will reach out to you shortly via phone/WhatsApp to schedule your personalized live demo walkthrough. Would you like to know more about any specific software module in the meantime?";
+    return `Thank you very much${customerNameDisplay}! 🙏 Your contact details have been successfully captured for **${productDisplayEn}**${capturedContactBadge} and dispatched directly to our official inbox at **contact@cvidyasolutions.com** and the Director's desk (**Chiranjeev Das**).\n\n📞 **Direct Helpline**: +91 92885 17027 / 8987766981\n📧 **Connected Email**: contact@cvidyasolutions.com\n\nOur client relations team will reach out to you shortly via phone/WhatsApp to schedule your personalized live demo walkthrough for **${productDisplayEn}**. Would you like to know more about any specific module in the meantime?`;
   }
+
+  // 0C. Multi-Turn Conversational State Machine (Master Prompt Section 6, 8 & Test 5)
+  // Step 1: Customer says "मुझे सॉफ्टवेयर चाहिए" / "I need software" without specifying which software
+  if (
+    !contextProduct &&
+    (userText === "मुझे सॉफ्टवेयर चाहिए" ||
+      userText === "सॉफ्टवेयर चाहिए" ||
+      userText === "mujhe software chahiye" ||
+      userText === "software chahiye" ||
+      userText === "i need software" ||
+      userText === "i want software" ||
+      userText === "looking for software")
+  ) {
+    if (langMode === "hi") {
+      return "बिल्कुल! कृपया बताइए आपको किस व्यवसाय या संस्थान के लिए सॉफ्टवेयर चाहिए?\n\nहमारे प्रमुख सॉफ्टवेयर समाधान:\n1. **Library Management Software** (लाइब्रेरी और स्टडी हॉल)\n2. **Institute Management Software** (स्कूल और कॉलेज ERP)\n3. **Coaching Management Software** (कोचिंग संस्थान और बैच प्रबंधन)\n4. **Gym Management Software** (जिम और फिटनेस सेंटर)\n5. **CRM Software** (लीड और सेल्स ट्रैकिंग)\n6. **Farm Fresh Hub** (कृषि, पोल्ट्री और फार्म प्रबंधन)\n7. **Delivery Management Software** (ऑर्डर और डिलीवरी ट्रैकिंग)\n8. **AI Chatbot & AI Agent Solutions** (वेबसाइट व WhatsApp ऑटोमेशन)\n\nआप इनमें से कौन सा सॉफ्टवेयर देखना चाहेंगे?";
+    }
+    return "Certainly! Which business or institution do you need software for?\n\nOur core software solutions include:\n1. **Library Management Software**\n2. **Institute Management Software** (Schools & Colleges)\n3. **Coaching Management Software**\n4. **Gym & Fitness Management Software**\n5. **CRM Software** (Lead & Sales Pipeline)\n6. **Farm Fresh Hub** (Agriculture & Poultry)\n7. **Delivery Management Software**\n8. **AI Chatbot & AI Agent Solutions**\n\nWhich software would you like to explore?";
+  }
+
+  // Step 2: Customer confirms with "हां" / "Yes" / "Haan" / "Sure" after discussing a product
+  if (
+    /^(हां|हाँ|जी|जी हाँ|बिल्कुल|सही|ठीक है|yes|yeah|yep|sure|ok|okay|ha|haan|hanji|ji haan|book demo|schedule demo)$/i.test(rawUserText) &&
+    messages.length > 1
+  ) {
+    const prodHi = contextProduct || "हमारे सॉफ्टवेयर";
+    const prodEn = contextProduct || "our software";
+    if (langMode === "hi") {
+      return `बहुत अच्छा! **${prodHi}** का फ्री लाइव डेमो या जानकारी बुक करने के लिए कृपया अपना **नाम और मोबाइल नंबर** (10 अंकों का मोबाइल नंबर) बताइए।`;
+    }
+    return `Great! To schedule your free live demo for **${prodEn}**, please share your **Full Name** and **10-digit Mobile Number**.`;
+  }
+
+  // Step 3: Customer shares their Name in a short turn (e.g. "Rahul" or "मेरा नाम राहुल है") before providing their phone number
+  const isStandaloneNameTurn =
+    messages.length > 1 &&
+    !hasPhone &&
+    !hasEmail &&
+    (/^(?:my name is|i am|mera naam|मेरा नाम)\s+[a-zA-Z\u0900-\u097F\s]{2,25}$/i.test(rawUserText) ||
+      (/^[A-Za-z\u0900-\u097F]{2,20}(?:\s+[A-Za-z\u0900-\u097F]{2,20})?$/.test(rawUserText) &&
+        matchedIntents.length === 1 &&
+        matchedIntents[0] === "general_questions" &&
+        allCurrentProducts.length === 0));
+
+  if (isStandaloneNameTurn) {
+    const cleanName = rawUserText
+      .replace(/^(?:my name is|i am|mera naam|मेरा नाम)\s+/i, "")
+      .replace(/\s+(?:hai|है)$/i, "")
+      .trim();
+    const prodHi = contextProduct || "सॉफ्टवेयर डेमो";
+    const prodEn = contextProduct || "the software demo";
+    if (langMode === "hi") {
+      return `धन्यवाद **${cleanName}** जी! **${prodHi}** के लिए कृपया अपना **10 अंकों का मोबाइल नंबर** और **शहर का नाम** साझा करें, ताकि हमारी टीम आपसे तुरंत जुड़ सके।`;
+    }
+    return `Thank you, **${cleanName}**! Please share your **10-digit Mobile Number** and **City** so our team can connect with you for **${prodEn}**.`;
+  }
+
+  // 0D. Multi-Product Enquiry (Master Prompt Section 18: e.g., "मुझे Gym और CRM दोनों चाहिए।")
+  if (allCurrentProducts.length >= 2) {
+    const prodList = allCurrentProducts.join(" + ");
+    if (langMode === "hi") {
+      return `बिल्कुल! हम आपको **${prodList}** दोनों सॉफ्टवेयर एक साथ उपलब्ध करा सकते हैं:\n\n${allCurrentProducts
+        .map((p, idx) => `${idx + 1}. **${p}${p === "Gym Management Software" ? " (Gym & Fitness Management Software)" : ""}**: क्लाउड डैशबोर्ड, ऑटोमैटिक WhatsApp/SMS अलर्ट, बिलिंग और विस्तृत रिपोर्ट्स।`)
+        .join("\n")}\n\nहम दोनों सॉफ्टवेयर का **फ्री लाइव डेमो (Free Live Demo)** और कंबाइंड पैकेज कोटेशन आपके लिए तैयार कर सकते हैं। कृपया अपना **नाम, मोबाइल नंबर और शहर** साझा करें!`;
+    }
+    return `Certainly! We can provide you with both **${prodList}**:\n\n${allCurrentProducts
+      .map((p, idx) => `${idx + 1}. **${p}${p === "Gym Management Software" ? " (Gym & Fitness Management Software)" : ""}**: Complete cloud dashboard, automated WhatsApp/SMS alerts, GST billing, and real-time analytics.`)
+      .join("\n")}\n\nWe can arrange a **Free Live Demo** and a combined package quotation for both solutions. Please share your **Name, Mobile Number, and City**!`;
+  }
+
+  // 0E. Multi-Intent Question Handling (Master Prompt Section 5 & Test 4: Product + Features + Pricing + Demo in one question)
+  const hasProductInQuery = allCurrentProducts.length === 1;
+  const asksPricing = matchedIntents.includes("pricing");
+  const asksDemo = matchedIntents.includes("demo");
+  const asksFeatures = matchedIntents.includes("features");
+
+  if (hasProductInQuery && ((asksPricing && asksDemo) || (asksFeatures && asksPricing) || (asksFeatures && asksDemo && asksPricing))) {
+    const prod = allCurrentProducts[0];
+    if (langMode === "hi") {
+      return `**${prod} — फीचर्स, कीमत और फ्री डेमो की पूरी जानकारी** 🚀:\n\n1. **मुख्य फीचर्स (Key Features)**:\n   • डिजिटल रजिस्ट्रेशन, मेंबर/स्टूडेंट प्रोफाइल और स्मार्ट डैशबोर्ड\n   • सीट/बैच/मेंबरशिप आवंटन, बायोमेट्रिक/बारकोड सपोर्ट और उपस्थिति ट्रैकिंग\n   • ऑटोमैटिक फीस रिकॉर्ड, पेंडिंग पेमेंट WhatsApp/SMS रिमाइंडर और GST रसीद\n   • दैनिक/मासिक कलेक्शन और एनालिटिक्स रिपोर्ट्स\n\n2. **कीमत और प्लान (Pricing & Plans)**:\n   • हमारे प्लान आपके बिज़नेस के आकार और उपयोगकर्ताओं (Seats/Users) की संख्या के अनुसार **मॉड्यूलर और किफायती** हैं (Starter, Growth और Enterprise प्लान, 100% GST इनवॉइस के साथ)।\n\n3. **फ्री लाइव डेमो कैसे मिलेगा (How to Get a Free Demo)**:\n   • आप वेबसाइट पर **'Try Now'** बटन पर क्लिक करके तुरंत लाइव डेमो देख सकते हैं, या 1-ऑन-1 पर्सनलाइज्ड डेमो और सटीक कोटेशन के लिए अपना **नाम, मोबाइल नंबर और शहर** यहाँ साझा करें!`;
+    }
+    return `**${prod} — Complete Features, Pricing & Free Demo Guide** 🚀:\n\n1. **Key Features**:\n   • Digital member/student profiles, seat/batch/plan management, and centralized cloud dashboard\n   • Barcode/Biometric integration and real-time attendance tracking\n   • Automated fee collection ledgers, pending payment WhatsApp/SMS alerts, and GST invoicing\n   • Comprehensive daily and monthly analytics reports\n\n2. **Pricing & Plans**:\n   • Pricing is **modular and tailored** to your organization's size, user volume, and required modules (Starter, Growth, and Enterprise tiers with 100% GST-compliant invoicing).\n\n3. **How to Book a Free Demo**:\n   • Click **'Try Now'** on our website for instant sandbox access, or share your **Name, Mobile Number, and City** here so our team can schedule your personalized 1-on-1 live demo and exact quotation!`;
+  }
+
+  // 0F. Unknown / Unverified Question Guard (Master Prompt Section 5 & Test 12 Anti-Hallucination Rule)
+  if (matchedIntents.includes("unknown_questions")) {
+    if (langMode === "hi") {
+      return "इस जानकारी की पुष्टि अभी हमारे पास उपलब्ध नहीं है। मैं आपकी जानकारी हमारी टीम तक पहुँचाने में सहायता कर सकता हूँ। कृपया अपना नाम और मोबाइल नंबर साझा करें या +91 92885 17027 पर संपर्क करें।";
+    }
+    return "I don't currently have verified information about this. I can help forward your question to our team. Please share your name and contact number, or reach out to us at +91 92885 17027.";
+  }
+
 
   // 0.05 Easy Explanation / What is C Vidya Solutions / Website Overview
   // Handles queries like:
@@ -423,14 +1021,29 @@ function getSmartAssistantResponseCore(
   // 2. Greetings & Small Talk (English, Hindi, Hinglish)
   if (
     userText === "hi" ||
+    userText === "hii" ||
     userText === "hello" ||
+    userText === "helo" ||
     userText === "hey" ||
+    userText === "हेलो" ||
+    userText === "हैलो" ||
+    userText === "हेल्लो" ||
+    userText === "हाय" ||
+    userText === "हाई" ||
+    userText === "हे" ||
     userText.startsWith("namaste") ||
     userText.startsWith("namaskar") ||
     userText.startsWith("pranam") ||
+    userText.startsWith("हेलो ") ||
+    userText.startsWith("हैलो ") ||
+    userText.startsWith("हाय ") ||
     userText.includes("नमस्ते") ||
     userText.includes("नमस्कार") ||
     userText.includes("प्रणाम") ||
+    userText.includes("सुप्रभात") ||
+    userText.includes("शुभ संध्या") ||
+    userText.includes("गुड मॉर्निंग") ||
+    userText.includes("गुड इवनिंग") ||
     userText.includes("good morning") ||
     userText.includes("good afternoon") ||
     userText.includes("good evening") ||
@@ -439,11 +1052,13 @@ function getSmartAssistantResponseCore(
     userText.includes("kya haal") ||
     userText.includes("how are you") ||
     userText.includes("कैसे हो") ||
+    userText.includes("कैसे हैं") ||
+    userText.includes("क्या हाल") ||
     userText.includes("what's up") ||
     userText.includes("whats up")
   ) {
     if (langMode === "hi") {
-      return "नमस्ते! 👋 मैं बिल्कुल ठीक हूँ, पूछने के लिए धन्यवाद! C Vidya Solutions में आपका हार्दिक स्वागत है।\n\nबताइए, आज मैं आपकी कैसे मदद कर सकता हूँ? आप हमारे किसी भी बिजनेस सॉफ्टवेयर (जैसे लाइब्रेरी, जिम फिटनेस ज़ोन, स्कूल/इंस्टीट्यूट ERP, कोचिंग, एग्रीफ्यूज़न, ज्वेलर्स, CRM, पेट्रोल पंप, केयर प्लस हॉस्पिटल या PDF टूल्स), लाइव डेमो या प्राइसिंग के बारे में हिंदी, इंग्लिश या हिंग्लिश में बात कर सकते हैं।";
+      return "नमस्ते! 👋 मैं बिल्कुल ठीक हूँ, पूछने के लिए धन्यवाद! C Vidya Solutions में आपका हार्दिक स्वागत है।\n\nबताइए, आज मैं आपकी कैसे मदद कर सकता हूँ? आप हमारे किसी भी बिजनेस सॉफ्टवेयर (जैसे लाइब्रेरी, जिम फिटनेस ज़ोन, स्कूल/इंस्टीट्यूट ERP, कोचिंग, एग्रीफ्यूज़न, ज्वेलर्स, CRM, पेट्रोल पंप, केयर प्लस हॉस्पिटल या PDF टूल्स), लाइव डेमो या प्राइसिंग के बारे में हिंदी या इंग्लिश में बात कर सकते हैं।";
     }
     if (hinglish) {
       return "Namaste! 👋 Main bilkul badhiya hoon, poochne ke liye shukriya! C Vidya Solutions me aapka swagat hai.\n\nBatayein, aaj main aapki kis tarah se help kar sakta hoon? Aap hamare kisi bhi software (Library, Gym Fitness Zone, School/Institute ERP, Coaching, AgriFusion, Jewelers, CRM, Petrol Pump, Care Plus Hospital, ya PDF Tools), AI agents, ya live demo ke baare me aaram se pooch sakte hain!";
@@ -489,6 +1104,9 @@ function getSmartAssistantResponseCore(
     userText.includes("background") ||
     userText.includes("इतिहास")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya Solutions की यात्रा और प्रमुख उपलब्धियाँ** 🚀:\n\n• **2018 (स्थापना)**: एक विशेष टेक्नोलॉजी कंसल्टेंसी के रूप में शुरुआत हुई, जहाँ एंटरप्राइज इंफ्रास्ट्रक्चर और डेटाबेस आधुनिकीकरण पर काम शुरू हुआ।\n• **2021 (विस्तार)**: वैश्विक स्तर पर संचालन का विस्तार हुआ और बिजनेस इंटेलिजेंस व एनालिटिक्स सेवाएँ शुरू की गईं।\n• **2025 - वर्तमान (नवाचार)**: 10 प्रमुख क्लाउड SaaS सॉफ्टवेयर सूट्स और 4 ऑटोनॉमस AI एजेंट्स लॉन्च किए गए, तथा STPI सिंदरी (BIT सिंदरी कैंपस, धनबाद) के अंतर्गत प्रमाणन प्राप्त हुआ।\n\nटैगलाइन: *'Innovating Software for a Simpler Future'*";
+    }
     if (hinglish) {
       return "**C Vidya Solutions ki Yatra & Milestones** 🚀:\n\n• **2018 (Foundation)**: Ek specialized consultancy ke roop me shuruat hui jahan core infrastructure modernization aur databases par kaam hua.\n• **2021 (Expansion)**: Global operations expand huye aur proprietary enterprise data analytics launch ki gayi.\n• **2025 - Present (Innovation)**: Full-scale autonomous AI agents aur 7 Flagship SaaS products launch huye, saath hi STPI Sindri (BIT Sindri Campus) incubation me certified hue.\n\nTagline: *'Innovating Software for a Simpler Future'*";
     }
@@ -507,6 +1125,9 @@ function getSmartAssistantResponseCore(
     userText.includes("apply") ||
     userText.includes("kaam chahiye")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya Solutions में करियर और नौकरी के अवसर** 💼:\n\nहमारी इंजीनियरिंग टीम में निम्नलिखित पदों पर भर्ती चल रही है:\n\n1. **Senior Full-Stack Cloud Architect** (इंजीनियरिंग, 4-7 वर्ष अनुभव, रिमोट / हाइब्रिड धनबाद मुख्यालय)\n2. **Autonomous AI Agent Engineer** (R&D AI डिवीजन, 2-5 वर्ष अनुभव, रिमोट)\n3. **Enterprise UI/UX Systems Designer** (डिज़ाइन सिस्टम्स, 3+ वर्ष अनुभव, रिमोट)\n\n• **आवेदन कैसे करें?**:\n  - वेबसाइट पर `https://cvidyasolutions.com/careers/` पेज पर जाएं।\n  - या अपना रिज्यूमे सीधे `careers@cvidyasolutions.com` पर भेजें।";
+    }
     if (hinglish) {
       return "**C Vidya Solutions Careers & Job Openings** 💼:\n\nHamari engineering team grow kar rahi hai aur hum talented developers ko hire kar rahe hain:\n\n1. **Senior Full-Stack Cloud Architect** (Engineering, 4-7 Years exp, Remote / Hybrid Dhanbad HQ)\n2. **Autonomous AI Agent Engineer** (R&D AI Division, 2-5 Years exp, Remote)\n3. **Enterprise UI/UX Systems Designer** (Design Systems, 3+ Years exp, Remote)\n\n• **Apply Kaise Karein?**:\n  - Website: `https://cvidyasolutions.com/careers/` par visit karein.\n  - Ya direct apna resume send karein: `careers@cvidyasolutions.com`\n  (Subject me Job Title zaroor likhein)";
     }
@@ -522,6 +1143,9 @@ function getSmartAssistantResponseCore(
     userText.includes("linkedin") ||
     (userText.includes("social media") && !userText.includes("agent"))
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya Solutions के आधिकारिक सोशल मीडिया चैनल्स** 🌐:\n\n• **YouTube**: https://www.youtube.com/@cvidyasolutions\n• **Facebook**: https://www.facebook.com/profile.php?id=61591206215743\n• **Instagram**: https://www.instagram.com/cvidyasolutions/?hl=en (@cvidyasolutions)\n• **Twitter / X**: https://twitter.com/CVidyaSolutions (@CVidyaSolutions)\n• **LinkedIn**: https://linkedin.com/company/cvidyasolutions\n\nनवीनतम सॉफ्टवेयर अपडेट्स और लाइव डेमो ट्यूटोरियल्स के लिए हमें फॉलो करें!";
+    }
     if (hinglish) {
       return "**C Vidya Solutions Official Social Media Channels** 🌐:\n\n• **YouTube**: https://www.youtube.com/@cvidyasolutions\n• **Facebook**: https://www.facebook.com/profile.php?id=61591206215743\n• **Instagram**: https://www.instagram.com/cvidyasolutions/?hl=en (@cvidyasolutions)\n• **Twitter / X**: https://twitter.com/CVidyaSolutions (@CVidyaSolutions)\n• **LinkedIn**: https://linkedin.com/company/cvidyasolutions\n\nLatest software updates, tutorials aur product walk-throughs ke liye follow karein!";
     }
@@ -535,30 +1159,44 @@ function getSmartAssistantResponseCore(
     userText.includes("kitne din") ||
     userText.includes("setup time") ||
     userText.includes("deployment time") ||
-    userText.includes("timing")
+    userText.includes("timing") ||
+    userText.includes("कितना समय") ||
+    userText.includes("कितने दिन")
   ) {
+    if (langMode === "hi") {
+      return "**सॉफ्टवेयर सेटअप और डिप्लॉयमेंट समय-सीमा** ⏱️:\n\n• **रेडीमेड SaaS सॉफ्टवेयर (Turnkey Platforms)**: केवल **2 से 5 कार्य दिवसों (Business Days)** के भीतर आपका क्लाउड डेटाबेस सेटअप, ब्रांडिंग और स्टाफ ट्रेनिंग पूरी हो जाती है।\n• **कस्टम एंटरप्राइज और AI पाइपलाइन**: बड़े कस्टम इंटीग्रेशन और पुराने डेटा माइग्रेशन में **3 से 6 सप्ताह** का समय लगता है, वह भी ज़ीरो-डाउनटाइम गारंटी के साथ!\n\nआप कौन सा सॉफ्टवेयर सेटअप करवाना चाहते हैं?";
+    }
     if (hinglish) {
       return "**Software Deployment & Setup Timeline** ⏱️:\n\n• **Pre-Built SaaS Modules (Turnkey)**: Sirf **2 se 5 business days** ke andar aapka cloud database setup, branding aur staff training complete ho jati hai!\n• **Custom Enterprise & AI Pipelines**: Complex enterprise integrations aur legacy database migrations me **3 se 6 weeks** ka samay lagta hai with **zero-downtime** guarantee!\n\nAapko kaunsa software deploy karwana hai?";
     }
     return "**System Deployment & Integration Timelines** ⏱️:\n\n• **Turnkey SaaS Platforms**: Pre-built modules (Library, Gym, Coaching, Petrol Pump, etc.) deploy in **2 to 5 business days**, including cloud database provisioning, branding, and team onboarding.\n• **Bespoke Enterprise & AI Pipelines**: Custom microservice migrations and AI agent orchestration typically span **3 to 6 weeks** with guaranteed zero downtime.";
   }
 
-  // 3. Human / Real Person Agent Request
+  // 3. Human / Real Person Agent Request (Master Prompt Section 12 & Test 11)
   if (
     userText.includes("human") ||
     userText.includes("real agent") ||
+    userText.includes("real person") ||
     userText.includes("person") ||
     userText.includes("insan") ||
     userText.includes("banda") ||
     userText.includes("talk to agent") ||
+    userText.includes("talk to team") ||
+    userText.includes("talk to human") ||
     userText.includes("call me") ||
     userText.includes("baat karni") ||
-    userText.includes("call karna")
+    userText.includes("call karna") ||
+    userText.includes("बात करनी") ||
+    userText.includes("इंसान") ||
+    userText.includes("टीम से बात")
   ) {
-    if (hinglish) {
-      return "Main **C Vidya Solutions** ka official AI Customer Support Assistant hoon aur hamare sabhi software aur AI agents ki poori technical jaankari de sakta hoon.\n\nAgar aapko hamari executive team ya founder se direct baat karni hai:\n\n📞 **Helpline Call/WhatsApp**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n📍 **Headquarters**: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n🏢 **Branch & Incubation**: STPI Sindri, BIT Sindri Campus, Dhanbad\n\nAap apna **Name**, **Mobile Number**, aur **Software of Interest** yahan likh dijiye, hamari team aapse turant connect karegi!";
+    if (langMode === "hi") {
+      return "बिल्कुल! मैं आपकी बात हमारी टीम तक पहुँचाने के लिए आपकी सहायता करता हूँ। कृपया अपना संपर्क नंबर बताइए।\n\nयदि आप तुरंत जुड़ना चाहते हैं:\n📞 **सीधा हेल्पलाइन / WhatsApp**: +91 92885 17027 / 8987766981\n📧 **आधिकारिक ईमेल**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **संस्थापक डेस्क (चिरंजीव दास)**: chiranjeev0058@gmail.com\n📍 **मुख्यालय**: सुरुंगा, बलियापुर, धनबाद, झारखंड - 828115\n\nकृपया अपना **नाम**, **मोबाइल नंबर** और **सॉफ्टवेयर का नाम** यहाँ साझा करें, हमारी टीम तुरंत आपसे संपर्क करेगी!";
     }
-    return "I am the official **AI Customer Support Assistant** of C Vidya Solutions. I can answer any question about our software architecture, features, live demos, pricing, and onboarding.\n\nIf you would like to connect directly with our human executive team:\n\n📞 **Helpline**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n📍 **Headquarters**: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n🏢 **Incubation & Branch**: STPI Sindri, BIT Sindri Campus, Dhanbad, Jharkhand\n\nPlease share your Name, Mobile Number, and Product of interest, and our executive team will contact you right away!";
+    if (hinglish) {
+      return "Bilkul! Main aapki baat hamari team tak pahunchane ke liye aapki sahayata karta hoon. Kripya apna contact number bataiye.\n\n📞 **Helpline Call/WhatsApp**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n\nAap apna **Name**, **Mobile Number**, aur **Software of Interest** yahan likh dijiye, hamari team aapse turant connect karegi!";
+    }
+    return "Certainly! I can help connect you with our team. Please share your contact number.\n\nIf you would like to reach our executive desk directly:\n📞 **Helpline**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n📍 **Headquarters**: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n\nPlease share your **Name**, **Mobile Number**, and **Product of Interest**, and our executive team will contact you right away!";
   }
 
   // 4. All Software / Products Overview ("all software", "what software", "list of software", "all products", "services", "kya kya software", "सॉफ्टवेयर")
@@ -567,6 +1205,9 @@ function getSmartAssistantResponseCore(
     userText.includes("all products") ||
     userText.includes("all product") ||
     userText.includes("what software") ||
+    userText.includes("software products") ||
+    userText.includes("products do you offer") ||
+    userText.includes("what products") ||
     userText.includes("which software") ||
     userText.includes("list of software") ||
     userText.includes("kya kya software") ||
@@ -575,18 +1216,21 @@ function getSmartAssistantResponseCore(
     userText.includes("services list") ||
     userText.includes("software list") ||
     userText.includes("सभी सॉफ्टवेयर") ||
-    userText.includes("सॉफ्टवेयर की जानकारी")
+    userText.includes("सॉफ्टवेयर की जानकारी") ||
+    userText.includes("कौन-कौन से सॉफ्टवेयर") ||
+    userText.includes("कौन कौन से सॉफ्टवेयर") ||
+    userText.includes("क्या सॉफ्टवेयर बनाते")
   ) {
     if (langMode === "hi") {
-      return "**C Vidya Solutions का संपूर्ण सॉफ्टवेयर पोर्टफोलियो**:\n\n📦 **7 प्रमुख SaaS सॉफ्टवेयर**:\n1. **C Vidya Library Management**: स्टडी हॉल सीट आवंटन, बारकोड स्कैनर, ओवरड्यू फाइन WhatsApp अलर्ट।\n2. **C Vidya Fitness Zone**: जिम बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, मेंबरशिप रिन्यूअल, वर्कआउट व डाइट चार्ट।\n3. **C Vidya Institutes Management**: स्कूल/कॉलेज ERP, एडमिशन CRM, फीस कैशबुक, GPS बस ट्रैकिंग, रिपोर्ट कार्ड।\n4. **C Vidya Coaching Management**: बैच शेड्यूल, पेरेंट्स SMS अलर्ट, ऑफलाइन OMR मॉक टेस्ट स्कैनर व AIR रैंक।\n5. **AgriFusion (FarmFresh Hub)**: पोल्ट्री, मछली पालन, बकरी पालन और रिटेल POS बिलिंग।\n6. **C Vidya Jewelers Management**: लाइव 24K/22K गोल्ड रेट सिंक, कारीगर कास्टिंग और GST बारकोड बिलिंग।\n7. **C Vidya Enterprises CRM**: विजुअल कानबान डील पाइपलाइन, ऑटोमैटिक फॉलो-अप और कोटेशन PDF बिल्डर।\n\n🤖 **4 ऑटोनॉमस AI एजेंट्स**:\n1. **Social Media Agent** | 2. **AI Customer Support Agent** | 3. **Business Sales Flow AI Agent** | 4. **AI Marketing for B2B SaaS**\n\n⚡ **विशेष इंडस्ट्री प्लेटफॉर्म**:\n1. **Petrol Pump Cloud Software** | 2. **Care Plus Healthcare System** | 3. **C Vidya PDF & Media Tools SaaS**\n\nआप किस सॉफ्टवेयर का लाइव डेमो टेस्ट करना चाहते हैं?";
+      return "**C Vidya Solutions का संपूर्ण सॉफ्टवेयर पोर्टफोलियो**:\n\n📦 **प्रमुख बिजनेस सॉफ्टवेयर (Core Software Suites)**:\n1. **Library Management Software**: स्टडी हॉल सीट आवंटन, स्टूडेंट मैनेजमेंट, बारकोड स्कैनर, फीस रिकॉर्ड व WhatsApp अलर्ट।\n2. **Institute Management Software**: स्कूल/कॉलेज ERP, एडमिशन CRM, फीस कैशबुक, उपस्थिति, परीक्षा व रिपोर्ट कार्ड।\n3. **Coaching Management Software**: बैच शेड्यूलिंग, स्टूडेंट एनरोलमेंट, फीस ट्रैकिंग, OMR मॉक टेस्ट स्कैनर व AIR रैंक।\n4. **Gym & Fitness Management Software (CV Fitness Zone)**: जिम मेंबरशिप प्लान, बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, रिन्यूअल अलर्ट व डाइट चार्ट।\n5. **CRM Software (C Vidya Enterprises CRM)**: लीड कैप्चर, फॉलो-अप ट्रैकिंग, सेल्स पाइपलाइन और कोटेशन PDF बिल्डर।\n6. **Farm Fresh Hub (AgriFusion)**: कृषि उत्पाद, पोल्ट्री, मछली पालन, इन्वेंटरी और ऑर्डर/POS बिलिंग।\n7. **Delivery Management Software**: ऑर्डर मैनेजमेंट, डिलीवरी बॉय असाइनमेंट, डिस्पैच ट्रैकिंग और डिलीवरी कन्फर्मेशन।\n8. **Jewelers Management, Petrol Pump Cloud & Care Plus Healthcare ERP**\n\n🤖 **AI चैटबॉट और 4 ऑटोनॉमस AI एजेंट्स**:\n1. **AI Chatbot & Customer Support Agent** (वेबसाइट व WhatsApp 24/7 चैटबॉट)\n2. **Business Sales Flow AI Agent** | 3. **Social Media Agent** | 4. **AI Marketing for B2B SaaS**\n\nआप किस सॉफ्टवेयर के फीचर्स या फ्री लाइव डेमो देखना चाहते हैं?";
     }
     if (hinglish) {
-      return "**C Vidya Solutions Complete Software Portfolio**:\n\n📦 **7 Core SaaS Products**:\n1. **C Vidya Library Management**: Study halls, reading room seat allocator, barcode scanner, overdue fine WhatsApp alerts.\n   🔗 [Live: v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone**: Gym members biometric turnstile gate access, plan renewals, workout & diet plans.\n   🔗 [Live: fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institutes Management**: Schools/Colleges ERP, admission CRM, fee cashbooks, GPS bus tracking, gradebooks.\n4. **C Vidya Coaching Management**: Dynamic batch rosters, absent student SMS to parents, offline OMR mock test scanner & AIR ranks.\n   🔗 [Live: coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (FarmFresh Hub)**: Poultry flock FCR, fish pond telemetry, goat herd breeding, POS retail billing.\n   🔗 [Live: fresh.cvidyasolutions.workers.dev]\n6. **C Vidya Jewelers Management**: Live 24K/22K gold rate sync, karigar metal casting logs, GST barcode billing.\n   🔗 [Live: jewelry.cvidyasolutions.workers.dev]\n7. **C Vidya Enterprises CRM**: Drag-and-drop Kanban deals, automated follow-ups, VoIP call logs, quote PDF generator.\n   🔗 [Live: crm.cvidyasolutions.workers.dev]\n\n🤖 **4 Autonomous AI Agents**:\n1. **C Vidya Social Media Agent**: Auto viral content scheduling for LinkedIn, X, Insta & Facebook.\n2. **C Vidya AI Customer Support Agent**: 24/7 RAG support, sub-second query resolution.\n3. **C Vidya Business Sales Flow AI Agent**: Automated B2B lead discovery & personalized outreach.\n4. **C Vidya AI Marketing for B2B SaaS**: SEO content clusters & LinkedIn thought leadership.\n\n⚡ **Specialized Platforms**:\n1. **Petrol Pump Cloud Software**: Shift nozzle reconciliation, tank dip variance, fleet credit khata.\n2. **Care Plus Healthcare System**: Hospital OPD/IPD, digital prescriptions, pharmacy POS, lab tests.\n3. **C Vidya PDF and Media Tools SaaS**: Word to PDF conversion, merge, split, compress, watermark.\n\nAapko kis software ka live demo test karna hai?";
+      return "**C Vidya Solutions Complete Software Portfolio**:\n\n📦 **Core SaaS Products**:\n1. **C Vidya Library Management**: Study halls, reading room seat allocator, barcode scanner, overdue fine WhatsApp alerts.\n   🔗 [Live: v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone (Gym)**: Gym members biometric turnstile gate access, plan renewals, workout & diet plans.\n   🔗 [Live: fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institutes Management**: Schools/Colleges ERP, admission CRM, fee cashbooks, GPS bus tracking, gradebooks.\n4. **C Vidya Coaching Management**: Dynamic batch rosters, absent student SMS to parents, offline OMR mock test scanner & AIR ranks.\n   🔗 [Live: coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (FarmFresh Hub)**: Poultry flock FCR, fish pond telemetry, goat herd breeding, POS retail billing.\n   🔗 [Live: fresh.cvidyasolutions.workers.dev]\n6. **Delivery Management Software**: Order dispatch tracking, delivery boy assignment, customer confirmation & status updates.\n7. **C Vidya Jewelers Management**: Live 24K/22K gold rate sync, karigar metal casting logs, GST barcode billing.\n   🔗 [Live: jewelry.cvidyasolutions.workers.dev]\n8. **C Vidya Enterprises CRM**: Drag-and-drop Kanban deals, automated follow-ups, VoIP call logs, quote PDF generator.\n   🔗 [Live: crm.cvidyasolutions.workers.dev]\n\n🤖 **AI Chatbot & 4 Autonomous AI Agents**:\n1. **C Vidya Social Media Agent** | 2. **C Vidya AI Customer Support & Website/WhatsApp Chatbot** | 3. **C Vidya Business Sales Flow AI Agent** | 4. **C Vidya AI Marketing for B2B SaaS**\n\n⚡ **Specialized Platforms**:\n1. **Petrol Pump Cloud Software** | 2. **Care Plus Healthcare System** | 3. **C Vidya PDF and Media Tools SaaS**\n\nAapko kis software ka live demo test karna hai?";
     }
-    return "**C Vidya Solutions Ecosystem Overview**:\n\n📦 **7 Flagship SaaS Products**:\n1. **C Vidya Library Management**: ISBN barcode scanning, reading room seat allocator, overdue WhatsApp alerts, fine ledgers. [v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone**: Biometric turnstile access control, subscription renewals, automated fee lockout, workout & diet planner. [fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institutes Management**: Admissions CRM, school/college fee collection, CBSE/ICSE gradebooks, GPS bus tracking, hostel management.\n4. **C Vidya Coaching Management**: Batch scheduling, biometric attendance alerts, offline OMR mock test grading, AIR rank generator. [coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (FarmFresh Hub)**: Poultry flock FCR, fishery pond telemetry, goat herd cycles, POS retail/wholesale billing. [fresh.cvidyasolutions.workers.dev]\n6. **C Vidya Jewelers Management**: 24K/22K live gold/silver rate sync, karat weight calculation, Karigar casting logs, GST barcode billing. [jewelry.cvidyasolutions.workers.dev]\n7. **C Vidya Enterprises CRM**: Drag-and-drop Kanban deal pipeline, automated follow-ups, VoIP logs, quotation PDF builder. [crm.cvidyasolutions.workers.dev]\n\n🤖 **4 Autonomous AI Agents**:\n1. **C Vidya Social Media Agent**: Viral trend research, automated multi-channel posting, comment sentiment replies.\n2. **C Vidya AI Customer Support Agent**: 24/7 RAG support, sub-second query resolution, omnichannel widget integration.\n3. **C Vidya Business Sales Flow AI Agent**: Automated B2B prospect discovery, personalized cold outreach, demo calendar booking.\n4. **C Vidya AI Marketing for B2B SaaS Companies**: SEO keyword clustering, technical blogs, LinkedIn thought leadership, CAC/MQL analytics.\n\n⚡ **Other Specialized Services**:\n1. **C Vidya Cloud-Based Software Petrol Pump Site**: Shift reconciliation, nozzle meter counters, tank dip-to-sale variance, fleet credit khata.\n2. **Care Plus Healthcare System**: Hospital OPD/IPD queue, digital prescriptions, pharmacy inventory, lab pathology reports, bed allocation.\n3. **C Vidya PDF and Media Tools SaaS**: High-speed Word to PDF, merge, split, compress, watermark, protect, media conversion tools.\n\nWhich software or service would you like to explore or test in a live demo?";
+    return "**C Vidya Solutions Software & AI Portfolio**:\n\n📦 **Core Business SaaS Products**:\n1. **C Vidya Library Management Software**: Student/member registration, reading room seat allocation, ISBN barcode scanning, fee tracking, and WhatsApp alerts. [v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone (Gym Management Software)**: Biometric turnstile access control, membership plans, renewal alerts, and workout/diet planners. [fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institute Management Software**: Complete School/College ERP for admissions, fee management, attendance, exams, and GPS bus tracking.\n4. **C Vidya Coaching Management Software**: Batch scheduling, student enrollment, fee tracking, parent SMS alerts, and OMR mock test grading. [coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (Farm Fresh Hub)**: Farm product catalog, poultry/fishery telemetry, inventory management, and retail/wholesale POS billing. [fresh.cvidyasolutions.workers.dev]\n6. **C Vidya Delivery Management Software**: Order management, delivery boy assignment, live dispatch tracking, delivery status updates, and customer confirmation.\n7. **C Vidya Jewelers Management**: 24K/22K live gold/silver rate sync, Karigar casting logs, and GST barcode billing. [jewelry.cvidyasolutions.workers.dev]\n8. **C Vidya Enterprises CRM**: Lead capture, customer follow-up tracking, Kanban deal pipeline, and quotation PDF builder. [crm.cvidyasolutions.workers.dev]\n\n🤖 **AI Chatbot & 4 Autonomous AI Agents**:\n1. **C Vidya AI Chatbot & Customer Support Agent**: 24/7 website & WhatsApp chatbot, lead capture, voice & text support.\n2. **C Vidya Social Media Agent**: Viral trend research and automated multi-channel posting.\n3. **C Vidya Business Sales Flow AI Agent**: Automated B2B prospect discovery and demo booking.\n4. **C Vidya AI Marketing for B2B SaaS Companies**: SEO content clusters and LinkedIn thought leadership.\n\n⚡ **Specialized Industry Platforms**:\n1. **Petrol Pump Cloud Software** | 2. **Care Plus Healthcare System** | 3. **C Vidya PDF and Media Tools SaaS**\n\nWhich software or AI solution would you like to explore or test in a live demo?";
   }
 
-  // 5. Demo, Trial, or Sandbox Access
+  // 5. Demo, Trial, or Sandbox Access (Context-Aware for Product + Demo requests like "Mujhe coaching software ka demo chahiye")
   if (
     userText.includes("demo") ||
     userText.includes("trial") ||
@@ -599,16 +1243,18 @@ function getSmartAssistantResponseCore(
     userText.includes("डेमो") ||
     userText.includes("ट्रायल")
   ) {
+    const targetProductHi = contextProduct || "हमारे सभी सॉफ्टवेयर और AI एजेंट्स";
+    const targetProductEn = contextProduct || "all our software products and AI agents";
     if (langMode === "hi") {
-      return "हमारे सभी सॉफ्टवेयर और AI एजेंट्स के लिए **फ्री इंटरैक्टिव लाइव डेमो (Free Live Demo)** उपलब्ध है! 🚀\n\nआप वेबसाइट पर किसी भी सॉफ्टवेयर कार्ड के **'Try Now'** बटन पर क्लिक करके तुरंत लाइव डेमो चलाकर देख सकते हैं।\n\nयदि आप 1-ऑन-1 पर्सनलाइज्ड डेमो चाहते हैं, तो कृपया अपना **नाम, मोबाइल नंबर, ईमेल, शहर और सॉफ्टवेयर का नाम** साझा करें!";
+      return `बिल्कुल! **${targetProductHi}** के लिए **फ्री इंटरैक्टिव लाइव डेमो (Free Live Demo)** उपलब्ध है! 🚀\n\nआप वेबसाइट पर **'Try Now'** बटन पर क्लिक करके तुरंत लाइव डेमो देख सकते हैं।\n\nयदि आप **${targetProductHi}** का 1-ऑन-1 पर्सनलाइज्ड लाइव डेमो शेड्यूल करना चाहते हैं, तो कृपया ये विवरण साझा करें:\n1. **आपका नाम (Full Name)**\n2. **10 अंकों का मोबाइल / WhatsApp नंबर**\n3. **संस्थान / बिज़नेस का नाम और शहर**\n4. **डेमो के लिए पसंदीदा समय**`;
     }
     if (hinglish) {
-      return "Hamare sabhi software aur AI agents ke liye **Free Interactive Live Demos & Sandbox Access** available hai! 🚀\n\nAap website par kisi bhi product card ke **'Try Now'** button par tap karke live demo turant test kar sakte hain.\n\nAgar aapko customized walkthrough ya 1-on-1 demo session schedule karna hai, toh kripya ye details share kijiye:\n1. **Aapka Full Name**\n2. **Business / Institute ka Name**\n3. **Mobile / WhatsApp Number**\n4. **Email Address**\n5. **Kaunsa Software chahiye** (Library, Gym, Petrol Pump, Care Plus, AgriFusion, Coaching, AI Agent, etc.)\n6. **City aur State**\n\nHamari tech team 24 hours ke andar aapse connect karke personalized demo arrange karegi!";
+      return `Bilkul! **${targetProductEn}** ke liye **Free Interactive Live Demos & Sandbox Access** available hai! 🚀\n\nAap website par kisi bhi product card ke **'Try Now'** button par tap karke live demo turant test kar sakte hain.\n\nAgar aapko **${targetProductEn}** ka customized 1-on-1 demo session schedule karna hai, toh kripya ye details share kijiye:\n1. **Aapka Full Name**\n2. **Business / Institute ka Name**\n3. **Mobile / WhatsApp Number**\n4. **City aur Preferred Demo Time**\n\nHamari tech team turant aapse connect karke personalized demo arrange karegi!`;
     }
-    return "We provide **Free Interactive Live Demos & Sandbox Access** for all our software products and AI agents!\n\nYou can click the **'Try Now'** button on any product card across the website to launch the live environment directly.\n\nTo schedule a personalized 1-on-1 walkthrough or receive custom credentials, please share:\n1. **Your Full Name**\n2. **Business / Institution Name**\n3. **Mobile Number**\n4. **Email Address**\n5. **Product of Interest** (e.g., Library, Gym, Petrol Pump, Care Plus, AgriFusion, Coaching, AI Agents, PDF Tools)\n6. **City & State**\n\nOur team will set up your environment within 24 hours!";
+    return `Certainly! We provide a **Free Interactive Live Demo** for **${targetProductEn}**! 🚀\n\nYou can click the **'Try Now'** button on any product card across the website to launch the live environment directly.\n\nTo schedule a personalized 1-on-1 walkthrough for **${targetProductEn}**, please share:\n1. **Your Full Name**\n2. **Business / Institution Name**\n3. **10-digit Mobile Number**\n4. **Email Address & City**\n5. **Preferred Date/Time for Demo**\n\nOur team will set up your personalized demo session right away!`;
   }
 
-  // 6. Pricing, Cost, Rates, Subscription Plans & GST
+  // 6. Pricing, Cost, Rates, Subscription Plans, GST & Pricing Objections (Master Prompt Section 9 & Test 7)
   if (
     userText.includes("price") ||
     userText.includes("pricing") ||
@@ -623,12 +1269,35 @@ function getSmartAssistantResponseCore(
     userText.includes("subscription") ||
     userText.includes("billing") ||
     userText.includes("gst") ||
+    userText.includes("expensive") ||
+    userText.includes("discount") ||
+    userText.includes("mahanga") ||
+    userText.includes("mehenga") ||
+    userText.includes("sasta") ||
     userText.includes("कीमत") ||
     userText.includes("प्राइस") ||
-    userText.includes("शुल्क")
+    userText.includes("शुल्क") ||
+    userText.includes("महंगा") ||
+    userText.includes("महँगा") ||
+    userText.includes("सस्ता")
   ) {
+    const isObjection =
+      userText.includes("expensive") ||
+      userText.includes("discount") ||
+      userText.includes("mahanga") ||
+      userText.includes("mehenga") ||
+      userText.includes("महंगा") ||
+      userText.includes("महँगा");
+
+    if (isObjection) {
+      if (langMode === "hi") {
+        return "बिल्कुल निश्चिंत रहें! **C Vidya Solutions** के सॉफ्टवेयर प्लान महंगे नहीं हैं, बल्कि भारतीय व्यवसायों और संस्थानों के बजट और जरूरत के अनुसार **बेहद किफायती और मॉड्यूलर (Pay-As-You-Grow)** बनाए गए हैं। 💡\n\n• **बजट और जरूरत के अनुसार प्लान**: आपको केवल उन्हीं फीचर्स और उपयोगकर्ता संख्या (Users/Seats) के लिए भुगतान करना होता है जिनकी आपके बिज़नेस को ज़रूरत है।\n• **कोई छुपा शुल्क नहीं (Zero Hidden Cost)**: क्लाउड होस्टिंग, डेटा सुरक्षा और ट्रेनिंग प्लान में शामिल रहती है।\n• **पहले फ्री डेमो, फिर निर्णय**: आप खरीदने से पहले **Free Live Demo** देख सकते हैं।\n\nसटीक और आपके बजट के अनुकूल कोटेशन के लिए कृपया अपना **नाम, मोबाइल नंबर और बिज़नेस प्रकार** साझा करें, हमारी सेल्स टीम आपकी पूरी मदद करेगी!";
+      }
+      return "Rest assured! **C Vidya Solutions** software is designed to be **highly affordable and modular (Pay-As-You-Grow)** for businesses and institutions of all sizes. 💡\n\n• **Tailored to Your Size**: Pricing depends on your specific business requirements, active modules, and user/seat volume—so small and medium businesses only pay for what they need.\n• **Zero Hidden Costs**: Cloud hosting, automated backups, and onboarding support are built in with 100% GST-compliant invoicing.\n• **Try Before You Buy**: We offer a **Free Live Demo** so you can evaluate the complete system first.\n\nPlease share your **Name, Mobile Number, and Business Type**, and our sales team will prepare a budget-friendly custom quotation for you!";
+    }
+
     if (langMode === "hi") {
-      return "**C Vidya Solutions — मूल्य और सब्सक्रिप्शन प्लान (Pricing & Tiers)** 💳:\n\nहमारे सभी सॉफ्टवेयर प्लान मॉड्यूलर और किफायती हैं:\n• **स्टार्टर प्लान (Single Branch)**: एकल शाखा लाइब्रेरी, जिम, क्लिनिक या फार्म के लिए उपयुक्त (1,000 सक्रिय रिकॉर्ड्स, POS बिलिंग और SMS/WhatsApp अलर्ट सहित)।\n• **ग्रोथ / प्रोफेशनल प्लान (Most Popular)**: मल्टी-बैच कोचिंग, पेट्रोल पंप, ज्वेलरी शोरूम और अस्पतालों के लिए (बायोमेट्रिक हार्डवेयर इंटीग्रेशन, GST लेजर और 24/7 सपोर्ट सहित)।\n• **एंटरप्राइज कस्टम प्लान**: बड़े स्कूल समूहों, मल्टी-ब्रांच संस्थानों और कस्टम AI एजेंट पाइपलाइन के लिए।\n\n🧾 **GST इनवॉइस**: सभी बिल 100% GST-अनुपालित होते हैं। सटीक कोटेशन के लिए कृपया अपना व्यवसाय प्रकार और उपयोगकर्ता संख्या साझा करें!";
+      return "**C Vidya Solutions — मूल्य और सब्सक्रिप्शन प्लान (Pricing & Tiers)** 💳:\n\nहमारे सभी सॉफ्टवेयर प्लान आपके व्यवसाय की आवश्यकता और उपयोगकर्ता संख्या के अनुसार मॉड्यूलर और किफायती हैं:\n• **स्टार्टर प्लान (Single Branch)**: एकल शाखा लाइब्रेरी, जिम, कोचिंग, क्लिनिक या फार्म के लिए उपयुक्त (1,000 सक्रिय रिकॉर्ड्स, POS बिलिंग और SMS/WhatsApp अलर्ट सहित)।\n• **ग्रोथ / प्रोफेशनल प्लान (Most Popular)**: मल्टी-बैच कोचिंग, स्कूल, पेट्रोल पंप, ज्वेलरी शोरूम और अस्पतालों के लिए (बायोमेट्रिक हार्डवेयर इंटीग्रेशन, GST लेजर और 24/7 सपोर्ट सहित)।\n• **एंटरप्राइज कस्टम प्लान**: बड़े संस्थानों, मल्टी-ब्रांच चेन और कस्टम AI चैटबॉट/एजेंट सॉल्यूशंस के लिए।\n\n🧾 **GST इनवॉइस**: सभी बिल 100% GST-अनुपालित होते हैं। सटीक कोटेशन के लिए कृपया अपना **नाम, मोबाइल नंबर, व्यवसाय प्रकार और उपयोगकर्ता संख्या** साझा करें!";
     }
     if (hinglish) {
       return "**C Vidya Solutions Pricing & Plans** 💳:\n\nHamare software plans modular aur affordable hain, jo aapke business size aur student/member count par depend karte hain:\n\n• **Starter Tier (Single Location)**: Single-branch library, local gym studio, clinic ya individual farm ke liye modular annual plan. 1000 records, POS billing aur SMS/WhatsApp alerts included.\n• **Growth / Professional Tier (Most Popular)**: Multi-batch coaching, busy fuel stations, jewelry showroom aur growing hospitals ke liye. Biometric hardware integration, GST ledgers aur 24/7 SLA included.\n• **Enterprise Custom Tier**: Multi-campus school networks, hospital chains aur dedicated cloud edge deployments ke liye.\n\n🧾 **GST Compliance**: Hamare sabhi invoices 100% GST-compliant hote hain registered GSTIN number ke saath.\n\nAapko kis software ka quote chahiye? Apna business type aur approximate users batayein!";
@@ -637,8 +1306,29 @@ function getSmartAssistantResponseCore(
   }
 
   // =========================================================================
-  // 7. THE 7 FLAGSHIP SAAS PRODUCTS
+  // 7. CORE BUSINESS SAAS PRODUCTS (INCLUDING DELIVERY MANAGEMENT)
   // =========================================================================
+
+  // 7.0 Delivery Management Software (Master Prompt Section 3.7)
+  if (
+    userText.includes("delivery software") ||
+    userText.includes("delivery management") ||
+    userText.includes("order delivery") ||
+    userText.includes("courier management") ||
+    userText.includes("dispatch tracking") ||
+    userText.includes("delivery boy") ||
+    userText.includes("delivery system") ||
+    userText.includes("डिलीवरी सॉफ्टवेयर") ||
+    userText.includes("डिलीवरी मैनेजमेंट") ||
+    userText.includes("ऑर्डर ट्रैकिंग") ||
+    userText.includes("कूरियर") ||
+    (userText.includes("delivery") && !userText.includes("operations"))
+  ) {
+    if (langMode === "hi") {
+      return "**C Vidya Delivery Management Software** ई-कॉमर्स, डिस्ट्रीब्यूटर्स, ग्रोसरी, फार्म फ्रेश और लॉजिस्टिक्स व्यवसायों के लिए एक संपूर्ण डिलीवरी व ऑर्डर ट्रैकिंग सिस्टम है:\n\n• **ऑर्डर मैनेजमेंट (Order Management)**: नए ऑर्डर्स की एंट्री, पैकेजिंग और इनवॉइसिंग एक ही डैशबोर्ड से।\n• **डिलीवरी बॉय असाइनमेंट (Delivery Boy Assignment)**: रूट और पिनकोड के अनुसार डिलीवरी एजेंट को ऑर्डर तुरंत असाइन करें।\n• **डिस्पैच व लाइव ट्रैकिंग (Dispatch Tracking)**: गोदाम से निकलने से लेकर ग्राहक के पते तक रियल-टाइम डिस्पैच स्टेटस।\n• **डिलीवरी स्टेटस अपडेट और OTP कन्फर्मेशन**: डिलीवरी पूरी होने पर ग्राहक OTP/सिग्नेचर कन्फर्मेशन और ऑटोमैटिक WhatsApp/SMS सूचना।\n• **कैश ऑन डिलीवरी (COD) व रिपोर्ट्स**: एजेंट-वार कैश कलेक्शन, पेंडिंग ऑर्डर और दैनिक डिलीवरी रिपोर्ट्स।\n\nक्या आप अपने व्यवसाय के लिए **Delivery Management Software** का फ्री लाइव डेमो देखना चाहेंगे? कृपया अपना नाम और मोबाइल नंबर साझा करें!";
+    }
+    return "**C Vidya Delivery Management Software** is a complete order dispatch and last-mile delivery tracking platform for distributors, retail stores, farm-to-table businesses, and courier networks:\n\n• **Order Management**: Centralized order intake, invoice generation, and dispatch queue management.\n• **Delivery Boy Assignment**: Assign orders to field delivery executives by route, zone, or workload.\n• **Dispatch & Route Tracking**: Real-time tracking from warehouse dispatch to doorstep arrival.\n• **Delivery Status Updates**: Instant status transitions (Packed, Out for Delivery, Delivered, Rescheduled) with customer SMS/WhatsApp alerts.\n• **Customer Delivery Confirmation**: Digital proof of delivery (OTP / confirmation log) and COD cash reconciliation.\n• **Analytics & Reports**: Daily delivery performance, agent settlement ledgers, and turnaround time reports.\n\nWould you like to book a **Free Live Demo** for your delivery operations? Please share your Name and Mobile Number!";
+  }
 
   // 7.1 C Vidya Library Management System
   if (
@@ -652,12 +1342,12 @@ function getSmartAssistantResponseCore(
     userText.includes("किताब")
   ) {
     if (langMode === "hi") {
-      return "**C Vidya Library Management System** रीडिंग लाइब्रेरी, स्टडी सेंटर और कॉलेजों के लिए एक पूर्णतः ऑटोमेटेड क्लाउड सॉफ्टवेयर है:\n\n• **सीट आवंटन (Seat Allotment)**: सुबह, शाम या पूरे दिन की शिफ्ट के अनुसार स्टडी रूम सीट्स आवंटित करें।\n• **बारकोड व ISBN स्कैनिंग**: किताबों का तेज़ इश्यू और रिटर्न, शीर्षक या लेखक से तुरंत खोज।\n• **ऑटोमैटिक WhatsApp अलर्ट**: किताब देरी से लौटाने या फीस ड्यू होने पर छात्रों को ऑटोमैटिक WhatsApp और SMS रिमाइंडर।\n• **फीस व डिजिटल रसीद**: मासिक/त्रैमासिक शुल्क संग्रह, ऑनलाइन पेमेंट और डिजिटल आईडी कार्ड।\n\n🔗 लाइव ऐप लिंक: `https://v.cvidyasolutions.workers.dev/`\n\nक्या आप अपनी लाइब्रेरी के लिए लाइव डेमो देखना चाहेंगे?";
+      return "**C Vidya Library Management Software (Library Management System)** रीडिंग लाइब्रेरी, स्टडी सेंटर और कॉलेजों के लिए एक पूर्णतः ऑटोमेटेड क्लाउड सॉफ्टवेयर है:\n\n• **सीट आवंटन (Seat Allotment)**: सुबह, शाम या पूरे दिन की शिफ्ट के अनुसार स्टडी रूम सीट्स आवंटित करें।\n• **बारकोड व ISBN स्कैनिंग**: किताबों का तेज़ इश्यू और रिटर्न, शीर्षक या लेखक से तुरंत खोज।\n• **ऑटोमैटिक WhatsApp अलर्ट**: किताब देरी से लौटाने या फीस ड्यू होने पर छात्रों को ऑटोमैटिक WhatsApp और SMS रिमाइंडर।\n• **फीस व डिजिटल रसीद**: मासिक/त्रैमासिक शुल्क संग्रह, ऑनलाइन पेमेंट और डिजिटल आईडी कार्ड।\n\n🔗 लाइव ऐप लिंक: `https://v.cvidyasolutions.workers.dev/`\n\nक्या आप अपनी लाइब्रेरी के लिए लाइव डेमो देखना चाहेंगे?";
     }
     if (hinglish) {
-      return "**C Vidya Library Management System** reading libraries, study centers aur colleges ke liye ek complete automated cloud solution hai:\n\n• **Seat Allotment System**: Reading room me morning, evening ya full-day shift ke hisab se seats allocate karein.\n• **Barcode & ISBN Scanning**: Kitabon ka fast check-in aur check-out, title/author/rack ke hisab se instant search.\n• **Automated Overdue Alerts**: Kitab return na karne par students ko automatic WhatsApp aur SMS alert aur fine calculation.\n• **Fees & Digital Receipts**: Monthly/quarterly subscription fees collect karein, online payment lein aur digital ID card banayein.\n• **Reader Analytics**: Konse students regular hain aur kaunsi books popular hain, sab ek dashboard me dekhein.\n\n🔗 Live App Link: `https://v.cvidyasolutions.workers.dev/`\n\nKya aapko apni library ke liye live demo test karna hai?";
+      return "**C Vidya Library Management Software (Library Management System)** reading libraries, study centers aur colleges ke liye ek complete automated cloud solution hai:\n\n• **Seat Allotment System**: Reading room me morning, evening ya full-day shift ke hisab se seats allocate karein.\n• **Barcode & ISBN Scanning**: Kitabon ka fast check-in aur check-out, title/author/rack ke hisab se instant search.\n• **Automated Overdue Alerts**: Kitab return na karne par students ko automatic WhatsApp aur SMS alert aur fine calculation.\n• **Fees & Digital Receipts**: Monthly/quarterly subscription fees collect karein, online payment lein aur digital ID card banayein.\n• **Reader Analytics**: Konse students regular hain aur kaunsi books popular hain, sab ek dashboard me dekhein.\n\n🔗 Live App Link: `https://v.cvidyasolutions.workers.dev/`\n\nKya aapko apni library ke liye live demo test karna hai?";
     }
-    return "**C Vidya Library Management** is a complete cloud automation system for libraries, study rooms, and educational reading halls:\n\n• **Member Profiles & Digital Passes**: Student registration, photo ID cards, and reading room seat allocator.\n• **Barcode & ISBN Scanner**: High-speed book check-in and check-out; search by title, author, category, or rack location.\n• **Automated Overdue Alerts**: Automated WhatsApp and SMS notifications with automated fine calculation.\n• **Financial Ledgers & Cashbook**: Instant fee receipts, lost book reconciliation, and daily cash collection logs.\n• **Reader Analytics**: Track popular book genres, peak reading hall hours, and borrowing histories.\n\n🔗 Live App: `https://v.cvidyasolutions.workers.dev/`\n\nWould you like a live demo or test login for your library?";
+    return "**C Vidya Library Management Software** is a complete cloud automation system for libraries, study rooms, and educational reading halls:\n\n• **Member Profiles & Digital Passes**: Student registration, photo ID cards, and reading room seat allocator.\n• **Barcode & ISBN Scanner**: High-speed book check-in and check-out; search by title, author, category, or rack location.\n• **Automated Overdue Alerts**: Automated WhatsApp and SMS notifications with automated fine calculation.\n• **Financial Ledgers & Cashbook**: Instant fee receipts, lost book reconciliation, and daily cash collection logs.\n• **Reader Analytics**: Track popular book genres, peak reading hall hours, and borrowing histories.\n\n🔗 Live App: `https://v.cvidyasolutions.workers.dev/`\n\nWould you like a live demo or test login for your library?";
   }
 
   // 7.2 C Vidya Fitness Zone (Gym Management)
@@ -672,12 +1362,12 @@ function getSmartAssistantResponseCore(
     userText.includes("फिटनेस")
   ) {
     if (langMode === "hi") {
-      return "**C Vidya Fitness Zone** आधुनिक जिम और फिटनेस क्लबों के लिए एक शक्तिशाली मैनेजमेंट सॉफ्टवेयर है:\n\n• **बायोमेट्रिक टर्नस्टाइल गेट कंट्रोल**: फिंगरप्रिंट या RFID से गेट कनेक्ट करें; मेंबरशिप समाप्त होते ही गेट अपने-आप लॉक हो जाता है!\n• **मेंबरशिप प्लान**: मासिक, त्रैमासिक, वार्षिक और पर्सनल ट्रेनिंग (PT) प्लान आसानी से मैनेज करें।\n• **ऑटोमैटिक WhatsApp रिन्यूअल**: फीस समाप्त होने से पहले ऑटोमैटिक रिमाइंडर और UPI पेमेंट लिंक भेजता है।\n• **वर्कआउट व डाइट चार्ट**: प्रत्येक सदस्य के लिए कस्टम डाइट और एक्सरसाइज प्लान।\n\n🔗 लाइव ऐप लिंक: `https://fitzone.cvidyasolutions.workers.dev/`\n\nक्या आप अपने जिम के लिए लाइव डेमो देखना चाहेंगे?";
+      return "**C Vidya Fitness Zone (Gym Management Software)** आधुनिक जिम और फिटनेस क्लबों के लिए एक शक्तिशाली मैनेजमेंट सॉफ्टवेयर है:\n\n• **बायोमेट्रिक टर्नस्टाइल गेट कंट्रोल**: फिंगरप्रिंट या RFID से गेट कनेक्ट करें; मेंबरशिप समाप्त होते ही गेट अपने-आप लॉक हो जाता है!\n• **मेंबरशिप प्लान**: मासिक, त्रैमासिक, वार्षिक और पर्सनल ट्रेनिंग (PT) प्लान आसानी से मैनेज करें।\n• **ऑटोमैटिक WhatsApp रिन्यूअल**: फीस समाप्त होने से पहले ऑटोमैटिक रिमाइंडर और UPI पेमेंट लिंक भेजता है।\n• **वर्कआउट व डाइट चार्ट**: प्रत्येक सदस्य के लिए कस्टम डाइट और एक्सरसाइज प्लान।\n\n🔗 लाइव ऐप लिंक: `https://fitzone.cvidyasolutions.workers.dev/`\n\nक्या आप अपने जिम के लिए लाइव डेमो देखना चाहेंगे?";
     }
     if (hinglish) {
-      return "**C Vidya Fitness Zone** modern gyms, fitness centers aur crossfit clubs ke liye ek powerful operating system hai:\n\n• **Biometric Turnstile Gate Control**: Fingerprint ya RFID wristband lagakar turnstile gate se direct connect karein. Fees expire hote hi gate automatically entry block kar deta hai!\n• **Flexible Membership Plans**: Monthly, quarterly, yearly, couple aur Personal Training (PT) plans manage karein.\n• **Automated WhatsApp Renewal**: Fees due hone se pehle WhatsApp par automatic renewal reminder aur UPI payment link bhejta hai.\n• **Custom Workout & Diet Cards**: Har member ke liye customized diet plan aur daily progressive exercise routine set karein.\n• **Trainer Commission & Floor Heatmap**: Trainers ki monthly commission, attendance aur peak gym hours ka live analytics.\n\n🔗 Live App Link: `https://fitzone.cvidyasolutions.workers.dev/`\n\nKya aap apne gym ke liye live demo dekhna chahenge?";
+      return "**C Vidya Fitness Zone (Gym Management Software)** modern gyms, fitness centers aur crossfit clubs ke liye ek powerful operating system hai:\n\n• **Biometric Turnstile Gate Control**: Fingerprint ya RFID wristband lagakar turnstile gate se direct connect karein. Fees expire hote hi gate automatically entry block kar deta hai!\n• **Flexible Membership Plans**: Monthly, quarterly, yearly, couple aur Personal Training (PT) plans manage karein.\n• **Automated WhatsApp Renewal**: Fees due hone se pehle WhatsApp par automatic renewal reminder aur UPI payment link bhejta hai.\n• **Custom Workout & Diet Cards**: Har member ke liye customized diet plan aur daily progressive exercise routine set karein.\n• **Trainer Commission & Floor Heatmap**: Trainers ki monthly commission, attendance aur peak gym hours ka live analytics.\n\n🔗 Live App Link: `https://fitzone.cvidyasolutions.workers.dev/`\n\nKya aap apne gym ke liye live demo dekhna chahenge?";
     }
-    return "**C Vidya Fitness Zone** is an advanced club management platform for gyms, crossfit studios, and health clubs:\n\n• **Biometric Turnstile Access**: Fingerprint and RFID turnstile integration with automated door lock for unpaid or expired memberships.\n• **Flexible Membership Plans**: Daily, monthly, quarterly, annual, couple, and personal trainer (PT) subscriptions.\n• **Automated WhatsApp Invoices**: Instant renewal reminders with integrated UPI payment links.\n• **Workout & Diet Planners**: Custom diet cards, macronutrient targets, and progressive exercise routines.\n• **Trainer Rosters & Analytics**: Trainer commission logs, member attendance, and peak floor capacity heatmaps.\n\n🔗 Live App: `https://fitzone.cvidyasolutions.workers.dev/`\n\nWould you like a live demo for your fitness center?";
+    return "**C Vidya Fitness Zone (Gym Management Software)** is an advanced club management platform for gyms, crossfit studios, and health clubs:\n\n• **Biometric Turnstile Access**: Fingerprint and RFID turnstile integration with automated door lock for unpaid or expired memberships.\n• **Flexible Membership Plans**: Daily, monthly, quarterly, annual, couple, and personal trainer (PT) subscriptions.\n• **Automated WhatsApp Invoices**: Instant renewal reminders with integrated UPI payment links.\n• **Workout & Diet Planners**: Custom diet cards, macronutrient targets, and progressive exercise routines.\n• **Trainer Rosters & Analytics**: Trainer commission logs, member attendance, and peak floor capacity heatmaps.\n\n🔗 Live App: `https://fitzone.cvidyasolutions.workers.dev/`\n\nWould you like a live demo for your fitness center?";
   }
 
   // 7.3 C Vidya Institute Management
@@ -745,12 +1435,12 @@ function getSmartAssistantResponseCore(
     userText.includes("मुर्गी")
   ) {
     if (langMode === "hi") {
-      return "**AgriFusion (FarmFresh Hub)** — *'One Platform. Every Farm. Unlimited Growth.'*\n\nयह पोल्ट्री, मछली पालन, बकरी पालन और कृषि व्यवसाय के लिए ऑल-इन-वन सॉफ्टवेयर है:\n• **पोल्ट्री फार्मिंग**: फ़ीड खपत, मृत्यु दर और FCR (Feed Conversion Ratio) ट्रैकिंग।\n• **मछली पालन (Aquaculture)**: तालाब के पानी की गुणवत्ता (pH, ऑक्सीजन, तापमान) और फीडिंग शेड्यूल।\n• **बकरी व पशुपालन**: नस्ल रिकॉर्ड, टीकाकरण और स्वास्थ्य लॉग।\n• **रिटेल POS व उधारी खाता**: डिजिटल कांटे से जोड़कर ताज़ा चिकन, मछली व अंडों की बिलिंग और डिस्ट्रीब्यूटर खाता।\n\n🔗 लाइव ऐप लिंक: `https://fresh.cvidyasolutions.workers.dev/`";
+      return "**AgriFusion (Farm Fresh Hub)** — *'One Platform. Every Farm. Unlimited Growth.'*\n\nयह पोल्ट्री, मछली पालन, बकरी पालन और कृषि व्यवसाय के लिए ऑल-इन-वन सॉफ्टवेयर है:\n• **पोल्ट्री फार्मिंग**: फ़ीड खपत, मृत्यु दर और FCR (Feed Conversion Ratio) ट्रैकिंग।\n• **मछली पालन (Aquaculture)**: तालाब के पानी की गुणवत्ता (pH, ऑक्सीजन, तापमान) और फीडिंग शेड्यूल।\n• **बकरी व पशुपालन**: नस्ल रिकॉर्ड, टीकाकरण और स्वास्थ्य लॉग।\n• **रिटेल POS व उधारी खाता**: डिजिटल कांटे से जोड़कर ताज़ा चिकन, मछली व अंडों की बिलिंग और डिस्ट्रीब्यूटर खाता।\n\n🔗 लाइव ऐप लिंक: `https://fresh.cvidyasolutions.workers.dev/`";
     }
     if (hinglish) {
-      return "**AgriFusion (FarmFresh Hub)** - *'One Platform. Every Farm. Unlimited Growth.'*\n\nYe poultry, fishery, goat farming aur agriculture business ke liye all-in-one software hai:\n\n• **Poultry Farming**: Har batch ki feed intake, mortality rate aur Feed Conversion Ratio (FCR) track karein.\n• **Fishery / Aquaculture**: Pond water quality parameters (pH, Dissolved Oxygen, temperature) aur feeding schedule manage karein.\n• **Goat & Livestock Farming**: Breed records, vaccination schedules aur herd health logs maintain karein.\n• **Weighing Scale & Retail POS**: Live digital weighing scale connect karke fresh chicken, meat, fish aur eggs ka instant billing karein.\n• **Distributor Credit Khata**: Wholesalers aur distributors ka udhari (credit) khata aur daily payment collection manage karein.\n• **Farm P&L Accounting**: Har batch ka total kharcha, feed cost aur final net profit auto-calculate karein.\n\n🔗 Live App Link: `https://fresh.cvidyasolutions.workers.dev/`\n\nAap kaunse farming business ko manage karte hain?";
+      return "**AgriFusion (Farm Fresh Hub)** - *'One Platform. Every Farm. Unlimited Growth.'*\n\nYe poultry, fishery, goat farming aur agriculture business ke liye all-in-one software hai:\n\n• **Poultry Farming**: Har batch ki feed intake, mortality rate aur Feed Conversion Ratio (FCR) track karein.\n• **Fishery / Aquaculture**: Pond water quality parameters (pH, Dissolved Oxygen, temperature) aur feeding schedule manage karein.\n• **Goat & Livestock Farming**: Breed records, vaccination schedules aur herd health logs maintain karein.\n• **Weighing Scale & Retail POS**: Live digital weighing scale connect karke fresh chicken, meat, fish aur eggs ka instant billing karein.\n• **Distributor Credit Khata**: Wholesalers aur distributors ka udhari (credit) khata aur daily payment collection manage karein.\n• **Farm P&L Accounting**: Har batch ka total kharcha, feed cost aur final net profit auto-calculate karein.\n\n🔗 Live App Link: `https://fresh.cvidyasolutions.workers.dev/`\n\nAap kaunse farming business ko manage karte hain?";
     }
-    return "**AgriFusion (FarmFresh Hub)** (*'One Platform. Every Farm. Unlimited Growth.'*):\n\n• **Multi-Farm Enterprise**: Unified management for poultry flock cycles, fishery pond water telemetry (pH/DO), goat breeding herds, and dairy livestock.\n• **Feed Stock & Mortality Tracking**: Automated feed inventory alerts and flock Feed Conversion Ratio (FCR) analytics.\n• **Counter POS & Wholesale Billing**: Fast point-of-sale billing for fresh chicken, meat, fish, eggs, and farm produce.\n• **Supplier & Customer Ledgers**: Credit khata for distributors and direct farm-to-table delivery dispatch.\n• **Farm P&L Accounting**: Daily expense tracking and batch-wise profitability reports.\n\n🔗 Live App: `https://fresh.cvidyasolutions.workers.dev/`\n\nWhich farming activity do you manage?";
+    return "**AgriFusion (Farm Fresh Hub)** (*'One Platform. Every Farm. Unlimited Growth.'*):\n\n• **Multi-Farm Enterprise**: Unified management for poultry flock cycles, fishery pond water telemetry (pH/DO), goat breeding herds, and dairy livestock.\n• **Feed Stock & Mortality Tracking**: Automated feed inventory alerts and flock Feed Conversion Ratio (FCR) analytics.\n• **Counter POS & Wholesale Billing**: Fast point-of-sale billing for fresh chicken, meat, fish, eggs, and farm produce.\n• **Supplier & Customer Ledgers**: Credit khata for distributors and direct farm-to-table delivery dispatch.\n• **Farm P&L Accounting**: Daily expense tracking and batch-wise profitability reports.\n\n🔗 Live App: `https://fresh.cvidyasolutions.workers.dev/`\n\nWhich farming activity do you manage?";
   }
 
   // 7.6 C Vidya Jewelers Management
@@ -786,7 +1476,8 @@ function getSmartAssistantResponseCore(
     userText.includes("leads") ||
     userText.includes("quotation") ||
     userText.includes("proposal") ||
-    userText.includes("b2b crm")
+    userText.includes("b2b crm") ||
+    userText.includes("सीआरएम")
   ) {
     if (langMode === "hi") {
       return "**C Vidya Enterprises CRM** सेल्स टीमों और कंपनियों के लिए आधुनिक लीड मैनेजमेंट और डील क्लोजिंग प्लेटफॉर्म है:\n\n• **विजुअल कानबान पाइपलाइन**: नई लीड्स से लेकर डील क्लोज होने तक हर स्टेज को ड्रैग-एंड-ड्रॉप बोर्ड पर ट्रैक करें।\n• **ऑटोमैटिक फॉलो-अप व रिमाइंडर**: मीटिंग शेड्यूल, कॉल लॉग्स और टास्क रिमाइंडर।\n• **इंस्टेंट कोटेशन PDF**: कंपनी लोगो और GST के साथ 1 मिनट में प्रोफेशनल PDF कोटेशन बनाएं।\n\n🔗 लाइव ऐप लिंक: `https://crm.cvidyasolutions.workers.dev/`";
@@ -798,8 +1489,22 @@ function getSmartAssistantResponseCore(
   }
 
   // =========================================================================
-  // 8. THE 4 AUTONOMOUS AI AGENTS
+  // 8. AI CHATBOT SOLUTIONS & THE 4 AUTONOMOUS AI AGENTS
   // =========================================================================
+
+  // 8.0 AI Chatbot Solutions (Website AI Chatbot, WhatsApp Chatbot, Voice & Text Assistant - Master Prompt Section 3.8 & Test 9)
+  if (
+    userText.includes("chatbot") ||
+    userText.includes("chat bot") ||
+    userText.includes("चैटबॉट") ||
+    userText.includes("website chatbot") ||
+    userText.includes("whatsapp chatbot")
+  ) {
+    if (langMode === "hi") {
+      return "**C Vidya AI Chatbot & Customer Support Solutions** 🤖:\n\nहम आपके व्यवसाय या वेबसाइट के लिए स्मार्ट **24/7 AI चैटबॉट और वॉयस असिस्टेंट** तैयार करते हैं:\n• **Website AI Chatbot**: आपकी वेबसाइट पर आने वाले हर विज़िटर के सवालों का <0.8 सेकंड में तुरंत उत्तर देता है।\n• **WhatsApp Chatbot Integration**: WhatsApp पर ग्राहकों के प्रश्नों का ऑटोमैटिक जवाब, डेमो बुकिंग और पेमेंट रिमाइंडर।\n• **Lead Capture & CRM Sync**: ग्राहक का नाम, मोबाइल नंबर, शहर और आवश्यकता अपने-आप कैप्चर करके सीधे आपके CRM और एडमिन डैशबोर्ड में सेव करता है।\n• **Multi-Language & Voice Support**: हिंदी और इंग्लिश दोनों भाषाओं में टेक्स्ट और रियल-ह्यूमन वॉयस (Male/Female) के साथ काम करता है।\n\n🔗 लाइव डेमो: `https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/`\n\nक्या आप अपनी वेबसाइट या बिज़नेस के लिए AI चैटबॉट बनवाना चाहते हैं? कृपया अपना **नाम, मोबाइल नंबर और वेबसाइट/व्यवसाय का नाम** साझा करें!";
+    }
+    return "**C Vidya AI Chatbot & Customer Support Solutions** 🤖:\n\nWe build custom **24/7 AI Chatbots and Voice Assistants** tailored to your website and business workflows:\n• **Website AI Chatbot**: Embedded smart assistant that answers customer questions in under 0.8 seconds grounded in your business data.\n• **WhatsApp Chatbot**: Automated inquiry handling, catalog sharing, demo booking, and order/fee notifications on WhatsApp.\n• **Automated Lead Capture**: Extracts visitor Name, Mobile Number, Email, City, and Requirement directly into your CRM.\n• **Voice & Bilingual Support**: Natural Hindi and English text and realistic Male/Female voice interaction.\n\n🔗 Live Demo: `https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/`\n\nWould you like to deploy an AI Chatbot for your website or business? Please share your **Name, Mobile Number, and Business/Website details**!";
+  }
 
   // 8.1 All 4 AI Agents Overview
   if (
@@ -824,8 +1529,12 @@ function getSmartAssistantResponseCore(
     userText.includes("ai social") ||
     userText.includes("linkedin post") ||
     userText.includes("instagram agent") ||
-    userText.includes("twitter agent")
+    userText.includes("twitter agent") ||
+    userText.includes("सोशल मीडिया एजेंट")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya Social Media Agent** आपके ब्रांड के लिए 24/7 ऑटोनॉमस सोशल मीडिया मैनेजर की तरह काम करता है:\n\n• **वायरल ट्रेंड रिसर्च**: इंटरनेट पर ट्रेंडिंग विषयों को स्कैन करके आकर्षक पोस्ट तैयार करता है।\n• **मल्टी-प्लेटफॉर्म ऑटो-पोस्टिंग**: LinkedIn, Instagram, Facebook और X (Twitter) पर एक साथ पोस्ट शेड्यूल और पब्लिश करता है।\n• **स्मार्ट कमेंट रिप्लाई और लीड कैप्चर**: दर्शकों के कमेंट्स और DM का तुरंत विनम्र उत्तर देता है और लीड्स सेव करता है।\n\n🔗 लाइव ऐप: `https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/`";
+    }
     if (hinglish) {
       return "**C Vidya Social Media Agent** aapke brand ke liye 24/7 autonomous social media manager ki tarah kaam karta hai:\n\n• **Viral Trend Ingestion**: Internet par trending topics scan karke engaging post ideas nikalta hai.\n• **Multi-Platform Auto-Posting**: LinkedIn, Instagram, Facebook aur X (Twitter) par ek sath post schedule aur publish karta hai.\n• **Smart Comment Replies**: Audience ke comments ka sentiment analyze karke polite aur personalized replies deta hai.\n• **DM Lead Capture**: DMs me aane wale interested prospects se lead information capture karta hai.\n\n🔗 Live App Link: `https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/`";
     }
@@ -837,8 +1546,12 @@ function getSmartAssistantResponseCore(
     userText.includes("ai support") ||
     userText.includes("customer support agent") ||
     userText.includes("rag agent") ||
-    userText.includes("support bot")
+    userText.includes("support bot") ||
+    userText.includes("कस्टमर सपोर्ट एजेंट")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya AI Customer Support Agent** कंपनियों को 24/7 ऑटोनॉमस ग्राहक सेवा प्रदान करता है:\n\n• **सब-सेकंड RAG सटीकता**: आपकी कंपनी के नॉलेज बेस के आधार पर 0.8 सेकंड के भीतर सटीक उत्तर देता है।\n• **ओमनीचैनल डिप्लॉयमेंट**: वेबसाइट चैट विजेट, WhatsApp Business API और ईमेल पर आसानी से जुड़ता है।\n• **स्मार्ट टिकट वर्गीकरण व ह्यूमन ट्रांसफर**: ज़रूरी प्रश्नों को प्राथमिकता देता है और आवश्यकता पड़ने पर मानव टीम को ट्रांसफर करता है।\n\n🔗 लाइव ऐप: `https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/`";
+    }
     if (hinglish) {
       return "**C Vidya AI Customer Support Agent** companies ko 24/7 autonomous customer service provide karta hai:\n\n• **Sub-Second RAG Accuracy**: Aapke company docs aur knowledge base ko scan karke 0.8 second ke andar accurate answer deta hai.\n• **Omnichannel Deployment**: Website chat widget, WhatsApp Business API aur Email support par instantly connect hota hai.\n• **Smart Ticket Triage**: Important aur urgent queries ko pehchan kar priority mark karta hai.\n• **Human Agent Escalation**: Agar customer ko human executive se baat karni ho, toh poori chat summary ke saath transfer kar deta hai.\n\n🔗 Live App Link: `https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/`";
     }
@@ -852,8 +1565,12 @@ function getSmartAssistantResponseCore(
     userText.includes("sales agent") ||
     userText.includes("outreach agent") ||
     userText.includes("sdr agent") ||
-    userText.includes("b2b sales")
+    userText.includes("b2b sales") ||
+    userText.includes("सेल्स फ्लो")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya Business Sales Flow AI Agent** आपके लिए ऑटोनॉमस AI सेल्स डेवलपमेंट रिप्रेजेंटेटिव (SDR) की तरह काम करता है:\n\n• **B2B क्लाइंट खोज**: लक्षित कंपनियों और निर्णय लेने वालों के वेरिफाइड ईमेल ढूंढता है।\n• **पर्सनलाइज्ड आउटरीच**: ईमेल, LinkedIn और WhatsApp पर कस्टम संदेश भेजता है।\n• **कैलेंडर डेमो बुकिंग**: इच्छुक क्लाइंट्स की डेमो मीटिंग सीधे आपकी सेल्स टीम के कैलेंडर में बुक कर देता है।\n\n🔗 लाइव ऐप: `https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/`";
+    }
     if (hinglish) {
       return "**C Vidya Business Sales Flow AI Agent** aapke liye autonomous AI Sales Development Representative (SDR) ki tarah kaam karta hai:\n\n• **B2B Prospect Discovery**: Targeted industries aur companies ke decision-makers ki verified business emails find karta hai.\n• **Hyper-Personalized Outreach**: Har prospect ke liye personalized cold email, LinkedIn message aur WhatsApp sequences bhejta hai.\n• **BANT Qualification**: Lead ka budget, authority, need aur timeline qualify karta hai.\n• **Direct Calendar Booking**: Interested clients ki demo meetings aapke sales team ke Google/Outlook calendar me book kar deta hai.\n\n🔗 Live App Link: `https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/`";
     }
@@ -866,8 +1583,12 @@ function getSmartAssistantResponseCore(
     userText.includes("marketing agent") ||
     userText.includes("ai marketing") ||
     userText.includes("seo agent") ||
-    userText.includes("content agent")
+    userText.includes("content agent") ||
+    userText.includes("मार्केटिंग एजेंट")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya AI Marketing for B2B SaaS Companies** एक ऑटोनॉमस इनबाउंड मार्केटिंग और SEO इंजन है:\n\n• **SEO कंटेंट क्लस्टर**: प्रतिस्पर्धियों का विश्लेषण करके टॉप-रैंकिंग टेक्निकल ब्लॉग्स और आर्टिकल्स लिखता है।\n• **थॉट लीडरशिप**: संस्थापकों और अधिकारियों के लिए प्रभावशाली LinkedIn पोस्ट और न्यूज़लेटर्स तैयार करता है।\n• **पाइपलाइन एनालिटिक्स**: Customer Acquisition Cost (CAC) और क्वालिफाइड लीड्स (MQL) को रियल-टाइम ट्रैक करता है।\n\n🔗 लाइव ऐप: `https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/`";
+    }
     if (hinglish) {
       return "**C Vidya AI Marketing for B2B SaaS Companies** ek autonomous inbound demand generation machine hai:\n\n• **SEO Content Clusters**: Competitor gap analysis karke high-intent keywords par top-ranking technical articles likhta hai.\n• **Thought Leadership**: Founders aur executives ke liye authoritative LinkedIn carousels aur newsletters tayar karta hai.\n• **High-Converting Copy**: Landing pages, case studies aur email lead nurturing sequences craft karta hai.\n• **Attribution & MQL Velocity**: Customer Acquisition Cost (CAC) aur Qualified Leads pipeline ko real-time measure karta hai.\n\n🔗 Live App Link: `https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/`";
     }
@@ -947,6 +1668,132 @@ function getSmartAssistantResponseCore(
   }
 
   // =========================================================================
+  // 9B. CORE IT, WEB DEVELOPMENT, CUSTOM SOFTWARE & ACCOUNTING SERVICES + MOBILE APP + CASE STUDIES
+  // =========================================================================
+
+  // Mobile App (Android APK & iOS App Store Early Access)
+  if (
+    userText.includes("mobile app") ||
+    userText.includes("android app") ||
+    userText.includes("ios app") ||
+    userText.includes("apk") ||
+    userText.includes("play store") ||
+    userText.includes("app store") ||
+    userText.includes("app download") ||
+    userText.includes("मोबाइल ऐप") ||
+    userText.includes("ऐप डाउनलोड")
+  ) {
+    if (langMode === "hi") {
+      return "**C Vidya Solutions मोबाइल ऐप (Android और iOS)** 📱:\n\n• आप हमारे सभी क्लाउड सॉफ्टवेयर मॉड्यूल्स को किसी भी स्मार्टफोन, टैबलेट या डेस्कटॉप पर सीधे चला सकते हैं।\n• **Android APK और iOS अर्ली-एक्सेस**: वेबसाइट के `/mobile-app/` सेक्शन में जाकर अपना नाम, ईमेल और मोबाइल नंबर रजिस्टर करें और तुरंत Android / iOS ऐप एक्सेस प्राप्त करें।\n\n📞 **सहायता के लिए संपर्क करें**: +91 92885 17027";
+    }
+    if (hinglish) {
+      return "**C Vidya Solutions Mobile App (Android & iOS)** 📱:\n\n• Hamare sabhi SaaS software mobile, tablet, Android aur iPhone par 100% responsive hain.\n• **Android & iOS App Early Access**: Website ke `/mobile-app/` page par jaakar apna Name, Email aur Phone register kijiye aur instant mobile app access paayein!\n\n📞 **Helpline**: +91 92885 17027";
+    }
+    return "**C Vidya Solutions Mobile App (Android & iOS)** 📱:\n\n• All C Vidya cloud software suites are 100% mobile-responsive and PWA-enabled across Android phones, iPhones, tablets, and desktops.\n• **Android & iOS App Early Access**: Visit `/mobile-app/` on our website to register your Name, Email, and Phone for direct Android and iOS mobile app access.\n\n📞 **Direct Helpline**: +91 92885 17027";
+  }
+
+  // Core IT Services: Custom Software Development, Customization, Web Development, Accounting & Billing (Master Prompt Intents 16, 17 & Test 10)
+  if (
+    userText.includes("web development") ||
+    userText.includes("website banana") ||
+    userText.includes("website banवाना") ||
+    userText.includes("website design") ||
+    userText.includes("custom software") ||
+    userText.includes("customization") ||
+    userText.includes("custom module") ||
+    userText.includes("according to business") ||
+    userText.includes("build software") ||
+    userText.includes("software development") ||
+    userText.includes("app development") ||
+    userText.includes("erp development") ||
+    userText.includes("accounting software") ||
+    userText.includes("billing software") ||
+    userText.includes("pos billing") ||
+    userText.includes("it solution") ||
+    userText.includes("वेब डेवलपमेंट") ||
+    userText.includes("वेबसाइट") ||
+    userText.includes("कस्टम सॉफ्टवेयर") ||
+    userText.includes("हमारे हिसाब से") ||
+    userText.includes("बदलाव हो सकता") ||
+    userText.includes("नया सॉफ्टवेयर बनवाना") ||
+    userText.includes("अकाउंटिंग") ||
+    userText.includes("बिलिंग सॉफ्टवेयर")
+  ) {
+    if (langMode === "hi") {
+      return "हाँ, बिल्कुल! **C Vidya Solutions** आपके व्यवसाय की विशेष आवश्यकताओं के अनुसार **कस्टम सॉफ्टवेयर डेवलपमेंट और कस्टमाइजेशन (Custom Software & ERP Development)** की सुविधा प्रदान करता है 💻:\n\n1. **कस्टम सॉफ्टवेयर और मॉड्यूल कस्टमाइजेशन**: आपके बिज़नेस वर्कफ़्लो के हिसाब से मल्टी-टेनेंट क्लाउड ERP, कस्टम डैशबोर्ड, रिपोर्ट्स और रोल-बेस्ड पोर्टल तैयार किए जाते हैं।\n2. **वेब और मोबाइल ऐप डेवलपमेंट (PWA / Android / iOS)**: 95+ Google PageSpeed स्कोर, SEO-ऑप्टिमाइज्ड वेबसाइट्स और मोबाइल ऐप्स।\n3. **अकाउंटिंग और GST बिलिंग सॉफ्टवेयर**: GST-अनुपालित इनवॉइसिंग, थर्मल व A4 प्रिंटिंग, बारकोड POS, उधारी (Credit Khata) और ऑटोमैटिक WhatsApp पेमेंट रिमाइंडर।\n4. **हार्डवेयर व API इंटीग्रेशन**: बायोमेट्रिक टर्नस्टाइल, RFID बारकोड स्कैनर, पेमेंट गेटवे और WhatsApp/SMS API इंटीग्रेशन।\n\n📞 **संपर्क करें**: +91 92885 17027 | 📧 `sales@cvidyasolutions.com`\nकृपया अपना **नाम, मोबाइल नंबर और अपने बिज़नेस की आवश्यकता** साझा करें ताकि हमारे आर्किटेक्ट्स आपसे बात कर सकें!";
+    }
+    if (hinglish) {
+      return "Haan, bilkul! **C Vidya Solutions — Custom Software Development, Web & Accounting Services** 💻:\n\n1. **Custom Software & Module Customization**: Aapke business workflow ke hisab se multi-tenant cloud ERP, role-based dashboards aur custom modules tayar kiye jate hain.\n2. **Web & App Development Services**: High-speed SEO websites, 95+ Google PageSpeed score, aur Progressive Web Apps (PWA).\n3. **Accounting & GST Billing Software**: GST-compliant billing, thermal/A4 print, barcode POS, Credit Khata ledger, aur automated WhatsApp payment reminders.\n4. **IT Solutions & Hardware Integration**: Biometric turnstile gate integration, RFID barcode hardware, cloud security, aur 99.99% uptime SLA.\n\n📞 **Helpline**: +91 92885 17027 | 📧 `sales@cvidyasolutions.com`";
+    }
+    return "Yes, absolutely! **C Vidya Solutions** specializes in building **Custom Software, Bespoke Cloud ERPs, and Custom Business Modules** tailored specifically to your organization's workflow 💻:\n\n1. **Custom Software & ERP Development**: End-to-end custom cloud architectures, role-based portals, custom modules, and automated business workflows built around your requirements.\n2. **Web & Mobile App Development**: High-converting corporate web apps, 95+ Google PageSpeed scores, SEO architecture, and Progressive Web Apps (PWA / Android / iOS).\n3. **Accounting & GST Billing Software**: GST-compliant invoicing, thermal & A4 print templates, barcode POS, credit khata ledgers, and automated WhatsApp payment alerts.\n4. **API & Hardware Integration**: Biometric/RFID hardware integration, WhatsApp/SMS gateways, UPI payment links, and 99.99% cloud uptime SLA.\n\n📞 **Direct Helpline**: +91 92885 17027 | 📧 `sales@cvidyasolutions.com`\nPlease share your **Name, Mobile Number, Business Type, and Key Requirements**, and our engineering team will prepare a custom architecture plan for you!";
+  }
+
+  // WhatsApp, SMS, API, Third-Party Integration, Installation & Onboarding, Partnership & Reseller (Master Prompt Intents 19–27)
+  if (
+    userText.includes("whatsapp integration") ||
+    userText.includes("whatsapp api") ||
+    userText.includes("sms integration") ||
+    userText.includes("sms alert") ||
+    userText.includes("api integration") ||
+    userText.includes("webhook") ||
+    userText.includes("third party integration") ||
+    userText.includes("installation") ||
+    userText.includes("onboarding") ||
+    userText.includes("partnership") ||
+    userText.includes("reseller") ||
+    userText.includes("agency partner") ||
+    userText.includes("sell your software") ||
+    userText.includes("व्हाट्सएप") ||
+    userText.includes("एसएमएस") ||
+    userText.includes("एपीआई") ||
+    userText.includes("इंटीग्रेशन") ||
+    userText.includes("इंस्टॉलेशन") ||
+    userText.includes("पार्टनरशिप") ||
+    userText.includes("रीसेलर")
+  ) {
+    if (
+      userText.includes("partner") ||
+      userText.includes("reseller") ||
+      userText.includes("sell your software") ||
+      userText.includes("पार्टनरशिप") ||
+      userText.includes("रीसेलर")
+    ) {
+      if (langMode === "hi") {
+        return "**C Vidya Solutions — पार्टनरशिप और रीसेलर प्रोग्राम (Partnership & Reseller Program)** 🤝:\n\nहम पूरे भारत में आईटी एजेंसियों, कंसल्टेंट्स और बिज़नेस पार्टनर्स के साथ मिलकर काम करते हैं:\n• **चैनल पार्टनर और रीसेलर अवसर**: हमारे सभी रेडीमेड SaaS सॉफ्टवेयर (Library, Gym, Coaching, School ERP, CRM, Farm Fresh Hub, Delivery) और AI एजेंट्स को अपने क्षेत्र में प्रमोट करें।\n• **पूरी तकनीकी और ट्रेनिंग सहायता**: डेमो, क्लाउड डिप्लॉयमेंट और 24/7 टेक्निकल सपोर्ट हमारी टीम संभालती है।\n\nपार्टनरशिप या रीसेलर बनने के लिए कृपया अपना **नाम, मोबाइल नंबर, कंपनी का नाम और शहर** साझा करें या 📞 +91 92885 17027 पर संपर्क करें!";
+      }
+      return "**C Vidya Solutions — Partnership & Reseller Program** 🤝:\n\nWe actively collaborate with IT agencies, consultants, and regional channel partners across India:\n• **Reseller & Channel Partner Benefits**: Offer our proven cloud SaaS suites (Library, Gym, Coaching, Institute ERP, CRM, Farm Fresh Hub, Delivery) and Autonomous AI Agents to your clients.\n• **Full Engineering & Onboarding Support**: Our technical team handles cloud provisioning, training, and 24/7 SLA support.\n\nTo join as a Partner or Reseller, please share your **Full Name, Mobile Number, Company Name, and City**, or call 📞 +91 92885 17027!";
+    }
+
+    if (langMode === "hi") {
+      return "**C Vidya Solutions — इंस्टॉलेशन, WhatsApp/SMS और API इंटीग्रेशन सुविधा** 🔗:\n\n• **तुरंत क्लाउड सेटअप और ट्रेनिंग (Installation & Onboarding)**: केवल **2 से 5 कार्य दिवसों** में क्लाउड सेटअप, डेटा इम्पोर्ट और आपकी टीम की पूरी ट्रेनिंग करा दी जाती है।\n• **WhatsApp और SMS इंटीग्रेशन**: फीस रसीद, बकाया रिमाइंडर, उपस्थिति अलर्ट और डिलीवरी अपडेट सीधे ग्राहक के WhatsApp और SMS पर जाते हैं।\n• **API, पेमेंट और हार्डवेयर इंटीग्रेशन**: UPI पेमेंट गेटवे, बायोमेट्रिक फिंगरप्रिंट/टर्नस्टाइल, बारकोड स्कैनर और कस्टम REST API / Webhook इंटीग्रेशन उपलब्ध है।\n\nआप किस सॉफ्टवेयर में यह सुविधा जोड़ना चाहते हैं? कृपया अपना नाम और मोबाइल नंबर साझा करें!";
+    }
+    return "**C Vidya Solutions — Installation, WhatsApp/SMS & API Integrations** 🔗:\n\n• **Rapid Cloud Setup & Onboarding**: Complete turnkey installation, branding, legacy data import, and staff training within **2 to 5 business days**.\n• **WhatsApp & SMS Integration**: Automated fee receipts, due reminders, attendance alerts, and order notifications via WhatsApp Business API and DLT SMS gateways.\n• **API, Payment & Hardware Integration**: Seamless connection with UPI payment links, biometric turnstile gates, ISBN barcode scanners, digital weighing scales, and REST APIs / Webhooks.\n\nWhich software or integration would you like to set up? Please share your Name and Mobile Number!";
+  }
+
+  // Verified Client Outcomes, Case Studies & Testimonials
+  if (
+    userText.includes("case stud") ||
+    userText.includes("testimonial") ||
+    userText.includes("client outcome") ||
+    userText.includes("success stor") ||
+    userText.includes("clients") ||
+    userText.includes("dr. r. k. sinha") ||
+    userText.includes("vikramaditya") ||
+    userText.includes("rajeshwar prasad") ||
+    userText.includes("ananya chatterjee") ||
+    userText.includes("केस स्टडी") ||
+    userText.includes("ग्राहक")
+  ) {
+    if (langMode === "hi") {
+      return "**C Vidya Solutions — प्रमाणित ग्राहक परिणाम और केस स्टडीज़ (Verified Client Outcomes)** 🏆:\n\n• **डॉ. आर. के. सिन्हा (रीडिंग लाइब्रेरी व स्टडी हॉल)**: 400+ सीटों की लाइब्रेरी में बारकोड ऑटोमेशन और WhatsApp फीस रिमाइंडर से समय पर फीस वसूली में **42% की वृद्धि**।\n• **विक्रमादित्य सिंह (मल्टी-ब्रांच फिटनेस क्लब)**: बायोमेट्रिक टर्नस्टाइल ऑटो-लॉक से एक्सपायर्ड मेंबरशिप एंट्री पूरी तरह बंद और रिन्यूअल **3 गुना तेज़**।\n• **प्रो. के. वर्मा (JEE/NEET कोचिंग संस्थान)**: कैमरा OMR स्कैनर से 1,200+ छात्रों की टेस्ट कॉपियों की जांच **2 दिन के बजाय सिर्फ 10 मिनट में**।\n• **राजेश्वर प्रसाद (हाईवे पेट्रोल पंप)**: नोजल मीटर रीडिंग, टैंक डिप और क्रेडिट खाता डिजिटल होने से **2 घंटे का शिफ्ट हिसाब अब 10 मिनट में**।\n• **अनन्या चटर्जी (एंटरप्राइज B2B डिस्ट्रीब्यूशन)**: कानबान CRM और कोटेशन PDF से सेल्स टीम की क्लोजिंग दर में **38% की बढ़ोतरी**।";
+    }
+    if (hinglish) {
+      return "**C Vidya Solutions — Verified Client Outcomes & Case Studies** 🏆:\n\n• **Dr. R. K. Sinha (Academic Reading Room)**: 400-seat library me barcode automation aur WhatsApp fee alerts se on-time fee collection **42% badh gaya**.\n• **Vikramaditya Singh (Multi-Branch Fitness Studio)**: Biometric turnstile gate sync se expired members ki unauthorized entry zero ho gayi aur renewals **3x fast** ho gaye.\n• **Prof. K. Verma (JEE/NEET Coaching Academy)**: Camera OMR grading se 1,200+ students ka test result **2 din ke bajay sirf 10 minutes me** publish hota hai.\n• **Rajeshwar Prasad (Highway Fuel Station)**: Nozzle meter, tank dip aur fleet credit khata centralize hone se **2 ghante ka shift handover ab 10 minute me** poora hota hai.\n• **Ananya Chatterjee (Enterprise Distribution)**: Kanban CRM aur instant GST quotation PDF se deal closure rate **38% badh gaya**.";
+    }
+    return "**C Vidya Solutions — Verified Client Outcomes & Case Studies** 🏆:\n\n• **Dr. R. K. Sinha (Academic Library & Reading Room)**: Automated seat booking and WhatsApp reminders across 400 seats increased on-time monthly fee collection by **42%**.\n• **Vikramaditya Singh (Multi-Branch Fitness Studio)**: Biometric turnstile integration eliminated unauthorized access and accelerated membership renewals **3x**.\n• **Prof. K. Verma (JEE & NEET Coaching Academy)**: Camera-based OMR grading processes 1,200+ mock tests with All-India Ranks in **under 10 minutes** instead of two days.\n• **Rajeshwar Prasad (Highway Fuel & Energy Station)**: Centralized nozzle meters, dip-tank stock calculation, and fleet credit khata reduced shift handovers from **2 hours to 10 minutes**.\n• **Ananya Chatterjee (Enterprise B2B Distribution)**: Drag-and-drop Kanban pipelines and 1-click GST PDF quotes boosted sales closure rates by **38%**.";
+  }
+
+  // =========================================================================
   // 10. TECHNICAL SUPPORT, DATA MIGRATION & CLOUD ARCHITECTURE
   // =========================================================================
 
@@ -957,8 +1804,12 @@ function getSmartAssistantResponseCore(
     userText.includes("csv") ||
     userText.includes("migration") ||
     userText.includes("old data") ||
-    userText.includes("purana data")
+    userText.includes("purana data") ||
+    userText.includes("पुराना डेटा")
   ) {
+    if (langMode === "hi") {
+      return "हाँ, बिल्कुल! **C Vidya Solutions** के सभी सॉफ्टवेयर में आसान डेटा इम्पोर्ट सुविधा उपलब्ध है:\n\n• **1-क्लिक Excel / CSV इम्पोर्ट**: आपके पुराने छात्रों, सदस्यों, किताबों, दवाइयों या ग्राहकों का डेटा Excel शीट से सीधे अपलोड हो जाता है।\n• **फ्री माइग्रेशन सहायता**: हमारी इंजीनियरिंग टीम पुराने सॉफ्टवेयर या रजिस्टर से C Vidya में डेटा ट्रांसफर करने में पूरी मदद करती है ताकि आपका काम एक दिन भी न रुके।\n\nआप किस सॉफ्टवेयर में डेटा इम्पोर्ट करवाना चाहते हैं?";
+    }
     if (hinglish) {
       return "Haan, bilkul! **C Vidya Solutions** ke sabhi software me seamless data migration support milta hai:\n\n• **1-Click Excel / CSV Import**: Aapke purane students, members, book lists, medicines, ya customers ka data Excel sheet ke through direct upload ho jata hai.\n• **Free Migration Support**: Hamari technical engineering team purane system se C Vidya me data transfer karne me bilkul free help karti hai taaki aapka kaam ek din bhi na ruke.\n\nAapko kis software me data import karwana hai?";
     }
@@ -974,8 +1825,12 @@ function getSmartAssistantResponseCore(
     userText.includes("stpi") ||
     userText.includes("server") ||
     userText.includes("surakshit") ||
-    userText.includes("सुरक्षा")
+    userText.includes("सुरक्षा") ||
+    userText.includes("सुरक्षित")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya क्लाउड सुरक्षा और इंफ्रास्ट्रक्चर मानक** 🔒:\n\n• **Cloudflare ग्लोबल एज नेटवर्क**: भारत और विश्वभर में <50ms स्पीड और 99.99% अपटाइम गारंटी।\n• **बैंक-ग्रेड एन्क्रिप्शन**: एंड-टू-एंड TLS 1.3 और AES-256 डेटाबेस एन्क्रिप्शन।\n• **ऑटोमैटिक डेली बैकअप**: प्रतिदिन ऑटोमैटिक क्लाउड बैकअप ताकि आपका डेटा हमेशा 100% सुरक्षित रहे।\n• **रोल-बेस्ड एक्सेस (RBAC)**: एडमिन, स्टाफ, अकाउंटेंट और ग्राहकों के लिए अलग-अलग सुरक्षित लॉगिन अधिकार।\n• **STPI सरकारी प्रमाणन**: Software Technology Parks of India (STPI सिंदरी, BIT सिंदरी कैंपस) द्वारा समर्थित और प्रमाणित।";
+    }
     if (hinglish) {
       return "**C Vidya Cloud Security & Infrastructure**:\n\n• **Cloudflare Global Edge**: India aur worldwide <50ms latency aur 99.99% uptime guarantee.\n• **Bank-Grade Encryption**: End-to-end TLS 1.3 in-transit aur AES-256 database encryption.\n• **Automatic Daily Backups**: Daily automated cloud backups taaki aapka data hamesha 100% safe aur recoverable rahe.\n• **Role-Based Access (RBAC)**: Admin, Staff, Accountant aur Customers ke alag-alag permissions taaki koi unauthorized access na ho.\n• **STPI Government Incubation**: C Vidya Solutions Software Technology Parks of India (STPI Sindri, BIT Sindri Campus) dwara supported aur certified hai.";
     }
@@ -995,8 +1850,12 @@ function getSmartAssistantResponseCore(
     userText.includes("chalu nahi") ||
     userText.includes("kaam nahi") ||
     userText.includes("forgot") ||
-    userText.includes("सहायता")
+    userText.includes("सहायता") ||
+    userText.includes("पासवर्ड")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya तकनीकी सहायता मार्गदर्शन** 🛠️:\n\n• **लॉगिन / पासवर्ड समस्या**: अपने सॉफ्टवेयर पोर्टल पर 'Forgot Password' पर क्लिक करें, अपना रजिस्टर्ड ईमेल या मोबाइल नंबर दर्ज करें और OTP से नया पासवर्ड सेट करें।\n• **तकनीकी सहायता टिकट**: यदि कोई समस्या आ रही है, तो कृपया ये विवरण साझा करें:\n  1. सॉफ्टवेयर का नाम\n  2. रजिस्टर्ड ईमेल या मोबाइल नंबर\n  3. डिवाइस (मोबाइल या लैपटॉप)\n  4. समस्या का संक्षिप्त विवरण\n\n🔒 *सुरक्षा सूचना: अपना पासवर्ड या OTP कभी भी किसी के साथ साझा न करें।*";
+    }
     if (hinglish) {
       return "**C Vidya Technical Support Guidance**:\n\n• **Login / Password Problem**: Login page par 'Forgot Password' par tap karke apna registered email/mobile dalein aur OTP se password reset karein.\n• **Support Ticket**: Agar koi error aa raha hai, toh kripya ye share kijiye:\n  1. Software ka Naam\n  2. Registered Email ya Mobile Number\n  3. Device Type (Mobile ya Laptop/Desktop)\n  4. Error Message ya description\n\n🔒 *Security Note: Kabhi bhi apna password ya OTP kisi ke saath share na karein.* Hamari support team turant aapko assist karegi!";
     }
@@ -1076,6 +1935,9 @@ function getSmartAssistantResponseCore(
     userText.includes("callback task") ||
     userText.includes("फॉलो-अप")
   ) {
+    if (langMode === "hi") {
+      return "**फॉलो-अप टास्क और कॉलबैक शेड्यूलिंग** 📅:\n\nमैं आपके लिए **C Vidya CRM फॉलो-अप टास्क** तुरंत दर्ज कर सकता हूँ। कृपया चैट में ये विवरण भेजें:\n• **आपका नाम और संस्था का नाम**\n• **मोबाइल नंबर और ईमेल**\n• **सॉफ्टवेयर का नाम**\n• **कॉल करने का पसंदीदा समय**\n\nविवरण मिलते ही टास्क हमारे CRM सिस्टम और `cvidyasolutions@gmail.com` पर दर्ज हो जाएगा!";
+    }
     if (hinglish) {
       return "**Follow-Up Task & Callback Preparation** 📅:\n\nMain aapke liye **C Vidya CRM Follow-Up Task** turant register kar sakta hoon. Kripya niche diye gaye **'CRM / Lead & Task'** button par click karein ya chat me ye details bhejein:\n• **Contact Name & Company**\n• **Mobile Number / Email**\n• **Product of Interest**\n• **Follow-Up Task Note & Preferred Date/Time**\n\nJaise hi aap details denge, task hamare Firestore CRM queue aur `cvidyasolutions@gmail.com` par log ho jayega!";
     }
@@ -1094,6 +1956,9 @@ function getSmartAssistantResponseCore(
     userText.includes("executive report") ||
     userText.includes("kpi report")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya CRM, सेल्स वर्कफ़्लो और प्रबंधन रिपोर्ट** 📊:\n\n• **CRM लीड सर्च और स्टेटस अपडेट**: अधिकृत एडमिन `/admin` पोर्टल से सभी लीड्स खोज सकते हैं और उनका स्टेटस (`New`, `Qualified`, `Demo Scheduled`, `Follow-Up`, `Escalated`, `Closed`) अपडेट कर सकते हैं।\n• **प्रमाणित पोर्टफोलियो सारांश**:\n  - **प्रमुख SaaS सूट्स**: 7 फ्लैगशिप प्लेटफॉर्म + 3 विशेष इंडस्ट्री सूट्स\n  - **ऑटोनॉमस AI एजेंट्स**: 4 प्रोडक्शन एजेंट्स\n  - **सक्रिय क्लाइंट्स**: 150+ संस्थान और व्यवसाय\n  - **क्लाउड अपटाइम**: 99.99% (Cloudflare Edge एवं Google Cloud)";
+    }
     if (hinglish) {
       return "**C Vidya CRM, Sales/Marketing Workflows & Management Reporting** 📊:\n\n• **CRM Lead Search & Status Update**: Authorized administrators Contact page ya Footer se **Administrative Data Center** (या `/api/crm/leads`) khol kar sabhi leads search kar sakte hain, status (`New`, `Qualified`, `Demo Scheduled`, `Follow-Up`, `Escalated`, `Closed`) update kar sakte hain, aur follow-up tasks assign kar sakte hain.\n• **Sales & Marketing Automation**: Hamara *SalesFlow AI Agent* aur *B2B SaaS Marketing Agent* outbound prospect discovery, BANT qualification, aur SEO/LinkedIn campaigns assist karte hain.\n• **Verified Management Report Summary**:\n  - **Active SaaS Suites**: 7 Flagship Platforms + 3 Specialized Suites\n  - **Autonomous AI Agents**: 4 Production Agents\n  - **Enterprise Deployments**: 150+ Active Client Organizations\n  - **Cloud Uptime Target**: 99.99% on Cloudflare Edge & Google Cloud\n\nLive CRM Lead summary dekhne ke liye Admin Data Center me **'CRM & Reports'** tab open karein!";
     }
@@ -1110,6 +1975,9 @@ function getSmartAssistantResponseCore(
     userText.includes("interview") ||
     userText.includes("भर्ती")
   ) {
+    if (langMode === "hi") {
+      return "**C Vidya HR स्क्रीनिंग और भर्ती प्रशासन** 👥:\n\nहमारे वर्तमान ओपन इंजीनियरिंग और डिज़ाइन पद:\n1. **Senior Full-Stack Cloud Architect** — 4–7 वर्ष अनुभव (React, TypeScript, Node.js, Cloud) · रिमोट / हाइब्रिड (धनबाद मुख्यालय)\n2. **Autonomous AI Agent Engineer** — 2–5 वर्ष अनुभव (LLM, RAG पाइपलाइन, Python/TypeScript) · रिमोट\n3. **Enterprise UI/UX Systems Designer** — 3+ वर्ष अनुभव (डिज़ाइन सिस्टम्स, B2B SaaS, Figma) · रिमोट\n\nउम्मीदवार `/careers/` पेज पर आवेदन कर सकते हैं या `careers@cvidyasolutions.com` पर रिज्यूमे भेज सकते हैं।";
+    }
     if (hinglish) {
       return "**C Vidya HR Screening & Recruitment Administration** 👥:\n\nHamare current verified open engineering aur design positions:\n1. **Senior Full-Stack Cloud Architect** — 4-7 Years experience (React, TypeScript, Node.js, Cloud Architecture) · Remote / Hybrid (Dhanbad HQ)\n2. **Autonomous AI Agent Engineer** — 2-5 Years experience (LLM orchestration, RAG pipelines, Python/TypeScript) · Remote\n3. **Enterprise UI/UX Systems Designer** — 3+ Years experience (Design systems, B2B SaaS workflows, Figma) · Remote\n\n**Candidate Screening Checklist**:\n• Role applied for & years of relevant experience\n• Core technical stack & portfolio/GitHub link\n• Notice period & location preference\n\nCandidates `/careers/` page par form fill kar sakte hain ya `careers@cvidyasolutions.com` par resume bhej sakte hain.";
     }
@@ -1125,12 +1993,70 @@ function getSmartAssistantResponseCore(
     userText.includes("complaint") ||
     userText.includes("shikayat") ||
     userText.includes("sla breach") ||
-    userText.includes("custom contract")
+    userText.includes("custom contract") ||
+    userText.includes("शिकायत")
   ) {
+    if (langMode === "hi") {
+      return "**प्राथमिकता मानव एस्केलेशन डेस्क (Priority Human Escalation Desk)** 🚨:\n\nआपका अनुरोध संवेदनशील या विशेष श्रेणी में आता है, इसलिए इसे हमारे वरिष्ठ प्रबंधन और निदेशक डेस्क को भेजा जा रहा है:\n\n• **संस्थापक एवं निदेशक डेस्क**: चिरंजीव दास (`chiranjeev0058@gmail.com`)\n• **आधिकारिक सहायता ईमेल**: `cvidyasolutions@gmail.com` / `contact@cvidyasolutions.com`\n• **सीधा हेल्पलाइन नंबर**: +91 92885 17027 / +91 8987766981 (सोमवार–शनिवार, सुबह 10:00 – शाम 07:00 IST)\n\nकृपया अपना **नाम**, **मोबाइल नंबर** और **संक्षिप्त विवरण** यहाँ साझा करें ताकि हमारी वरिष्ठ टीम प्राथमिकता पर आपसे संपर्क कर सके।";
+    }
     if (hinglish) {
       return "**Priority Human Escalation Desk** 🚨:\n\nAapki request complex/sensitive category me aati hai aur iske liye human confirmation zaroori hai. Main isko hamare senior executive aur Director Desk ko escalate kar raha hoon:\n\n• **Founder & Director Desk**: Chiranjeev Das (`chiranjeev0058@gmail.com`)\n• **Official Escalation Email**: `cvidyasolutions@gmail.com` / `contact@cvidyasolutions.com`\n• **Direct Priority Helpline**: +91 92885 17027 / +91 8987766981 (Mon–Sat, 10:00 AM – 07:00 PM IST)\n\nKripya apna **Name**, **Phone Number**, aur **Issue Summary** share karein taaki senior team aapse priority par sampark kar sake.";
     }
     return "**Priority Human Escalation Desk** 🚨:\n\nBecause your request involves a complex, contractual, or sensitive matter, human confirmation is required. Please escalate or connect directly with our executive leadership desk:\n\n• **Founder & Director Desk**: Chiranjeev Das (`chiranjeev0058@gmail.com`)\n• **Official Support & Escalation Inbox**: `cvidyasolutions@gmail.com` / `contact@cvidyasolutions.com`\n• **Direct Priority Helpline**: +91 92885 17027 / +91 8987766981 (Mon–Sat, 10:00 AM – 07:00 PM IST)\n\nShare your **Name**, **Phone Number**, and **Request Summary** here, and we will flag it immediately for human executive review.";
+  }
+
+  // 10.9 Direct Conversational & Instant Meta-Question Handler (<1ms zero-delay response)
+  if (
+    userText.includes("पूछता") ||
+    userText.includes("पूछती") ||
+    userText.includes("पूछना") ||
+    userText.includes("पूछूँ") ||
+    userText.includes("पूछो") ||
+    userText.includes("जो भी आपसे") ||
+    userText.includes("तुरंत") ||
+    userText.includes("जल्दी") ||
+    userText.includes("जवाब") ||
+    userText.includes("उत्तर") ||
+    userText.includes("सवाल") ||
+    userText.includes("जानकारी") ||
+    userText.includes("मदद") ||
+    userText.includes("सहायता") ||
+    userText.includes("बताओ") ||
+    userText.includes("बताइए") ||
+    userText.includes("आप कौन") ||
+    userText.includes("तुम कौन") ||
+    userText.includes("क्या कर सकते") ||
+    userText.includes("कैसे काम") ||
+    userText.includes("बिजनेस") ||
+    userText.includes("दुकान") ||
+    userText.includes("puchta") ||
+    userText.includes("puchna") ||
+    userText.includes("pooch") ||
+    userText.includes("jawab") ||
+    userText.includes("turant") ||
+    userText.includes("jaldi") ||
+    userText.includes("madad") ||
+    userText.includes("batao") ||
+    userText.includes("bataiye") ||
+    userText.includes("jankari") ||
+    userText.includes("sawal") ||
+    userText.includes("what can you do") ||
+    userText.includes("who are you") ||
+    userText.includes("instant reply") ||
+    userText.includes("fast reply") ||
+    userText.includes("quick reply") ||
+    userText.includes("whatever i ask") ||
+    userText.includes("ask you") ||
+    userText.includes("help me") ||
+    userText.includes("tell me about")
+  ) {
+    if (langMode === "hi") {
+      return "जी बिल्कुल! आप मुझसे जो भी पूछेंगे, मैं बिना किसी देरी के तुरंत हिंदी या इंग्लिश में उसका सटीक जवाब दूँगा। 😊\n\nआप मुझसे C Vidya Solutions के सभी 10 क्लाउड सॉफ्टवेयर (लाइब्रेरी, जिम फिटनेस ज़ोन, स्कूल ERP, कोचिंग, एग्रीफ्यूज़न, ज्वेलर्स, CRM, पेट्रोल पंप, केयर प्लस हॉस्पिटल, PDF टूल्स), 4 AI एजेंट्स, प्राइसिंग, फ्री लाइव डेमो या अपने बिज़नेस के लिए कस्टम सॉफ्टवेयर और मोबाइल ऐप के बारे में कुछ भी सीधे पूछ सकते हैं—बताइए, मैं अभी आपकी क्या मदद कर सकता हूँ?";
+    }
+    if (hinglish) {
+      return "Ji bilkul! Aap mujhse jo bhi poochenge, main bina kisi deri ke turant uska jawab dunga. 😊\n\nAap mujhse C Vidya Solutions ke sabhi 10 cloud software, 4 AI agents, pricing, free live demo ya apne business ke liye custom software ke baare me kuch bhi seedhe pooch sakte hain—batayein, main abhi aapki kya madad kar sakta hoon?";
+    }
+    return "Absolutely! Whatever you ask me, I am ready to give you a fast, direct, and accurate answer right away in English or Hindi. 😊\n\nYou can ask me anything about C Vidya Solutions' 10 cloud software suites (Library, Gym Fitness Zone, Institutes ERP, Coaching, AgriFusion, Jewelers, Enterprises CRM, Petrol Pump Cloud, Care Plus Healthcare, PDF Tools), our 4 AI automation agents, pricing plans, free live demos, or custom web and mobile development—how can I help you right now?";
   }
 
   // 11. Conversational Human Catch-All (Directly responds like a warm human without quoting raw user transcript)

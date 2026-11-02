@@ -201,16 +201,16 @@ export default function AiCallingConsolePanel({
       : 0;
 
   return (
-    <div className="space-y-4 text-xs">
+    <div className="space-y-4 text-xs text-slate-100">
       {/* Sub-navigation bar for Modules C through I */}
-      <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl">
+      <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 border border-slate-800 p-1.5 rounded-xl">
         <button
           type="button"
           onClick={() => setSubTab("dialer")}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
             subTab === "dialer"
-              ? "bg-[#071739] text-white shadow-xs"
-              : "text-slate-600 hover:bg-white"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           }`}
         >
           <PhoneCall className="w-3.5 h-3.5" />
@@ -221,8 +221,8 @@ export default function AiCallingConsolePanel({
           onClick={() => setSubTab("demos")}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
             subTab === "demos"
-              ? "bg-[#071739] text-white shadow-xs"
-              : "text-slate-600 hover:bg-white"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
@@ -233,8 +233,8 @@ export default function AiCallingConsolePanel({
           onClick={() => setSubTab("analytics")}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
             subTab === "analytics"
-              ? "bg-[#071739] text-white shadow-xs"
-              : "text-slate-600 hover:bg-white"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
@@ -245,8 +245,8 @@ export default function AiCallingConsolePanel({
           onClick={() => setSubTab("hr_sales")}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
             subTab === "hr_sales"
-              ? "bg-[#071739] text-white shadow-xs"
-              : "text-slate-600 hover:bg-white"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           }`}
         >
           <Users className="w-3.5 h-3.5" />
@@ -257,8 +257,8 @@ export default function AiCallingConsolePanel({
           onClick={() => setSubTab("handoff")}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
             subTab === "handoff"
-              ? "bg-[#071739] text-white shadow-xs"
-              : "text-slate-600 hover:bg-white"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "text-slate-300 hover:bg-slate-800 hover:text-white"
           }`}
         >
           <UserCheck className="w-3.5 h-3.5" />
@@ -268,13 +268,13 @@ export default function AiCallingConsolePanel({
 
       {/* 1. AI OUTBOUND CALLING + VOICE & LANGUAGE SELECTION */}
       {subTab === "dialer" && (
-        <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <div className="space-y-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h4 className="font-bold text-slate-950 text-sm">
+              <h4 className="font-bold text-white text-sm">
                 Autonomous AI Outbound Calling Agent
               </h4>
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-400 text-[11px]">
                 Select an existing CRM lead or enter a prospect number to launch a real-human voice call in English, Hindi, or Hinglish.
               </p>
             </div>
@@ -283,44 +283,44 @@ export default function AiCallingConsolePanel({
                 aria-label="AI Calling Voice Gender"
                 value={voiceGender}
                 onChange={(e) => setVoiceGender(e.target.value as "female" | "male")}
-                className="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 cursor-pointer"
+                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg font-bold text-white cursor-pointer [color-scheme:dark]"
               >
-                <option value="female">Female Voice (Ananya)</option>
-                <option value="male">Male Voice (Aarav)</option>
+                <option value="female" className="bg-slate-900 text-white">Female Voice (Ananya)</option>
+                <option value="male" className="bg-slate-900 text-white">Male Voice (Aarav)</option>
               </select>
               <select
                 aria-label="AI Calling Language"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as "en" | "hi" | "hinglish")}
-                className="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 cursor-pointer"
+                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg font-bold text-white cursor-pointer [color-scheme:dark]"
               >
-                <option value="hinglish">Hinglish (IN)</option>
-                <option value="hi">Hindi (हिंदी)</option>
-                <option value="en">English</option>
+                <option value="hinglish" className="bg-slate-900 text-white">Hinglish (IN)</option>
+                <option value="hi" className="bg-slate-900 text-white">Hindi (हिंदी)</option>
+                <option value="en" className="bg-slate-900 text-white">English</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                 Select CRM Lead (Optional)
               </label>
               <select
                 value={selectedLeadId}
                 onChange={(e) => setSelectedLeadId(e.target.value)}
-                className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"
+                className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white [color-scheme:dark]"
               >
-                <option value="">-- Custom / Manual Prospect --</option>
+                <option value="" className="bg-slate-900 text-white">-- Custom / Manual Prospect --</option>
                 {leads.map((l) => (
-                  <option key={l.id} value={l.id}>
+                  <option key={l.id} value={l.id} className="bg-slate-900 text-white">
                     {l.name} ({l.phone}) — {l.service || "General"}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                 Target Product / Solution
               </label>
               <input
@@ -328,11 +328,11 @@ export default function AiCallingConsolePanel({
                 value={customProduct}
                 onChange={(e) => setCustomProduct(e.target.value)}
                 placeholder="e.g. C Vidya Library Management"
-                className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+                className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                 Prospect Name
               </label>
               <input
@@ -340,11 +340,11 @@ export default function AiCallingConsolePanel({
                 value={customLeadName}
                 onChange={(e) => setCustomLeadName(e.target.value)}
                 placeholder="Enter contact name"
-                className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+                className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                 Phone / WhatsApp Number
               </label>
               <input
@@ -352,13 +352,13 @@ export default function AiCallingConsolePanel({
                 value={customPhone}
                 onChange={(e) => setCustomPhone(e.target.value)}
                 placeholder="+91 98765 43210"
-                className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+                className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+            <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
               Custom Call Follow-Up Note / Objective (Optional)
             </label>
             <input
@@ -366,7 +366,7 @@ export default function AiCallingConsolePanel({
               value={customObjective}
               onChange={(e) => setCustomObjective(e.target.value)}
               placeholder="e.g. Confirm tomorrow 11:30 AM live demo & biometric hardware requirements"
-              className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
           </div>
 
@@ -375,7 +375,7 @@ export default function AiCallingConsolePanel({
               type="button"
               onClick={handleStartOutboundCall}
               disabled={callState === "speaking"}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white font-bold rounded-lg transition-colors cursor-pointer"
             >
               <PhoneCall className="w-4 h-4" />
               {callState === "speaking"
@@ -386,7 +386,7 @@ export default function AiCallingConsolePanel({
               <button
                 type="button"
                 onClick={handleStopCall}
-                className="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors cursor-pointer"
               >
                 <PhoneOff className="w-3.5 h-3.5" />
                 End Call Audio
@@ -395,17 +395,17 @@ export default function AiCallingConsolePanel({
           </div>
 
           {activeCallRecord && (
-            <div className="p-3 bg-white border border-blue-200 rounded-xl space-y-1.5">
+            <div className="p-3 bg-slate-900 border border-blue-500/40 rounded-xl space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-blue-950 flex items-center gap-1.5">
-                  <Volume2 className="w-4 h-4 text-blue-600" />
+                <span className="font-bold text-blue-300 flex items-center gap-1.5">
+                  <Volume2 className="w-4 h-4 text-blue-400" />
                   {activeCallRecord.assignedRep} • {activeCallRecord.language.toUpperCase()}
                 </span>
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono text-[10px] font-bold">
+                <span className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 rounded font-mono text-[10px] font-bold">
                   {callState === "speaking" ? "LIVE AUDIO" : activeCallRecord.callStatus}
                 </span>
               </div>
-              <p className="text-slate-700 leading-relaxed">{activeCallRecord.script}</p>
+              <p className="text-slate-200 leading-relaxed">{activeCallRecord.script}</p>
             </div>
           )}
         </div>
@@ -413,8 +413,8 @@ export default function AiCallingConsolePanel({
 
       {/* 2. DEMO BOOKING & AUTOMATIC FOLLOW-UP */}
       {subTab === "demos" && (
-        <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <h4 className="font-bold text-slate-950 text-sm">
+        <div className="space-y-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+          <h4 className="font-bold text-white text-sm">
             1-on-1 Demo Booking &amp; Automatic Follow-Up Cadence
           </h4>
           <form onSubmit={handleScheduleDemo} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -424,7 +424,7 @@ export default function AiCallingConsolePanel({
               value={customLeadName}
               onChange={(e) => setCustomLeadName(e.target.value)}
               placeholder="Client Name"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <input
               type="text"
@@ -432,7 +432,7 @@ export default function AiCallingConsolePanel({
               value={customPhone}
               onChange={(e) => setCustomPhone(e.target.value)}
               placeholder="Mobile / WhatsApp"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <input
               type="email"
@@ -440,14 +440,14 @@ export default function AiCallingConsolePanel({
               value={demoEmail}
               onChange={(e) => setDemoEmail(e.target.value)}
               placeholder="Client Email"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <input
               type="date"
               required
               value={demoDate}
               onChange={(e) => setDemoDate(e.target.value)}
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white [color-scheme:dark]"
             />
             <input
               type="text"
@@ -455,11 +455,11 @@ export default function AiCallingConsolePanel({
               value={demoTime}
               onChange={(e) => setDemoTime(e.target.value)}
               placeholder="Preferred Time (e.g. 11:30 AM)"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <button
               type="submit"
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               Book Demo &amp; Auto Follow-Up
@@ -470,17 +470,17 @@ export default function AiCallingConsolePanel({
             {demoBookings.map((d) => (
               <div
                 key={d.id}
-                className="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between gap-2"
+                className="p-3 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between gap-2"
               >
                 <div>
-                  <div className="font-bold text-slate-900">
-                    {d.name} • <span className="text-blue-700">{d.product}</span>
+                  <div className="font-bold text-white">
+                    {d.name} • <span className="text-blue-400">{d.product}</span>
                   </div>
-                  <div className="text-slate-500 font-mono text-[11px]">
+                  <div className="text-slate-400 font-mono text-[11px]">
                     📅 {d.preferredDate} at {d.preferredTime} • 📞 {d.phone}
                   </div>
                 </div>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">
+                <span className="px-2 py-0.5 bg-blue-950/80 border border-blue-700/60 text-blue-300 rounded font-bold text-[10px]">
                   {d.status}
                 </span>
               </div>
@@ -498,36 +498,36 @@ export default function AiCallingConsolePanel({
       {subTab === "analytics" && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <div className="text-[10px] font-mono uppercase text-slate-500">Total AI Calls</div>
-              <div className="text-xl font-bold text-slate-950 mt-0.5">{totalCalls}</div>
+            <div className="p-3 bg-slate-950/90 border border-slate-800 rounded-xl">
+              <div className="text-[10px] font-mono uppercase text-slate-400">Total AI Calls</div>
+              <div className="text-xl font-bold text-white mt-0.5">{totalCalls}</div>
             </div>
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <div className="text-[10px] font-mono uppercase text-emerald-700">Avg Duration</div>
-              <div className="text-xl font-bold text-emerald-950 mt-0.5">{avgDuration}s</div>
+            <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl">
+              <div className="text-[10px] font-mono uppercase text-emerald-300">Avg Duration</div>
+              <div className="text-xl font-bold text-emerald-400 mt-0.5">{avgDuration}s</div>
             </div>
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="text-[10px] font-mono uppercase text-blue-700">Demos Booked</div>
-              <div className="text-xl font-bold text-blue-950 mt-0.5">{demoBookings.length}</div>
+            <div className="p-3 bg-blue-950/40 border border-blue-800/60 rounded-xl">
+              <div className="text-[10px] font-mono uppercase text-blue-300">Demos Booked</div>
+              <div className="text-xl font-bold text-blue-400 mt-0.5">{demoBookings.length}</div>
             </div>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-              <div className="text-[10px] font-mono uppercase text-amber-700">Human Handoffs</div>
-              <div className="text-xl font-bold text-amber-950 mt-0.5">{handoffTickets.length}</div>
+            <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl">
+              <div className="text-[10px] font-mono uppercase text-amber-300">Human Handoffs</div>
+              <div className="text-xl font-bold text-amber-400 mt-0.5">{handoffTickets.length}</div>
             </div>
           </div>
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {callLogs.map((c) => (
-              <div key={c.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div key={c.id} className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-bold text-slate-900">
+                  <span className="font-bold text-white">
                     {c.leadName} ({c.phone}) — {c.productOfInterest}
                   </span>
-                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 rounded font-mono text-[10px] font-bold">
                     {c.voiceGender.toUpperCase()} • {c.language.toUpperCase()} • {c.durationSeconds}s
                   </span>
                 </div>
-                <p className="text-slate-600 text-[11px]">{c.script}</p>
+                <p className="text-slate-300 text-[11px]">{c.script}</p>
                 <div className="text-[10px] text-slate-400 font-mono flex items-center gap-2">
                   <Clock className="w-3 h-3" />
                   {new Date(c.createdAt).toLocaleString()} • {c.outcome}
@@ -545,13 +545,13 @@ export default function AiCallingConsolePanel({
 
       {/* 4. HR & SALES MANAGEMENT */}
       {subTab === "hr_sales" && (
-        <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <div className="space-y-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-950 text-sm">
+              <h4 className="font-bold text-white text-sm">
                 HR &amp; Sales Pipeline Allocation
               </h4>
-              <p className="text-slate-500 text-[11px]">
+              <p className="text-slate-400 text-[11px]">
                 Active Sales SDRs, Technical Architects, and STPI Sindri HR recruitment pipeline ({jobApplicationsCount} candidate applications).
               </p>
             </div>
@@ -560,18 +560,18 @@ export default function AiCallingConsolePanel({
             {hrSalesTeam.map((member) => (
               <div
                 key={member.id}
-                className="p-3 bg-white border border-slate-200 rounded-xl flex items-start justify-between gap-2"
+                className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-start justify-between gap-2"
               >
                 <div>
-                  <div className="font-bold text-slate-900">{member.name}</div>
-                  <div className="text-slate-500 text-[11px]">
+                  <div className="font-bold text-white">{member.name}</div>
+                  <div className="text-slate-400 text-[11px]">
                     {member.role} • {member.department}
                   </div>
-                  <div className="text-slate-600 font-mono text-[10px] mt-1">
+                  <div className="text-slate-300 font-mono text-[10px] mt-1">
                     📞 {member.phone} • Leads: {member.assignedLeadsCount}
                   </div>
                 </div>
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
+                <span className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 rounded font-bold text-[10px]">
                   {member.status}
                 </span>
               </div>
@@ -582,9 +582,9 @@ export default function AiCallingConsolePanel({
 
       {/* 5. HUMAN HANDOFF ESCALATION */}
       {subTab === "handoff" && (
-        <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <h4 className="font-bold text-slate-950 text-sm flex items-center gap-1.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
+        <div className="space-y-3 bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+          <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
             Instant Human Handoff &amp; Senior Desk Escalation
           </h4>
           <form onSubmit={handleEscalateHandoff} className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -594,7 +594,7 @@ export default function AiCallingConsolePanel({
               value={customLeadName}
               onChange={(e) => setCustomLeadName(e.target.value)}
               placeholder="Customer Name"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <input
               type="text"
@@ -602,16 +602,16 @@ export default function AiCallingConsolePanel({
               value={customPhone}
               onChange={(e) => setCustomPhone(e.target.value)}
               placeholder="Customer Phone"
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <select
               value={handoffPriority}
               onChange={(e) => setHandoffPriority(e.target.value as "High" | "Urgent" | "Normal")}
-              className="px-2.5 py-2 bg-white border border-slate-200 rounded-lg font-bold"
+              className="px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg font-bold text-white [color-scheme:dark]"
             >
-              <option value="High">High Priority</option>
-              <option value="Urgent">Urgent SLA</option>
-              <option value="Normal">Standard</option>
+              <option value="High" className="bg-slate-900 text-white">High Priority</option>
+              <option value="Urgent" className="bg-slate-900 text-white">Urgent SLA</option>
+              <option value="Normal" className="bg-slate-900 text-white">Standard</option>
             </select>
             <input
               type="text"
@@ -619,11 +619,11 @@ export default function AiCallingConsolePanel({
               value={handoffReason}
               onChange={(e) => setHandoffReason(e.target.value)}
               placeholder="Reason for human handoff..."
-              className="sm:col-span-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg"
+              className="sm:col-span-2 px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500"
             />
             <button
               type="submit"
-              className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg cursor-pointer"
+              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg cursor-pointer"
             >
               Escalate to Human Executive
             </button>
@@ -633,18 +633,18 @@ export default function AiCallingConsolePanel({
             {handoffTickets.map((t) => (
               <div
                 key={t.id}
-                className="p-3 bg-white border border-amber-200 rounded-lg flex items-center justify-between gap-2"
+                className="p-3 bg-slate-900 border border-amber-500/40 rounded-lg flex items-center justify-between gap-2"
               >
                 <div>
-                  <div className="font-bold text-slate-900">
+                  <div className="font-bold text-white">
                     {t.customerName} ({t.phone}) • {t.product}
                   </div>
-                  <div className="text-slate-600 text-[11px]">{t.reason}</div>
+                  <div className="text-slate-300 text-[11px]">{t.reason}</div>
                   <div className="text-slate-400 font-mono text-[10px]">
                     Assigned: {t.assignedAgent}
                   </div>
                 </div>
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold text-[10px]">
+                <span className="px-2 py-0.5 bg-amber-950/80 border border-amber-700/60 text-amber-300 rounded font-bold text-[10px]">
                   {t.priority} • {t.status}
                 </span>
               </div>

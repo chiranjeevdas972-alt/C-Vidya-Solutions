@@ -1026,17 +1026,19 @@ export default function App() {
                       value={leadSearch}
                       onChange={(e) => setLeadSearch(e.target.value)}
                       placeholder={adminTab === "leads" ? "Filter by name, company, city, phone, or product..." : "Filter by applicant name, platform, or email..."}
-                      className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden"
+                      className="w-full pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden"
                     />
                   </div>
                 )}
 
                 {adminTab === "ai_calling" ? (
-                  <AiCallingConsolePanel
-                    leads={inquiriesList}
-                    onUpdateLeadStatus={updateLeadStatus}
-                    onRefreshLeads={fetchInquiries}
-                  />
+                  <div className="bg-slate-950 p-3 rounded-xl text-slate-100">
+                    <AiCallingConsolePanel
+                      leads={inquiriesList}
+                      onUpdateLeadStatus={updateLeadStatus}
+                      onRefreshLeads={fetchInquiries}
+                    />
+                  </div>
                 ) : adminTab === "leads" ? (
                   <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                     {inquiriesList

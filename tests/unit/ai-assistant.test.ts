@@ -5,6 +5,15 @@ import {
   detectLanguageMode,
   extractStructuredLeadFromChat,
   getSmartAssistantResponse,
+  CUSTOMER_INTENT_PATTERNS,
+  normalizeCustomerMessage,
+  detectCustomerLanguage,
+  detectCustomerIntents,
+  extractCustomerDetails,
+  identifyProductCategory,
+  identifyCustomerRequirement,
+  classifyLeadIntent,
+  generateCustomerResponse,
 } from "../../src/utils/aiResponder.ts";
 import { sanitizeTextForSpeech, ttsService } from "../../src/services/ttsService.ts";
 
@@ -170,6 +179,233 @@ describe("AI Assistant & Trilingual Business Knowledge Base Regression Suite", (
       expect(femaleReply).toContain("share karti hoon");
       expect(maleReply).toContain("share karta hoon");
       expect(femaleReply).not.toContain("7 Flagship SaaS Products");
+    });
+  });
+
+  describe("Master Implementation Prompt: 31 Intent Categories, 8 Core Functions & 15 Test Cases", () => {
+    it("should define all 31 intent categories in CUSTOMER_INTENT_PATTERNS", () => {
+      const expectedKeys = [
+        "greeting",
+        "company_info",
+        "software_info",
+        "library",
+        "institute",
+        "coaching",
+        "gym",
+        "crm",
+        "farm_fresh_hub",
+        "delivery",
+        "ai_chatbot",
+        "ai_agent",
+        "pricing",
+        "demo",
+        "features",
+        "customization",
+        "development",
+        "support",
+        "installation",
+        "integration",
+        "api_integration",
+        "whatsapp_integration",
+        "sms_integration",
+        "payment",
+        "purchase",
+        "partnership",
+        "reseller",
+        "contact_info",
+        "human_support",
+        "general_questions",
+        "unknown_questions",
+      ];
+      for (const key of expectedKeys) {
+        expect(CUSTOMER_INTENT_PATTERNS).toHaveProperty(key);
+        expect(Array.isArray(CUSTOMER_INTENT_PATTERNS[key])).toBe(true);
+        expect(CUSTOMER_INTENT_PATTERNS[key].length).toBeGreaterThan(0);
+      }
+    });
+
+    it("should execute all 8 reusable customer functions accurately", () => {
+      expect(normalizeCustomerMessage("  Hello   World  ")).toBe("hello world");
+      expect(detectCustomerLanguage("मुझे लाइब्रेरी सॉफ्टवेयर चाहिए")).toBe("hi");
+      expect(detectCustomerLanguage("mujhe library software chahiye")).toBe("hi");
+      expect(detectCustomerLanguage("I need Library Management Software")).toBe("en");
+
+      const intents = detectCustomerIntents("Library Management Software की पूरी जानकारी, कीमत और डेमो कैसे मिलेगा?");
+      expect(intents.matchedIntents).toContain("library");
+      expect(intents.matchedIntents).toContain("pricing");
+      expect(intents.matchedIntents).toContain("demo");
+
+      expect(identifyProductCategory("Tell me about Farm Fresh Hub")).toContain("Farm Fresh Hub");
+      expect(identifyProductCategory("मुझे डिलीवरी सॉफ्टवेयर चाहिए")).toContain("Delivery Management Software");
+      expect(classifyLeadIntent("I want to book a free demo")).toBe("demo");
+      expect(classifyLeadIntent("We want to become a reseller partner")).toBe("partnership");
+
+      const details = extractCustomerDetails([
+        { role: "user", content: "My name is Rahul from Dhanbad. Call me at 9876543210 for Gym Management Software demo" },
+      ]);
+      expect(details.name).toContain("Rahul");
+      expect(details.phone).toContain("9876543210");
+      expect(details.lead_type).toBe("demo");
+      expect(identifyCustomerRequirement("Need custom ERP software")).toContain("Need custom ERP software");
+    });
+
+    it("Test 1 (Hindi Greeting): 'नमस्ते' -> responds in Hindi", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "नमस्ते" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("C Vidya Solutions");
+    });
+
+    it("Test 2 (English Greeting): 'Hello' -> responds in English", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "Hello" }]);
+      expect(reply).toContain("Welcome to");
+      expect(reply).toContain("C Vidya Solutions");
+    });
+
+    it("Test 3 (Hinglish Input -> Hindi Output): 'mujhe library software chahiye'", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "mujhe library software chahiye" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("Library Management Software");
+    });
+
+    it("Test 4 (Library Enquiry): 'Library Management Software के बारे में बताइए'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "Library Management Software के बारे में बताइए" },
+      ]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("Library Management Software");
+      expect(reply).toContain("डेमो");
+    });
+
+    it("Test 5 (Gym Enquiry): 'Tell me about Gym Management Software'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "Tell me about Gym Management Software" },
+      ]);
+      expect(reply).toContain("Gym");
+      expect(reply.toLowerCase()).toContain("membership");
+    });
+
+    it("Test 6 (Farm Fresh Hub Enquiry): 'Farm Fresh Hub क्या है?'", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "Farm Fresh Hub क्या है?" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("Farm Fresh Hub");
+    });
+
+    it("Test 7 (Demo Request): 'मुझे डेमो चाहिए'", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "मुझे डेमो चाहिए" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("डेमो");
+    });
+
+    it("Test 8 (Pricing Question): 'Price क्या है?'", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "Price क्या है?" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("Pricing");
+    });
+
+    it("Test 9 (Multi-Intent Question): 'Library software के फीचर्स, प्राइस और डेमो बताइए'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "Library software के फीचर्स, प्राइस और डेमो बताइए" },
+      ]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("Library Management Software");
+      expect(reply).toContain("मुख्य फीचर्स");
+      expect(reply).toContain("कीमत");
+      expect(reply).toContain("फ्री लाइव डेमो");
+    });
+
+    it("Test 10 (Custom Software Enquiry): 'We need custom software for our business'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "We need custom software for our business" },
+      ]);
+      expect(reply.toLowerCase()).toContain("custom");
+    });
+
+    it("Test 11 (AI Agent Enquiry): 'AI Agent हमारे बिजनेस में कैसे काम करेगा?'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "AI Agent हमारे बिजनेस में कैसे काम करेगा?" },
+      ]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("AI");
+    });
+
+    it("Test 12 (Lead Capture): 'मेरा नाम राहुल है और नंबर 9876543210 है'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "मेरा नाम राहुल है और नंबर 9876543210 है" },
+      ]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("धन्यवाद");
+      expect(reply).toContain("9876543210");
+    });
+
+    it("Test 13 (Invalid Phone Number): 'मेरा नंबर 12345 है'", () => {
+      const reply = generateCustomerResponse([{ role: "user", content: "मेरा नंबर 12345 है" }]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("10 अंकों का सही मोबाइल नंबर");
+    });
+
+    it("Test 14 (Human Support Request): 'मुझे आपकी टीम से बात करनी है'", () => {
+      const reply = generateCustomerResponse([
+        { role: "user", content: "मुझे आपकी टीम से बात करनी है" },
+      ]);
+      expect(isHindiDevanagari(reply)).toBe(true);
+      expect(reply).toContain("हमारी टीम तक पहुँचाने के लिए आपकी सहायता करता हूँ");
+    });
+
+    it("Test 15 (Unknown Question / Anti-Hallucination Guard): 'क्या आपके पास अंतरिक्ष रॉकेट लॉन्च करने का लाइसेंस है?'", () => {
+      const replyHi = generateCustomerResponse([
+        { role: "user", content: "क्या आपके पास अंतरिक्ष रॉकेट लॉन्च करने का लाइसेंस है?" },
+      ]);
+      expect(replyHi).toContain("इस जानकारी की पुष्टि अभी हमारे पास उपलब्ध नहीं है");
+
+      const replyEn = generateCustomerResponse([
+        { role: "user", content: "Do you manufacture nuclear submarines in Antarctica?" },
+      ]);
+      expect(replyEn).toContain("I don't currently have verified information about this");
+    });
+
+    it("should maintain Multi-Turn Conversation Memory across turns (Product -> Affirmative -> Name -> Phone)", () => {
+      const turn1 = [{ role: "user", content: "मुझे जिम सॉफ्टवेयर चाहिए" }];
+      const reply1 = generateCustomerResponse(turn1);
+      expect(reply1).toContain("Gym");
+
+      const turn2 = [
+        ...turn1,
+        { role: "model", content: reply1 },
+        { role: "user", content: "हां" },
+      ];
+      const reply2 = generateCustomerResponse(turn2);
+      expect(reply2).toContain("नाम और मोबाइल नंबर");
+
+      const turn3 = [
+        ...turn2,
+        { role: "model", content: reply2 },
+        { role: "user", content: "Rahul" },
+      ];
+      const reply3 = generateCustomerResponse(turn3);
+      expect(reply3).toContain("Rahul");
+      expect(reply3).toContain("10 अंकों का मोबाइल नंबर");
+
+      const turn4 = [
+        ...turn3,
+        { role: "model", content: reply3 },
+        { role: "user", content: "9876543210" },
+      ];
+      const reply4 = generateCustomerResponse(turn4);
+      expect(reply4).toContain("धन्यवाद");
+      expect(reply4).toContain("9876543210");
+    });
+
+    it("should handle Multi-Product Enquiries and Pricing Objections gracefully", () => {
+      const multiProdReply = generateCustomerResponse([
+        { role: "user", content: "मुझे Gym और CRM दोनों चाहिए।" },
+      ]);
+      expect(multiProdReply).toContain("Gym & Fitness Management Software");
+      expect(multiProdReply).toContain("CRM Software");
+
+      const objectionReply = generateCustomerResponse([
+        { role: "user", content: "आपका सॉफ्टवेयर महंगा तो नहीं है?" },
+      ]);
+      expect(objectionReply).toContain("बजट और जरूरत के अनुसार");
     });
   });
 });

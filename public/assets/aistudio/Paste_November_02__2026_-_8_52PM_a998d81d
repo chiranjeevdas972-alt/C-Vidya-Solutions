@@ -1,0 +1,1130 @@
+# MASTER IMPLEMENTATION PROMPT
+# C VIDYA SOLUTIONS – COMPLETE AI CUSTOMER SUPPORT & SALES CHATBOT
+
+## 1. PROJECT OBJECTIVE
+
+You are working on my existing C VIDYA SOLUTIONS website and its existing C Vidya AI Chatbot.
+
+Website: https://www.cvidyasolutions.com/
+
+My existing application is built using React, CSS, Firebase and its existing backend infrastructure.
+
+Your task is to inspect, improve, complete and properly implement the existing C Vidya AI Chatbot so that it works as a professional, intelligent, accurate and production-ready AI customer support and sales assistant.
+
+IMPORTANT:
+
+- Do not create a new website.
+- Do not create a separate chatbot application.
+- Work inside the existing project.
+- Preserve all existing working features.
+- Inspect the entire existing codebase before making changes.
+- Reuse existing components, services, APIs, Firebase configuration and backend infrastructure wherever possible.
+- If a feature already exists and works correctly, SKIP reimplementing it.
+- If a feature exists but is incomplete or broken, FIX it.
+- If a feature does not exist, IMPLEMENT it.
+- Do not create duplicate components, routes, database collections or APIs.
+- Do not remove existing working functionality.
+- Do not overwrite existing production configurations unnecessarily.
+
+The final chatbot must be capable of understanding customer questions and providing accurate, useful and natural answers.
+
+## 2. LANGUAGE REQUIREMENTS
+
+The chatbot must support ONLY:
+
+1. Hindi
+2. English
+
+Language detection must happen automatically.
+
+Rules:
+
+- If the customer asks in Hindi, respond in Hindi.
+- If the customer asks in English, respond in English.
+- If the customer uses Hindi-English mixed typing (Hinglish), understand the meaning and respond in natural Hindi.
+- Never respond in an unrelated language.
+- Never force customers to select a language manually.
+- Maintain the language selected naturally by the customer throughout the conversation.
+- Support Hindi Unicode text correctly.
+- Support English text correctly.
+- Preserve the meaning of technical terms such as CRM, SaaS, API, AI Agent, Cloud, Software, Database and Integration.
+
+Examples:
+
+Customer: मुझे Gym Management Software चाहिए।
+
+Bot: बिल्कुल! C Vidya Solutions का Gym Management Software आपके Gym की Membership, Customer Records, Payments और Daily Operations को Manage करने में सहायता कर सकता है। क्या आप इसका Free Demo देखना चाहेंगे?
+
+Customer: I need library management software.
+
+Bot: Certainly! C Vidya Solutions offers Library Management Software to help manage books, members, book issue and return operations, inventory and reports. Would you like to book a free demo?
+
+Customer: Mujhe coaching software ka demo chahiye.
+
+Bot: बिल्कुल! हम आपको Coaching Management Software का Demo दिखा सकते हैं। कृपया अपना नाम और मोबाइल नंबर बताइए।
+
+## 3. COMPANY KNOWLEDGE BASE
+
+First inspect the complete official website:
+
+https://www.cvidyasolutions.com/
+
+Inspect all accessible pages and sections, including:
+
+- Home
+- About Us
+- Software
+- AI Agent
+- Services
+- Pricing
+- Portfolio
+- Mobile
+- Blog
+- Contact Us
+- Mobile App
+- Book Free Demo
+
+Also inspect existing project source files, content files, configuration, Firebase data and existing chatbot knowledge sources.
+
+Build a structured and searchable company knowledge base.
+
+The chatbot must understand:
+
+### Company Information
+
+Company Name: C VIDYA SOLUTIONS
+
+Website: www.cvidyasolutions.com
+
+Business Type: Software Development, Business Management Solutions, SaaS Products and AI-Based Solutions.
+
+Use the official website and existing verified project data for the following:
+
+- Company introduction
+- Company services
+- Software products
+- AI solutions
+- Business automation
+- Software development
+- Customer support
+- Contact details
+- Company portfolio
+- Available demonstrations
+- Existing pricing information
+
+Never invent company facts, customer testimonials, certifications, office addresses, awards or business achievements.
+
+If any information is unavailable, ask the customer to contact the company.
+
+## 4. COMPLETE SOFTWARE PRODUCT KNOWLEDGE
+
+Inspect the official Software and Services pages and create detailed knowledge for every product actually offered.
+
+At minimum, verify and cover the following product categories wherever they are present in the existing website or project.
+
+### A. Library Management Software
+
+Understand and answer questions about:
+
+- Book Inventory Management
+- Book Categories
+- Book Issue Management
+- Book Return Management
+- Student and Member Management
+- Membership Records
+- Barcode Support
+- Book Search
+- Due Date Management
+- Fine Management, if available
+- WhatsApp Notifications, if available
+- SMS Notifications, if available
+- Reports and Analytics
+- Admin Dashboard
+- User Management
+- Library Records
+- Data Management
+
+Example questions:
+
+- Do you provide Library Management Software?
+- How can I manage books?
+- Can I manage book issue and return?
+- Does your software support barcode?
+- Can I manage student memberships?
+- Can I generate reports?
+- Is online access available?
+
+### B. Institute Management Software
+
+Understand questions about:
+
+- Student Management
+- Admission Management
+- Attendance Management
+- Fees Management
+- Course Management
+- Batch Management
+- Staff Management
+- Examination Management
+- Reports
+- Notifications
+- Institute Administration
+
+Only describe features verified in the actual application or official product information.
+
+### C. Coaching Management Software
+
+Understand questions about:
+
+- Student Registration
+- Batch Management
+- Course Management
+- Attendance
+- Fees Collection
+- Payment Records
+- Teacher Management
+- Class Management
+- Student Performance
+- Notifications
+- Reports
+- Admin Dashboard
+
+### D. Gym and Fitness Management Software
+
+Understand questions about:
+
+- Gym Member Registration
+- Membership Plans
+- Membership Expiry
+- Payment Management
+- Trainer Management
+- Attendance
+- Customer Records
+- Workout Management, if available
+- Renewal Reminders
+- Reports
+- Gym Dashboard
+
+### E. CRM Solutions
+
+Understand questions about:
+
+- Lead Management
+- Customer Management
+- Sales Pipeline
+- Follow-up Management
+- Lead Tracking
+- Customer Records
+- Enquiry Management
+- Sales Reports
+- Team Management
+- Customer Communication
+- Automated Workflows
+
+### F. Farm Fresh Hub
+
+Understand questions about:
+
+- Farm Fresh Hub
+- Chicken and Poultry Business Management
+- Product Management
+- Customer Orders
+- Order Management
+- Inventory, if available
+- Payments, if available
+- Delivery, if available
+- Business Reports
+
+Do not claim unverified features.
+
+### G. Delivery Management Software
+
+Understand questions about:
+
+- Delivery Orders
+- Delivery Tracking
+- Delivery Staff Management
+- Order Assignment
+- Delivery Status
+- Customer Information
+- Delivery Reports
+- Order Management
+- Business Operations
+
+### H. AI Chatbot and AI Agent Solutions
+
+Understand questions about:
+
+- AI Customer Support
+- AI Website Chatbots
+- AI Voice Agents
+- Automated Customer Responses
+- Customer Enquiry Handling
+- Lead Qualification
+- Sales Assistance
+- Customer Follow-ups
+- Business Automation
+- AI Integration
+- Custom AI Agent Development
+
+For each product, build:
+
+1. Product Introduction
+2. Product Features
+3. Benefits
+4. Target Customers
+5. Frequently Asked Questions
+6. Technical Questions
+7. Pricing Questions
+8. Demo Questions
+9. Customization Questions
+10. Purchase Enquiries
+
+Do not assume that every product has identical functionality.
+
+## 5. COMPLETE CUSTOMER QUESTION DETECTION ENGINE
+
+Implement a dedicated Customer Intent Detection Engine.
+
+Use JavaScript Regex for common question patterns, together with AI semantic understanding for questions that do not match predefined patterns.
+
+Regex must NOT be the only method of understanding customers.
+
+Create reusable functions:
+
+- normalizeCustomerMessage()
+- detectCustomerLanguage()
+- detectCustomerIntents()
+- extractCustomerDetails()
+- identifyProductCategory()
+- identifyCustomerRequirement()
+- classifyLeadIntent()
+- generateCustomerResponse()
+
+The detection system must support Hindi and English, including common Hinglish typing.
+
+Implement the following intent categories:
+
+1. Greeting
+2. Company Information
+3. Software Information
+4. Library Management
+5. Institute Management
+6. Coaching Management
+7. Gym Management
+8. CRM
+9. Farm Fresh Hub
+10. Delivery Management
+11. AI Chatbot
+12. AI Agent
+13. Pricing
+14. Free Demo
+15. Product Features
+16. Software Customization
+17. Software Development
+18. Technical Support
+19. Installation
+20. Integration
+21. API Integration
+22. WhatsApp Integration
+23. SMS Integration
+24. Payment Questions
+25. Purchase Enquiry
+26. Partnership
+27. Reseller Enquiry
+28. Contact Information
+29. Human Support
+30. General Questions
+31. Unknown Questions
+
+Create a comprehensive regex dictionary.
+
+Example implementation:
+
+const CUSTOMER_INTENT_PATTERNS = {
+  greeting: [
+    /\b(hi|hello|hey|good morning|good evening)\b/i,
+    /नमस्ते|नमस्कार|हेलो|सुप्रभात/i
+  ],
+
+  library: [
+    /\b(library|book|books|barcode|librarian|library software)\b/i,
+    /लाइब्रेरी|पुस्तकालय|किताब|पुस्तक|बारकोड/i
+  ],
+
+  institute: [
+    /\b(institute|student|admission|attendance|institute software)\b/i,
+    /इंस्टीट्यूट|संस्थान|छात्र|विद्यार्थी|एडमिशन/i
+  ],
+
+  coaching: [
+    /\b(coaching|batch|class|coaching software|course)\b/i,
+    /कोचिंग|बैच|क्लास|पाठ्यक्रम/i
+  ],
+
+  gym: [
+    /\b(gym|fitness|membership|trainer|gym software)\b/i,
+    /जिम|फिटनेस|मेंबरशिप|ट्रेनर/i
+  ],
+
+  crm: [
+    /\b(crm|customer|lead|sales|follow up)\b/i,
+    /कस्टमर|ग्राहक|लीड|सेल्स|फॉलोअप/i
+  ],
+
+  pricing: [
+    /\b(price|pricing|cost|charges|subscription|quotation)\b/i,
+    /कीमत|प्राइस|खर्च|चार्ज|कोटेशन/i
+  ],
+
+  demo: [
+    /\b(demo|free demo|trial|book a demo|product demo)\b/i,
+    /डेमो|फ्री डेमो|ट्रायल|सॉफ्टवेयर दिखाइए/i
+  ],
+
+  support: [
+    /\b(error|bug|issue|problem|support|help|not working)\b/i,
+    /एरर|बग|समस्या|मदद|काम नहीं कर रहा/i
+  ],
+
+  customization: [
+    /\b(custom software|customization|customize|modify|special feature)\b/i,
+    /कस्टम सॉफ्टवेयर|कस्टमाइजेशन|बदलाव|अलग फीचर/i
+  ],
+
+  contact: [
+    /\b(contact|phone|mobile|email|call me|whatsapp)\b/i,
+    /संपर्क|फोन|मोबाइल|ईमेल|कॉल|व्हाट्सएप/i
+  ],
+
+  purchase: [
+    /\b(buy|purchase|order|need software|want software|get started)\b/i,
+    /खरीदना|ऑर्डर|सॉफ्टवेयर चाहिए|लेना चाहता हूं/i
+  ],
+
+  human_support: [
+    /\b(human|real person|sales executive|talk to person|representative)\b/i,
+    /इंसान से बात|व्यक्ति से बात|सेल्स टीम|कस्टमर केयर/i
+  ]
+};
+
+The above is a starting dictionary, not the complete implementation.
+
+Expand it with extensive relevant synonyms, spelling variations, natural question patterns, Hindi words, English words and Hinglish expressions for all 31 categories.
+
+Avoid false positives.
+
+A message may match multiple intents. Return all matched intents and select the most relevant primary intent.
+
+When Regex does not identify an intent, use AI semantic understanding instead of rejecting the question.
+
+## 6. NATURAL CUSTOMER CONVERSATION ENGINE
+
+The chatbot must communicate naturally like a professional human customer support executive.
+
+It must:
+
+- Understand the complete conversation context.
+- Remember relevant details within the current conversation.
+- Understand follow-up questions.
+- Avoid asking the same question repeatedly.
+- Avoid robotic and repetitive replies.
+- Ask only necessary questions.
+- Provide short answers for simple questions.
+- Provide detailed answers when customers request details.
+- Explain technical information in simple language.
+- Understand incomplete sentences.
+- Understand spelling mistakes.
+- Understand common Hindi and English variations.
+- Handle multiple questions in one message.
+
+Example:
+
+Customer: मुझे सॉफ्टवेयर चाहिए।
+
+Bot: बिल्कुल! आपको किस प्रकार का Software चाहिए? Library, Institute, Coaching, Gym, CRM या कोई Custom Software?
+
+Customer: Gym वाला।
+
+Bot: ठीक है! आपको Gym Management Software चाहिए। आप इसमें Membership, Payments, Attendance और Member Records जैसे काम मैनेज कर सकते हैं। क्या आप इसका Demo देखना चाहेंगे?
+
+Customer: हां।
+
+Bot: बहुत अच्छा! Demo की व्यवस्था करने के लिए कृपया अपना नाम बताइए।
+
+Customer: Rahul।
+
+Bot: धन्यवाद राहुल जी। कृपया अपना मोबाइल नंबर बताइए ताकि हमारी टीम आपसे संपर्क कर सके।
+
+The chatbot must maintain conversation context and must not ask the customer which software they need again.
+
+## 7. INTELLIGENT SALES ASSISTANT
+
+The chatbot must also act as a professional sales assistant.
+
+It should:
+
+- Identify potential customers.
+- Understand their business type.
+- Understand their actual problems.
+- Recommend relevant software.
+- Explain how the product can help.
+- Identify interested customers.
+- Offer a free demo when appropriate.
+- Capture qualified leads.
+- Encourage customers to take the next step.
+- Handle objections politely.
+- Explain customization possibilities.
+- Transfer serious enquiries to the sales team.
+
+Example:
+
+Customer: Your software is expensive.
+
+Bot: मैं आपकी बात समझ सकता हूँ। सही Software चुनने से पहले आपकी Business Requirements समझना जरूरी है। आप किस प्रकार का Software चाहते हैं? हमारी टीम आपकी जरूरत के अनुसार उपलब्ध विकल्प समझा सकती है।
+
+Never pressure customers into purchasing.
+
+Never invent discounts, promotional offers or guaranteed results.
+
+## 8. PRICING AND QUOTATION HANDLING
+
+Inspect existing website pricing pages, product information and project configurations.
+
+If verified pricing is available, answer using the actual published price and clearly explain what it includes.
+
+If pricing is unavailable:
+
+- Do not invent prices.
+- Do not provide random estimates.
+- Ask about customer requirements.
+- Offer a quotation from the sales team.
+- Capture contact information with customer consent.
+
+Example:
+
+Customer: What is the price of your Gym Software?
+
+Bot: Thank you for your interest! Pricing depends on the required features and business requirements. Would you like our team to contact you with the appropriate pricing details?
+
+## 9. FREE DEMO BOOKING
+
+Implement a complete demo enquiry flow.
+
+Collect:
+
+- Customer Name
+- Business Name
+- Software Required
+- Mobile Number
+- Email Address (optional)
+- Preferred Demo Date
+- Preferred Time
+- Additional Requirements
+
+Ask one question at a time.
+
+Do not claim that a demo has been booked until the booking is actually confirmed by the connected backend or responsible team.
+
+If no automated calendar integration exists, save the demo request as a pending enquiry and inform the customer that the team will confirm it.
+
+## 10. CUSTOMER LEAD CAPTURE
+
+Implement lead capture for:
+
+- Product Enquiries
+- Pricing Enquiries
+- Demo Requests
+- Purchase Enquiries
+- Custom Software Requests
+- AI Agent Requests
+- Partnership Requests
+
+Create or reuse the existing Firebase lead collection.
+
+Suggested lead structure:
+
+{
+  customerName: "",
+  businessName: "",
+  phone: "",
+  email: "",
+  language: "",
+  productInterested: "",
+  enquiryType: "",
+  customerMessage: "",
+  customerRequirements: "",
+  preferredDemoDate: "",
+  preferredDemoTime: "",
+  leadStatus: "new",
+  source: "website_ai_chatbot",
+  createdAt: "server timestamp",
+  updatedAt: "server timestamp"
+}
+
+Requirements:
+
+- Validate phone numbers.
+- Validate email addresses.
+- Avoid duplicate lead creation.
+- Preserve customer enquiry history.
+- Use Firebase server timestamps.
+- Do not store unnecessary personal information.
+- Obtain customer consent before saving contact details for follow-up.
+- Do not expose private customer records to other users.
+
+## 11. FIREBASE DATABASE AND CHAT HISTORY
+
+Inspect the current Firebase architecture first.
+
+Reuse existing Firestore collections wherever possible.
+
+If missing, implement the required structures for:
+
+- Chat Sessions
+- Chat Messages
+- Customer Leads
+- Demo Enquiries
+- Customer Feedback
+- Chatbot Configuration
+
+Every conversation should have a unique session identifier.
+
+Store:
+
+- Session ID
+- Message ID
+- Customer Message
+- AI Response
+- Detected Language
+- Detected Intent
+- Product Category
+- Timestamp
+- Lead Conversion Status
+
+Ensure secure Firestore rules.
+
+Only authorized administrators can access customer lead records, chat analytics and administrative settings.
+
+Never expose Firebase Admin credentials, private API keys or sensitive environment variables in frontend code.
+
+Do not weaken existing Firebase security rules.
+
+## 12. AI RESPONSE GENERATION
+
+Implement a proper AI response pipeline.
+
+The flow should be:
+
+1. Receive customer message.
+2. Normalize message.
+3. Detect language.
+4. Detect Regex intents.
+5. Retrieve relevant company knowledge.
+6. Retrieve relevant product information.
+7. Understand conversation context.
+8. Generate an accurate answer.
+9. Validate the response.
+10. Return the answer in the correct language.
+11. Save conversation history.
+12. Identify whether a lead should be captured.
+
+Use the AI model and backend integrations already configured in the existing project.
+
+Do not create unnecessary additional paid API dependencies.
+
+Use the existing model configuration if it is working.
+
+If an AI model call fails, provide a polite fallback response and log the error securely.
+
+## 13. STRICT ANTI-HALLUCINATION SYSTEM
+
+This is extremely important.
+
+The chatbot must NEVER:
+
+- Invent product features.
+- Invent prices.
+- Invent company information.
+- Invent contact numbers.
+- Invent email addresses.
+- Invent product availability.
+- Invent customer reviews.
+- Claim a demo has been booked when it has not.
+- Claim a payment has been received without verification.
+- Claim that a technical issue has been fixed without verification.
+- Provide fake guarantees.
+
+Use this information priority:
+
+1. Verified official website information.
+2. Existing application product information.
+3. Verified Firebase knowledge base.
+4. Approved company FAQs.
+5. AI-generated general explanations clearly distinguished from official company facts.
+
+If an answer cannot be verified, say:
+
+Hindi:
+"इस जानकारी की पुष्टि अभी हमारे पास उपलब्ध नहीं है। मैं आपकी जानकारी हमारी टीम तक पहुँचाने में सहायता कर सकता हूँ।"
+
+English:
+"I don't currently have verified information about this. I can help forward your question to our team."
+
+## 14. TECHNICAL SUPPORT SYSTEM
+
+The chatbot must understand customer technical problems.
+
+Examples:
+
+- Login not working.
+- Forgot password.
+- Software not opening.
+- Dashboard showing an error.
+- Data not loading.
+- Payment issue.
+- Mobile compatibility issue.
+- Installation problem.
+- Account access problem.
+
+Ask the customer for:
+
+- Product Name
+- Problem Description
+- Error Message
+- Device Type
+- Screenshot, if supported
+- Contact Details, with consent
+
+Never ask for passwords, OTPs, Firebase secrets or bank credentials.
+
+Create a support enquiry when the existing backend supports it.
+
+If the chatbot cannot solve the issue, provide human support escalation.
+
+## 15. HUMAN SUPPORT AND SALES HANDOFF
+
+Implement a proper handoff system.
+
+When the customer asks to speak with a person, salesperson or support executive:
+
+- Detect the request.
+- Collect necessary contact details with consent.
+- Record the enquiry.
+- Mark the conversation for human follow-up.
+- Notify the authorized team using existing notification integrations, if available.
+- Display a clear acknowledgement.
+
+Hindi:
+"बिल्कुल! मैं आपकी बात हमारी टीम तक पहुँचाने के लिए आपकी सहायता करता हूँ। कृपया अपना संपर्क नंबर बताइए।"
+
+English:
+"Certainly! I can help connect you with our team. Please share your contact number."
+
+Never claim a human agent is currently available unless availability is verified.
+
+## 16. VOICE CHATBOT FUNCTIONALITY
+
+Inspect the existing voice chatbot implementation.
+
+If already implemented and working, preserve it.
+
+If incomplete, improve it.
+
+Requirements:
+
+- Voice input.
+- Speech-to-text.
+- AI-generated response.
+- Text-to-speech.
+- Hindi voice support.
+- English voice support.
+- Natural conversation.
+- Microphone permission handling.
+- Error handling.
+- Start and stop voice controls.
+- Conversation history.
+- Proper loading indicator.
+
+Preserve the existing Male/Female Voice Selection option.
+
+Ensure the selected voice preference is actually applied to speech output.
+
+Do not implement fake voice functionality.
+
+Do not claim voice support for a language or voice that the configured speech provider does not support.
+
+If the customer switches between Hindi and English, detect the language and respond appropriately.
+
+## 17. CHATBOT USER INTERFACE
+
+Inspect the existing chatbot UI.
+
+Preserve its existing design wherever possible.
+
+Improve only where necessary.
+
+Required functionality:
+
+- Chat window.
+- Welcome message.
+- Message input.
+- Send button.
+- Loading indicator.
+- Typing indicator.
+- Message timestamps.
+- Scroll to latest message.
+- Clear conversation option.
+- Start new conversation option.
+- Error message display.
+- Responsive mobile design.
+- Desktop compatibility.
+- Voice input, if supported.
+- Voice output, if supported.
+- Male/Female voice selection, if already available.
+- Quick reply suggestions.
+- Free Demo action.
+- Contact Sales action.
+
+Suggested welcome message:
+
+Hindi:
+
+"नमस्ते! C Vidya Solutions में आपका स्वागत है। मैं आपका AI Assistant हूँ। मैं आपको हमारे Software, AI Solutions, Pricing, Free Demo और Technical Support के बारे में जानकारी दे सकता हूँ। बताइए, मैं आपकी क्या सहायता कर सकता हूँ?"
+
+English:
+
+"Hello! Welcome to C Vidya Solutions. I am your AI Assistant. I can help you with our Software Products, AI Solutions, Pricing, Free Demos and Technical Support. How may I help you today?"
+
+Suggested quick replies:
+
+- Explore Software
+- Book Free Demo
+- Pricing Enquiry
+- AI Solutions
+- Technical Support
+- Talk to Sales Team
+
+Use the correct language for the quick replies.
+
+## 18. ADMIN PANEL INTEGRATION
+
+Inspect the existing Admin Panel.
+
+Do not create a duplicate Admin Panel.
+
+If the following features already exist, reuse them.
+
+If missing, implement them inside the existing admin architecture.
+
+Admin functionality:
+
+A. Chatbot Dashboard
+
+- Total Conversations
+- Active Conversations
+- Total Leads
+- New Enquiries
+- Demo Requests
+- Product-wise Enquiries
+- Human Support Requests
+- Lead Conversion Statistics
+
+B. Chat Management
+
+- View Chat Sessions
+- View Customer Messages
+- View AI Responses
+- View Conversation History
+- Filter by Date
+- Filter by Product
+- Filter by Intent
+- Filter by Language
+- Search Conversations
+
+C. Lead Management
+
+- View Leads
+- Customer Details
+- Product Interested
+- Enquiry Type
+- Lead Status
+- Follow-up Status
+- Demo Requests
+- Customer Requirements
+
+D. Chatbot Configuration
+
+- Enable or Disable Chatbot
+- Welcome Message
+- Approved Company FAQs
+- Product Knowledge
+- Supported Languages
+- Voice Settings
+- Quick Reply Settings
+
+E. Feedback and Quality Monitoring
+
+- Customer Feedback
+- Unanswered Questions
+- Incorrect Answer Reports
+- Frequently Asked Questions
+- Failed AI Responses
+- Escalated Conversations
+
+All admin operations must require proper authentication and authorization.
+
+## 19. LEARNING FROM UNANSWERED QUESTIONS
+
+Implement a controlled knowledge improvement mechanism.
+
+When a customer asks an unanswered question:
+
+- Record the question.
+- Record the detected intent.
+- Record the product category, if identified.
+- Mark it as unanswered.
+- Make it available in the Admin Panel.
+- Allow an authorized administrator to create or approve an answer.
+
+Do not automatically turn unverified customer statements into official company knowledge.
+
+Only approved knowledge should be used as verified company information.
+
+## 20. SECURITY AND PERFORMANCE
+
+Ensure:
+
+- Firebase Authentication is respected.
+- Firestore Security Rules remain secure.
+- Backend endpoints validate requests.
+- API keys remain server-side.
+- Customer data is protected.
+- Input validation is implemented.
+- Error handling is comprehensive.
+- Rate limiting is implemented where appropriate.
+- Duplicate submissions are prevented.
+- AI responses are handled safely.
+- No sensitive information is logged.
+- Existing website performance is preserved.
+
+Do not introduce unnecessary dependencies.
+
+Do not break existing website routes or navigation.
+
+## 21. TESTING REQUIREMENTS
+
+Perform complete testing after implementation.
+
+Test at least the following conversations.
+
+TEST 1:
+
+Customer: नमस्ते
+
+Expected: Hindi welcome response.
+
+TEST 2:
+
+Customer: Hello
+
+Expected: English welcome response.
+
+TEST 3:
+
+Customer: मुझे Library Management Software चाहिए।
+
+Expected: Library product information.
+
+TEST 4:
+
+Customer: What are the features of your Gym Software?
+
+Expected: Verified Gym software features.
+
+TEST 5:
+
+Customer: Coaching software ka demo chahiye.
+
+Expected: Understand Hinglish and start demo enquiry.
+
+TEST 6:
+
+Customer: What is the price?
+
+Expected: Ask which product if context is missing, or answer pricing using verified information.
+
+TEST 7:
+
+Customer: I want custom software for my business.
+
+Expected: Identify custom development enquiry and ask about requirements.
+
+TEST 8:
+
+Customer: आपका मोबाइल नंबर क्या है?
+
+Expected: Provide verified company contact information only.
+
+TEST 9:
+
+Customer: My software is not working.
+
+Expected: Technical support workflow.
+
+TEST 10:
+
+Customer: I want to talk to a real person.
+
+Expected: Human support handoff.
+
+TEST 11:
+
+Customer: Can you provide WhatsApp integration?
+
+Expected: Answer based on verified integration availability.
+
+TEST 12:
+
+Customer: Mujhe AI chatbot banwana hai.
+
+Expected: Understand Hinglish and explain available AI solutions.
+
+TEST 13:
+
+Customer: Can I get a free demo tomorrow?
+
+Expected: Collect preferred date and check actual booking capability.
+
+TEST 14:
+
+Customer: मुझे Gym और CRM दोनों चाहिए।
+
+Expected: Identify both product requirements.
+
+TEST 15:
+
+Customer: I need something for my business.
+
+Expected: Ask what type of business and what problem needs solving.
+
+Also test:
+
+- Empty messages.
+- Very long messages.
+- Spelling mistakes.
+- Multiple questions.
+- Repeated messages.
+- Network failures.
+- AI API failures.
+- Firebase failures.
+- Invalid contact information.
+- Mobile screen compatibility.
+- Voice permissions.
+- Hindi and English language switching.
+
+Fix all critical errors discovered during testing.
+
+## 22. IMPLEMENTATION RULES
+
+Before changing any code:
+
+1. Inspect the project structure.
+2. Identify existing chatbot components.
+3. Identify existing AI services.
+4. Identify existing Firebase integrations.
+5. Identify existing Admin Panel components.
+6. Identify existing voice functionality.
+7. Identify existing APIs.
+8. Identify existing knowledge sources.
+9. Identify incomplete and missing features.
+
+Then prepare a feature audit:
+
+- Existing and working: SKIP.
+- Existing but broken: FIX.
+- Partially implemented: COMPLETE.
+- Not implemented: IMPLEMENT.
+
+Modify only the required files.
+
+Do not unnecessarily rewrite large files.
+
+Do not remove existing features.
+
+Do not create duplicate Firebase collections.
+
+Do not replace working authentication.
+
+Do not replace the existing website design.
+
+Do not change the live website domain or deployment configuration.
+
+Preserve compatibility with the existing React and Firebase versions.
+
+## 23. FINAL ACCEPTANCE CRITERIA
+
+The project will be considered complete only when:
+
+1. Chatbot understands Hindi and English.
+2. Hinglish questions are understood and answered in Hindi.
+3. Customer questions are classified correctly.
+4. All verified software products are covered.
+5. Company information is accurate.
+6. Customer conversations feel natural.
+7. Follow-up questions retain context.
+8. Pricing answers do not contain invented information.
+9. Demo enquiries can be recorded.
+10. Customer leads can be captured securely.
+11. Chat history is saved correctly.
+12. Human handoff works through available integrations.
+13. Voice functionality works wherever supported.
+14. Existing Male/Female voice selection is preserved.
+15. Admin Panel shows the required information.
+16. Existing working features remain unaffected.
+17. No critical build or runtime errors remain.
+18. Responsive design works on desktop and mobile.
+19. Security rules are not weakened.
+20. All implemented features pass the relevant tests.
+
+## 24. FINAL BUILD REPORT
+
+After completing the implementation, provide a detailed report containing:
+
+A. Existing Features Found
+
+B. Existing Features Skipped Because They Already Worked
+
+C. Existing Features Fixed
+
+D. New Features Implemented
+
+E. Files Modified
+
+F. New Files Created
+
+G. Firebase Changes Required
+
+H. API and Environment Variables Required
+
+I. Test Results
+
+J. Remaining Issues, if any
+
+K. Manual Deployment Steps
+
+L. Any feature that could not be implemented and the exact reason.
+
+IMPORTANT FINAL INSTRUCTION:
+
+Do not simply generate a plan or documentation.
+
+Actually inspect and modify the existing project code.
+
+Implement all missing features, fix incomplete features, preserve working features and test the application.
+
+Do not falsely report successful implementation if a feature has not been tested.
+
+The final objective is to make the existing C Vidya AI Chatbot a reliable, intelligent, bilingual (Hindi and English) customer support and sales assistant for C VIDYA SOLUTIONS.
+
+Work carefully, preserve the existing application and complete the implementation without breaking existing functionality.
