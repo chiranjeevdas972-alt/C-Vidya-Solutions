@@ -122,7 +122,10 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       window.addEventListener("keydown", handleKeyDown);
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        inputRef.current?.focus();
+        // Only auto-focus text input on desktop/laptop screens so mobile/tablet virtual keyboards don't cover the chat or block the mic
+        if (typeof window !== "undefined" && window.innerWidth >= 768 && !("ontouchstart" in window)) {
+          inputRef.current?.focus();
+        }
       }, 150);
       return () => window.removeEventListener("keydown", handleKeyDown);
     } else {
@@ -189,19 +192,22 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   };
 
   const handleToggleListening = () => {
-    ttsService.unlockAudio();
     setVoiceError("");
     setShowGenderPopup(false);
     setShowLangPopup(false);
 
     if (voiceStatus === "listening" || speechInputService.getIsListening() || isListeningRef.current) {
-      const pendingText = normalizeSpokenCvidyaText(interimTranscript || input).trim();
-      isListeningRef.current = false;
-      speechInputService.stopListening();
-      setVoiceStatus("idle");
-      clearComposerInput();
+      ttsService.unlockAudio();
+      const pendingText = normalizeSpokenCvidyaText(input).trim();
       if (pendingText) {
+        isListeningRef.current = false;
+        speechInputService.stopListening();
+        setVoiceStatus("idle");
+        clearComposerInput();
         handleSendMessage(pendingText, true);
+      } else {
+        // Let active mobile MediaRecorder or SpeechRecognition finalize & transcribe captured audio
+        speechInputService.finishListening();
       }
       return;
     }
@@ -214,7 +220,13 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       return;
     }
 
-    ttsService.stop();
+    // Stop any active TTS playback before opening the microphone
+    if (ttsService.isSpeaking()) {
+      ttsService.stop();
+    }
+    // Dismiss mobile virtual keyboard if open so microphone listening is unobstructed
+    inputRef.current?.blur();
+
     isListeningRef.current = true;
     clearComposerInput();
 
@@ -226,8 +238,12 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
           setInterimTranscript("");
         }
       },
+      onStatusHint: (hint) => {
+        if (!isListeningRef.current) return;
+        setInterimTranscript(hint);
+      },
       onInterimResult: (transcript) => {
-        if (!isListeningRef.current || !speechInputService.getIsListening()) return;
+        if (!isListeningRef.current) return;
         const cleaned = normalizeSpokenCvidyaText(transcript);
         setInterimTranscript(cleaned);
         setInput(cleaned);
@@ -236,10 +252,11 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         isListeningRef.current = false;
         speechInputService.stopListening();
         const cleaned = normalizeSpokenCvidyaText(finalText).trim();
-        clearComposerInput();
         if (cleaned) {
+          setInput(cleaned);
           handleSendMessage(cleaned, true);
         } else {
+          clearComposerInput();
           setVoiceStatus("idle");
         }
       },

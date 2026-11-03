@@ -1199,27 +1199,35 @@ function getSmartAssistantResponseCore(
     return "Certainly! I can help connect you with our team. Please share your contact number.\n\nIf you would like to reach our executive desk directly:\n📞 **Helpline**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n📍 **Headquarters**: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n\nPlease share your **Name**, **Mobile Number**, and **Product of Interest**, and our executive team will contact you right away!";
   }
 
-  // 4. All Software / Products Overview ("all software", "what software", "list of software", "all products", "services", "kya kya software", "सॉफ्टवेयर")
+  // 4. All Software / Products Overview ("all software", "what software", "what's your software", "list of software", "all products", "services", "kya kya software", "सॉफ्टवेयर")
   if (
-    userText.includes("all software") ||
-    userText.includes("all products") ||
-    userText.includes("all product") ||
-    userText.includes("what software") ||
-    userText.includes("software products") ||
-    userText.includes("products do you offer") ||
-    userText.includes("what products") ||
-    userText.includes("which software") ||
-    userText.includes("list of software") ||
-    userText.includes("kya kya software") ||
-    userText.includes("kya software") ||
-    userText.includes("product list") ||
-    userText.includes("services list") ||
-    userText.includes("software list") ||
-    userText.includes("सभी सॉफ्टवेयर") ||
-    userText.includes("सॉफ्टवेयर की जानकारी") ||
-    userText.includes("कौन-कौन से सॉफ्टवेयर") ||
-    userText.includes("कौन कौन से सॉफ्टवेयर") ||
-    userText.includes("क्या सॉफ्टवेयर बनाते")
+    !asksPricing &&
+    !asksDemo &&
+    (userText.includes("all software") ||
+      userText.includes("all products") ||
+      userText.includes("all product") ||
+      userText.includes("what software") ||
+      userText.includes("what's your software") ||
+      userText.includes("whats your software") ||
+      userText.includes("what is your software") ||
+      userText.includes("what are your software") ||
+      userText.includes("tell me about your software") ||
+      userText.includes("tell me your software") ||
+      userText.includes("software products") ||
+      userText.includes("products do you offer") ||
+      userText.includes("what products") ||
+      userText.includes("which software") ||
+      userText.includes("list of software") ||
+      userText.includes("kya kya software") ||
+      userText.includes("kya software") ||
+      userText.includes("product list") ||
+      userText.includes("services list") ||
+      userText.includes("software list") ||
+      userText.includes("सभी सॉफ्टवेयर") ||
+      userText.includes("सॉफ्टवेयर की जानकारी") ||
+      userText.includes("कौन-कौन से सॉफ्टवेयर") ||
+      userText.includes("कौन कौन से सॉफ्टवेयर") ||
+      userText.includes("क्या सॉफ्टवेयर बनाते"))
   ) {
     if (langMode === "hi") {
       return "**C Vidya Solutions का संपूर्ण सॉफ्टवेयर पोर्टफोलियो**:\n\n📦 **प्रमुख बिजनेस सॉफ्टवेयर (Core Software Suites)**:\n1. **Library Management Software**: स्टडी हॉल सीट आवंटन, स्टूडेंट मैनेजमेंट, बारकोड स्कैनर, फीस रिकॉर्ड व WhatsApp अलर्ट।\n2. **Institute Management Software**: स्कूल/कॉलेज ERP, एडमिशन CRM, फीस कैशबुक, उपस्थिति, परीक्षा व रिपोर्ट कार्ड।\n3. **Coaching Management Software**: बैच शेड्यूलिंग, स्टूडेंट एनरोलमेंट, फीस ट्रैकिंग, OMR मॉक टेस्ट स्कैनर व AIR रैंक।\n4. **Gym & Fitness Management Software (CV Fitness Zone)**: जिम मेंबरशिप प्लान, बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, रिन्यूअल अलर्ट व डाइट चार्ट।\n5. **CRM Software (C Vidya Enterprises CRM)**: लीड कैप्चर, फॉलो-अप ट्रैकिंग, सेल्स पाइपलाइन और कोटेशन PDF बिल्डर।\n6. **Farm Fresh Hub (AgriFusion)**: कृषि उत्पाद, पोल्ट्री, मछली पालन, इन्वेंटरी और ऑर्डर/POS बिलिंग।\n7. **Delivery Management Software**: ऑर्डर मैनेजमेंट, डिलीवरी बॉय असाइनमेंट, डिस्पैच ट्रैकिंग और डिलीवरी कन्फर्मेशन।\n8. **Jewelers Management, Petrol Pump Cloud & Care Plus Healthcare ERP**\n\n🤖 **AI चैटबॉट और 4 ऑटोनॉमस AI एजेंट्स**:\n1. **AI Chatbot & Customer Support Agent** (वेबसाइट व WhatsApp 24/7 चैटबॉट)\n2. **Business Sales Flow AI Agent** | 3. **Social Media Agent** | 4. **AI Marketing for B2B SaaS**\n\nआप किस सॉफ्टवेयर के फीचर्स या फ्री लाइव डेमो देखना चाहते हैं?";

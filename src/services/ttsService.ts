@@ -23,26 +23,34 @@ const FEMALE_VOICE_HINTS = [
   "swara", "neerja", "aria", "jenny", "sonia", "ava", "emma", "samantha", "karen",
   "moira", "tessa", "veena", "lekha", "kiyara", "isha", "sangeeta", "heera", "kalpana",
   "priya", "ananya", "aditi", "raveena", "kavya", "divya", "natasha", "clara", "hazel",
-  "zira", "victoria", "susan", "linda", "catherine", "serena", "allison", "siri female",
-  "google uk english female", "wavenet-a", "wavenet-d",
-  "standard-a", "standard-d", "neural2-a", "neural2-d", "hia-local", "hia-network",
-  "hic-local", "hic-network", "hif-local", "hif-network", "ena-local", "ena-network",
-  "enc-local", "enc-network", "female", "woman", "girl"
+  "zira", "victoria", "susan", "linda", "catherine", "serena", "allison", "nicky", "siri female",
+  "google uk english female", "google us english", "wavenet-a", "wavenet-d", "wavenet-c", "wavenet-e", "wavenet-f",
+  "standard-a", "standard-d", "neural2-a", "neural2-c", "neural2-d", "neural2-e", "neural2-f",
+  "hia-local", "hia-network", "hic-local", "hic-network", "hif-local", "hif-network",
+  "ena-local", "ena-network", "enc-local", "enc-network", "enf-local", "enf-network",
+  "sfg-local", "sfg-network", "iob-local", "iob-network",
+  "female", "woman", "girl"
 ];
 
 const MALE_VOICE_HINTS = [
   "madhur", "prabhat", "hemant", "ravi", "rishi", "neel", "andrew", "brian", "guy",
   "christopher", "eric", "roger", "steffan", "ryan", "daniel", "rohit", "arjun",
   "kabir", "dev", "amit", "raj", "alex", "david", "mark", "george", "james", "richard",
-  "fred", "tom", "aaron", "arthur", "oliver", "siri male", "google uk english male",
-  "wavenet-b", "wavenet-c", "standard-b", "standard-c", "neural2-b", "neural2-c",
+  "fred", "tom", "aaron", "arthur", "oliver", "reed", "evan", "siri male", "google uk english male",
+  "wavenet-b", "wavenet-c", "wavenet-d", "wavenet-i", "wavenet-j",
+  "standard-b", "standard-c", "neural2-b", "neural2-d", "neural2-i", "neural2-j",
   "hib-local", "hib-network", "hid-local", "hid-network", "hie-local", "hie-network",
   "enb-local", "enb-network", "end-local", "end-network", "ene-local", "ene-network",
+  "iom-local", "iom-network", "tpd-local", "tpd-network",
   "male", "man", "boy"
 ];
 
 const TOP_HINDI_VOICE_NAMES = ["swara", "madhur", "kalpana", "hemant", "lekha", "kiyara", "neel", "google हिन्दी", "hindi"];
-const TOP_ENGLISH_VOICE_NAMES = ["neerja", "prabhat", "rishi", "veena", "isha", "aria", "jenny", "andrew", "brian", "ryan", "sonia", "ava", "samantha", "daniel"];
+const TOP_ENGLISH_NEURAL_VOICE_NAMES = [
+  "neerja", "prabhat", "aria", "andrew", "brian", "guy", "jenny", "sonia", "ryan", "ava",
+  "emma", "christopher", "eric", "steffan", "rishi", "veena", "isha", "samantha", "daniel",
+  "karen", "moira", "serena", "alex", "oliver", "google uk english female", "google uk english male", "google us english"
+];
 
 /**
  * Strips markdown symbols, URLs, and decorative bullet chars and converts them into
@@ -51,17 +59,19 @@ const TOP_ENGLISH_VOICE_NAMES = ["neerja", "prabhat", "rishi", "veena", "isha", 
 export function sanitizeTextForSpeech(rawText: string): string {
   const isHindi = /[\u0900-\u097F]/.test(rawText);
   return rawText
+    .replace(/\[[^\]]*(?:cvidyasolutions|workers\.dev|Live:)[^\]]*\]/gi, "")
     .replace(/https?:\/\/(?:www\.)?cvidyasolutions\.com[^\s)]*/gi, isHindi ? "सी विद्या सॉल्यूशंस डॉट कॉम" : "C Vidya Solutions dot com")
     .replace(/www\.cvidyasolutions\.com/gi, isHindi ? "सी विद्या सॉल्यूशंस डॉट कॉम" : "C Vidya Solutions dot com")
+    .replace(/[a-z0-9-]+\.cvidyasolutions\.workers\.dev[^\s)\]]*/gi, "")
     .replace(/https?:\/\/[^\s)]+/g, isHindi ? "हमारे आधिकारिक लिंक" : "our official link")
     .replace(/[`*_~#>]/g, "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/₹\s*(\d[\d,]*)\s*\/\s*(?:mo|month)\b/gi, isHindi ? "$1 रुपये प्रति माह" : "$1 rupees per month")
     .replace(/₹\s*(\d[\d,]*)\s*\/\s*(?:yr|year)\b/gi, isHindi ? "$1 रुपये प्रति वर्ष" : "$1 rupees per year")
     .replace(/₹\s*(\d[\d,]*)/g, isHindi ? "$1 रुपये" : "$1 rupees")
-    .replace(/\b24\/7\b/g, isHindi ? "चौबीसों घंटे" : "24 by 7")
+    .replace(/\b24\/7\b/g, isHindi ? "चौबीसों घंटे" : "twenty-four seven")
     .replace(/\bOPD\/IPD\b/gi, "O P D and I P D")
-    .replace(/\bSMS\/WhatsApp\b/gi, isHindi ? "एसएमएस और व्हाट्सऐप" : "SMS and WhatsApp")
+    .replace(/\bSMS\/WhatsApp\b/gi, isHindi ? "एसएमएस और व्हाट्सऐप" : "S M S and WhatsApp")
     .replace(/\bCBSE\/ICSE\b/gi, "C B S E and I C S E")
     .replace(/\b24K\/22K\b/gi, isHindi ? "24 कैरेट और 22 कैरेट" : "24 karat and 22 karat")
     .replace(/\b1-on-1\b/gi, isHindi ? "वन ऑन वन" : "one on one")
@@ -72,7 +82,7 @@ export function sanitizeTextForSpeech(rawText: string): string {
     .replace(/\+91\s*/g, "+91 ")
     .replace(/[•▪▸►]/g, ". ")
     .replace(/[—–]/g, ", ")
-    .replace(/[📦🤖⚡📞📧📍🏢👔🧾🚀👋🙏🇮🇳🎯💼🌐⏱️🚨📅📊👥🔒💡✅😊💳🚪📈🔗🛠️🏆📱💻]/g, " ")
+    .replace(/[📦🤖⚡📞📧📍🏢👔🧾🚀👋🙏🇮🇳🎯💼🌐⏱️🚨📅📊👥🔒💡✅😊💳🚪📈🔗🛠️🏆📱💻🤝]/g, " ")
     .replace(/\n+/g, ". ")
     .replace(/\.\s*\./g, ".")
     .replace(/।\s*\./g, "।")
@@ -93,10 +103,16 @@ export function detectPreferredSpeechLocale(text: string): "hi-IN" | "en-IN" {
 
 function classifyVoiceGender(voice: SpeechSynthesisVoice): VoiceGender | "unknown" {
   const n = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-  if (/\bmale\b/.test(n) || MALE_VOICE_HINTS.some((h) => n.includes(h))) {
-    if (!/\bfemale\b/.test(n)) return "male";
+  if (/\bfemale\b/.test(n) || n.includes("google us english")) {
+    return "female";
   }
-  if (/\bfemale\b/.test(n) || FEMALE_VOICE_HINTS.some((h) => n.includes(h))) {
+  if (/\bmale\b/.test(n)) {
+    return "male";
+  }
+  if (MALE_VOICE_HINTS.some((h) => n.includes(h))) {
+    return "male";
+  }
+  if (FEMALE_VOICE_HINTS.some((h) => n.includes(h))) {
     return "female";
   }
   return "unknown";
@@ -105,7 +121,8 @@ function classifyVoiceGender(voice: SpeechSynthesisVoice): VoiceGender | "unknow
 /**
  * Selects the most lifelike human Male or Female voice strictly from Hindi ("hi")
  * for Hindi speech or English ("en") for English speech.
- * NEVER selects an English-only voice for Devanagari Hindi text (which would cause silent skipping).
+ * Strongly prioritizes cloud/neural/natural voices (Google Wavenet, Microsoft Online Natural, Apple Neural)
+ * and penalizes legacy offline desktop SAPI5 voices so English sounds like a real human.
  */
 function selectBestHumanVoice(
   voices: SpeechSynthesisVoice[],
@@ -135,8 +152,6 @@ function selectBestHumanVoice(
 
     if (targetLang === "hi-IN") {
       // CRITICAL: Only pick voices that can actually pronounce Devanagari Hindi!
-      // Never pick an en-IN or en-US voice for Devanagari text, because English TTS engines
-      // silently skip all Devanagari characters and output 0 audio.
       if (!isHindiVoice) {
         continue;
       }
@@ -147,40 +162,57 @@ function selectBestHumanVoice(
         continue;
       }
       if (vLang === "en-in") {
-        score += 85;
+        score += 75;
       } else if (vLang === "en-gb" || vLang === "en-us") {
-        score += 65;
+        score += 72;
       } else {
-        score += 50;
+        score += 55;
       }
     }
 
-    // Strongly prefer ultra-realistic neural / natural / online human voices
+    // Detect legacy offline Windows SAPI5 voices (e.g. "Microsoft Heera", "Microsoft Ravi", "Microsoft David", "Microsoft Zira")
+    // which have localService === true and lack "natural" / "online" / "neural"
+    const isLegacyOfflineSapi5 =
+      v.localService === true &&
+      vName.includes("microsoft") &&
+      !vName.includes("natural") &&
+      !vName.includes("online") &&
+      !vName.includes("neural");
+
+    // Strongly prefer ultra-realistic neural / natural / cloud Wavenet human voices
     if (vName.includes("natural") || vName.includes("neural") || vName.includes("multilingual") || vName.includes("wavenet")) {
-      score += 65;
-    } else if (vName.includes("online") || vName.includes("network") || vName.includes("studio")) {
-      score += 48;
+      score += 115;
+    } else if (vName.includes("google") && v.localService === false) {
+      // Chrome's Google UK English Female / Google UK English Male / Google US English / Google हिन्दी cloud voices
+      score += 110;
+    } else if (vName.includes("online") || vName.includes("network") || vName.includes("studio") || v.localService === false) {
+      score += 92;
     } else if (vName.includes("premium") || vName.includes("enhanced") || vName.includes("siri")) {
-      score += 38;
-    } else if (vName.includes("google") || vName.includes("microsoft") || vName.includes("apple")) {
-      score += 26;
+      score += 82;
+    } else if (vName.includes("google") || vName.includes("apple")) {
+      score += 60;
+    } else if (isLegacyOfflineSapi5) {
+      // Penalize old robotic offline desktop SAPI5 voices so cloud/neural voices always win when available
+      score -= 55;
+    } else if (vName.includes("microsoft")) {
+      score += 20;
     }
 
     if (targetLang === "hi-IN" && TOP_HINDI_VOICE_NAMES.some((n) => vName.includes(n))) {
       score += 28;
-    } else if (targetLang === "en-IN" && TOP_ENGLISH_VOICE_NAMES.some((n) => vName.includes(n))) {
-      score += 28;
+    } else if (targetLang === "en-IN" && TOP_ENGLISH_NEURAL_VOICE_NAMES.some((n) => vName.includes(n)) && !isLegacyOfflineSapi5) {
+      score += 32;
     }
 
     // Gender matching (Female vs Male)
     const detectedGender = classifyVoiceGender(v);
     const isGenderMatch = detectedGender === targetGender;
     if (isGenderMatch) {
-      score += 80;
+      score += 95;
     } else if (detectedGender === "unknown") {
       score += 15;
     } else {
-      score -= 40;
+      score -= 60;
     }
 
     if (score > bestScore) {
@@ -227,7 +259,6 @@ function transliterateDevanagariToPhonetic(text: string): string {
     }
     if (map[ch] !== undefined) {
       const val = map[ch];
-      // Drop inherent 'a' before a vowel matra or virama or at word end
       const isConsonant = val.length > 1 && val.endsWith("a") && ch >= "क" && ch <= "ह";
       const nextIsMatraOrVirama = next >= "ा" && next <= "्";
       const nextIsSpaceOrPunct = !next || /[\s.,?!।-]/.test(next);
@@ -251,7 +282,7 @@ function transliterateDevanagariToPhonetic(text: string): string {
 function prepareConversationalSpeechScript(rawText: string, targetLang: "en-IN" | "hi-IN" = "en-IN"): string {
   let text = rawText
     .replace(/🔗[^\n]*/g, "")
-    .replace(/\[Live:[^\]]*\]/gi, "")
+    .replace(/\[[^\]]*(?:cvidyasolutions|workers\.dev|Live:)[^\]]*\]/gi, "")
     .replace(/https?:\/\/[^\s)]+/g, "");
 
   if (targetLang === "hi-IN" || /[\u0900-\u097F]/.test(text)) {
@@ -284,9 +315,17 @@ function prepareConversationalSpeechScript(rawText: string, targetLang: "en-IN" 
       .replace(/\bAI\b/g, "एआई");
   } else {
     text = text
-      .replace(/\bC-VIDYA\b/g, "C Vidya")
+      .replace(/\bC-VIDYA\b/gi, "C Vidya")
       .replace(/\bSaaS\b/g, "cloud software")
-      .replace(/\bSLA\b/g, "service guarantee");
+      .replace(/\bSLA\b/g, "service guarantee")
+      .replace(/\bERP\b/g, "E R P")
+      .replace(/\bCRM\b/g, "C R M")
+      .replace(/\bPOS\b/g, "point of sale")
+      .replace(/\bGST\b/g, "G S T")
+      .replace(/\bUPI\b/g, "U P I")
+      .replace(/\bOMR\b/g, "O M R")
+      .replace(/\bISBN\b/g, "I S B N")
+      .replace(/\bRFID\b/g, "R F I D");
   }
 
   const cleaned = sanitizeTextForSpeech(text);
@@ -308,11 +347,12 @@ function prepareConversationalSpeechScript(rawText: string, targetLang: "en-IN" 
 }
 
 /**
- * Splits speech text into safe, bite-sized clauses (<= 95 chars for Hindi Devanagari, <= 145 chars for English)
- * so Chrome's network voices (like "Google हिन्दी") never reject or truncate long UTF-8 utterances.
+ * Splits speech text into safe, bite-sized clauses (<= 95 chars for Hindi Devanagari, <= 135 chars for English)
+ * so Chrome's network voices (like "Google हिन्दी", "Google UK English", "Google US English")
+ * never reject or truncate long utterances.
  */
 function splitIntoSpeechChunks(text: string, targetLang: "en-IN" | "hi-IN"): string[] {
-  const maxChunkLen = targetLang === "hi-IN" ? 95 : 145;
+  const maxChunkLen = targetLang === "hi-IN" ? 95 : 135;
   const rawSentences = text
     .split(/(?<=[।.?!])\s+/)
     .map((s) => s.trim())
@@ -323,16 +363,14 @@ function splitIntoSpeechChunks(text: string, targetLang: "en-IN" | "hi-IN"): str
     if (sentence.length <= maxChunkLen) {
       fineParts.push(sentence);
     } else {
-      // Split long sentences on commas or conjunctions
       const clauses = sentence
-        .split(/(?<=,|،)\s+|\s+(?=और\s|या\s|तथा\s|लेकिन\s|तो\s|and\s|or\s|but\s)/i)
+        .split(/(?<=,|،|;|:)\s+|\s+(?=और\s|या\s|तथा\s|लेकिन\s|तो\s|and\s|or\s|but\s|with\s|including\s)/i)
         .map((c) => c.trim())
         .filter(Boolean);
       for (const clause of clauses) {
         if (clause.length <= maxChunkLen) {
           fineParts.push(clause);
         } else {
-          // Hard split on word boundary if still over maxChunkLen
           const words = clause.split(/\s+/);
           let buf = "";
           for (const w of words) {
@@ -405,7 +443,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
 
   /**
    * Unlocks Web Audio API and warms up SpeechSynthesis inside a direct user click gesture
-   * (Mic button click, Send button click, etc.) so async voice replies are never blocked by browser autoplay rules.
+   * so async voice replies are never blocked by browser autoplay rules.
    */
   public unlockAudio(): void {
     if (typeof window === "undefined") return;
@@ -479,7 +517,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
             try {
               const source = ctx.createBufferSource();
               source.buffer = decodedBuffer;
-              source.playbackRate.value = 1.02;
+              source.playbackRate.value = 1.01;
               source.connect(ctx.destination);
               this.activeAudioSource = source;
               this.speaking = true;
@@ -532,7 +570,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
     try {
       const dataUrl = `data:${mimeType || "audio/wav"};base64,${base64Data}`;
       const audio = new Audio(dataUrl);
-      audio.playbackRate = 1.02;
+      audio.playbackRate = 1.01;
       this.activeAudio = audio;
       this.speaking = true;
 
@@ -611,7 +649,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
         utterance.voice = enVoice;
       }
       utterance.rate = 0.96;
-      utterance.pitch = gender === "female" ? (matchedGender ? 1.04 : 1.14) : (matchedGender ? 0.92 : 0.80);
+      utterance.pitch = gender === "female" ? (matchedGender ? 1.02 : 1.12) : (matchedGender ? 0.95 : 0.84);
 
       this.activeUtterances = [utterance];
       this.speaking = true;
@@ -737,7 +775,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
   /**
    * Speaks sequentially chunk-by-chunk using Browser SpeechSynthesis, with automatic
    * fallback to Server Gemini TTS (/api/tts) if the browser lacks a voice for the language
-   * or if SpeechSynthesis fails / silently skips Devanagari characters.
+   * or if SpeechSynthesis fails / silently skips characters.
    */
   private speakWithBrowserHumanVoice(
     cleanSpeech: string,
@@ -755,9 +793,6 @@ class HumanHybridTtsProvider implements ITtsProvider {
       const voices = window.speechSynthesis.getVoices?.() || [];
       const { voice: matchedVoice, matchedGender } = selectBestHumanVoice(voices, strictLang, gender);
 
-      // CRITICAL: If voices are loaded on this device and there is NO Hindi voice available,
-      // browser SpeechSynthesis CANNOT pronounce Devanagari characters! Return false so
-      // speakWithServerTts (/api/tts Gemini voice + phonetic fallback) handles it immediately.
       if (strictLang === "hi-IN" && voices.length > 0 && !matchedVoice) {
         return false;
       }
@@ -801,11 +836,9 @@ class HumanHybridTtsProvider implements ITtsProvider {
         const utterance = new SpeechSynthesisUtterance(chunkText);
         this.activeUtterances.push(utterance);
 
-        // Strictly enforce ONLY hi-IN or en-IN
         utterance.lang = strictLang;
         utterance.volume = 1.0;
 
-        // Re-check voices in case voiceschanged fired
         const latestVoices = window.speechSynthesis.getVoices?.() || voices;
         const { voice: currentMatchedVoice, matchedGender: currentMatchedGender } =
           matchedVoice
@@ -827,22 +860,23 @@ class HumanHybridTtsProvider implements ITtsProvider {
           }
         }
 
-        // Natural human conversational cadence & distinct Female vs Male vocal timbre
+        // Ultra-natural human conversational cadence for Hindi and English (Male & Female)
         if (strictLang === "hi-IN") {
-          if (gender === "female") {
-            utterance.rate = 1.02;
-            utterance.pitch = currentMatchedGender ? 1.04 : 1.12;
-          } else {
-            utterance.rate = 1.0;
-            utterance.pitch = currentMatchedGender ? 0.94 : 0.84;
-          }
-        } else {
           if (gender === "female") {
             utterance.rate = 1.02;
             utterance.pitch = currentMatchedGender ? 1.03 : 1.12;
           } else {
             utterance.rate = 1.0;
             utterance.pitch = currentMatchedGender ? 0.94 : 0.84;
+          }
+        } else {
+          // For English: preserve natural neural voice formant when gender matches
+          if (gender === "female") {
+            utterance.rate = 1.0;
+            utterance.pitch = currentMatchedGender ? 1.0 : 1.10;
+          } else {
+            utterance.rate = 0.98;
+            utterance.pitch = currentMatchedGender ? 0.97 : 0.85;
           }
         }
 
@@ -864,8 +898,6 @@ class HumanHybridTtsProvider implements ITtsProvider {
         utterance.onend = () => {
           if (currentSession !== this.speechSessionId || hasFallenBack) return;
           const elapsedMs = Date.now() - chunkDispatchTime;
-          // If chunk 0 finished in < 140ms despite having >= 10 characters of text,
-          // the browser TTS engine silently skipped unsupported characters without producing sound!
           if (idx === 0 && chunkText.length >= 10 && elapsedMs < 140) {
             triggerServerFallback();
             return;
@@ -886,7 +918,6 @@ class HumanHybridTtsProvider implements ITtsProvider {
           }
         };
 
-        // Watchdog: if chunk 0 doesn't start speaking within 950ms, fall back to Server TTS
         if (idx === 0) {
           this.watchdogTimerId = setTimeout(() => {
             if (currentSession === this.speechSessionId && !hasFallenBack && !window.speechSynthesis.speaking) {
@@ -899,10 +930,8 @@ class HumanHybridTtsProvider implements ITtsProvider {
         window.speechSynthesis.speak(utterance);
       };
 
-      // Immediately notify UI that speaking state has started
       callbacks?.onStart?.();
 
-      // Avoid Chrome's synchronous cancel()+speak() race condition by delaying 45ms only when prior speech was cancelled
       if (wasBusyBeforeStop) {
         this.startTimerId = setTimeout(() => {
           speakChunkAtIndex(0);
@@ -936,7 +965,6 @@ class HumanHybridTtsProvider implements ITtsProvider {
     this.stop();
     const currentSession = ++this.speechSessionId;
 
-    // Strictly resolve language to ONLY Hindi ("hi-IN") or English ("en-IN")
     const hasDevanagari = /[\u0900-\u097F]/.test(text);
     const strictLang: "en-IN" | "hi-IN" =
       hasDevanagari || preferredLang === "hi-IN" ? (hasDevanagari ? "hi-IN" : "en-IN") : "en-IN";
@@ -947,12 +975,10 @@ class HumanHybridTtsProvider implements ITtsProvider {
       return;
     }
 
-    // 1. Primary: Instant human neural speech via Browser SpeechSynthesis (with automatic server fallback)
     if (this.speakWithBrowserHumanVoice(cleanSpeech, strictLang, gender, currentSession, wasBusy, callbacks)) {
       return;
     }
 
-    // 2. Secondary: Server Gemini TTS (/api/tts: Kore Female / Puck Male) + Phonetic Hindi fallback
     this.speakWithServerTts(cleanSpeech, strictLang, gender, currentSession, callbacks, true);
   }
 
@@ -1004,7 +1030,6 @@ class TtsService {
         if (savedGender === "male" || savedGender === "female") {
           this.gender = savedGender;
         }
-        // Pre-warm browser voice list including async voiceschanged event
         if ("speechSynthesis" in window) {
           window.speechSynthesis.getVoices?.();
           if (typeof window.speechSynthesis.addEventListener === "function") {
