@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useDeploymentRegistry } from "../services/deploymentRegistrySync";
 import libraryImg from "../assets/images/library_software_dashboard_1784909434916.jpg";
 import coachingImg from "../assets/images/coaching_software_dashboard_1784909470078.jpg";
 import fitnessImg from "../assets/images/fitness_software_dashboard_1784909454777.jpg";
@@ -44,10 +45,19 @@ interface SoftwareItem {
 }
 
 export default function SoftwareCarousel() {
+  const { registryByLegacyId } = useDeploymentRegistry();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
-  const softwares: SoftwareItem[] = [
+  const softwares: SoftwareItem[] = useMemo(() => {
+    const pickUrl = (legacyId: string, fallbackUrl?: string) => {
+      const reg = registryByLegacyId.get(legacyId);
+      if (!reg) return fallbackUrl;
+      if (reg.enabled === false) return undefined;
+      return reg.deploymentUrl || fallbackUrl;
+    };
+
+    return [
     {
       id: 0,
       name: "C VIDYA LIBRARY MANAGEMENT SYSTEM",
@@ -57,7 +67,7 @@ export default function SoftwareCarousel() {
       description: "Complete institutional ledger with digital barcode scanners, auto SMS warnings, CBSE score matching, and catalog check-outs.",
       badge: "Institutional Module",
       accentColor: "from-brand-gold-500 to-amber-500",
-      externalLink: "https://v.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("library", "https://v.cvidyasolutions.workers.dev/"),
       imageUrl: libraryImg,
       metrics: [
         { label: "Book Catalog Capacity", value: "50,000+" },
@@ -74,7 +84,7 @@ export default function SoftwareCarousel() {
       description: "Advanced image processing engine evaluating MCQ OMR answer sheets instantly. Sends real-time scorecard links to parents automatically.",
       badge: "Academic Operations",
       accentColor: "from-brand-gold-500 to-yellow-500",
-      externalLink: "https://coaching.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("coaching", "https://coaching.cvidyasolutions.workers.dev/"),
       imageUrl: coachingImg,
       metrics: [
         { label: "OMR Scan Speed", value: "120 sheets/min" },
@@ -91,7 +101,7 @@ export default function SoftwareCarousel() {
       description: "Full club management system integrated with physical gate relays, digital QR passes, automated diet planners, and membership logs.",
       badge: "Facility Hardware",
       accentColor: "from-amber-400 to-brand-gold-500",
-      externalLink: "https://fitzone.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("fitness", "https://fitzone.cvidyasolutions.workers.dev/"),
       imageUrl: fitnessImg,
       metrics: [
         { label: "Face Recognition Speed", value: "0.18s" },
@@ -108,7 +118,7 @@ export default function SoftwareCarousel() {
       description: "Intelligent customer pipeline tracker for academic institutions and franchises. Log callbacks, record requirements, and compile billing.",
       badge: "Enterprise SaaS",
       accentColor: "from-brand-gold-400 to-yellow-600",
-      externalLink: "https://crm.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("crm", "https://crm.cvidyasolutions.workers.dev/"),
       imageUrl: crmImg,
       metrics: [
         { label: "Lead Pipeline Load", value: "10,000/sec" },
@@ -125,6 +135,7 @@ export default function SoftwareCarousel() {
       description: "Unified enterprise platform matching board grades, tracking payroll ledgers, scheduling buses via GPS, and consolidating CBSE compliance.",
       badge: "Unified Campus ERP",
       accentColor: "from-amber-500 to-brand-gold-600",
+      externalLink: pickUrl("institutes"),
       imageUrl: institutesImg,
       metrics: [
         { label: "Affiliated Campus Blocks", value: "12+ Blocks" },
@@ -141,7 +152,7 @@ export default function SoftwareCarousel() {
       description: "Powered by C Vidya Solutions, AgriFusion unifies poultry, fishery, goat farming, livestock, inventory, POS billing, accounting, customer management, and business analytics into one intelligent platform.",
       badge: "Agribusiness & Farming Platform",
       accentColor: "from-brand-gold-500 to-emerald-500",
-      externalLink: "https://fresh.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("farming", "https://fresh.cvidyasolutions.workers.dev/"),
       imageUrl: agrifusionImg,
       metrics: [
         { label: "Poultry, Livestock & Ponds", value: "Unified" },
@@ -158,7 +169,7 @@ export default function SoftwareCarousel() {
       description: "Next-generation AI-powered customer support SaaS platform for automated query handling, smart ticket routing, knowledge base RAG, and instant multi-channel customer resolution.",
       badge: "AI Support SaaS",
       accentColor: "from-brand-gold-400 via-yellow-500 to-amber-500",
-      externalLink: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/",
+      externalLink: pickUrl("ai-support", "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/"),
       imageUrl: crmImg,
       metrics: [
         { label: "AI Resolution Rate", value: "92% Automated" },
@@ -167,6 +178,7 @@ export default function SoftwareCarousel() {
       ]
     }
   ];
+  }, [registryByLegacyId]);
 
   // 5-second automatic slide transition (holding & scrolling 5s)
   useEffect(() => {

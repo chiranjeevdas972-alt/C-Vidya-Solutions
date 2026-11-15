@@ -45,11 +45,25 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
   const [iframeKey, setIframeKey] = useState(1);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const isInstitutes = 
-    software?.id?.toLowerCase() === "institutes" || 
+  const isInstitutesProduct =
+    software?.id?.toLowerCase() === "institutes" ||
     software?.id?.toLowerCase() === "institutes-management" ||
-    software?.id?.toLowerCase()?.includes("institute") || 
+    software?.id?.toLowerCase()?.includes("institute") ||
     software?.name?.toLowerCase()?.includes("institute");
+
+  // Remain Coming Soon until a verified production deployment activates it or Admin enables a live URL
+  const isInstitutesComingSoon =
+    Boolean(isInstitutesProduct) &&
+    (!software?.externalLink ||
+      software?.deploymentStatus === "coming-soon" ||
+      (!software?.connectedToAutoDeploy && software?.deploymentStatus !== "active"));
+
+  const isDisabledMaintenance =
+    Boolean(software) &&
+    !isInstitutesComingSoon &&
+    (software?.enabled === false || software?.deploymentStatus === "inactive");
+
+  const isInstitutes = isInstitutesComingSoon;
 
   // State for Institutes Early Access Beta waitlist registration
   const [instituteLeadName, setInstituteLeadName] = useState("");
@@ -98,35 +112,35 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
     }
   };
 
-  // Direct local routes for full SaaS apps (Library, Fitness, Petrol Pump, PDF Tools), ensuring seamless same-origin step-by-step navigation
+  // Resolve live iframe target: preserve local suites until an automated Cloudflare deployment or manual admin URL update overrides the default seed
   const effectiveIframeSrc = useMemo(() => {
     if (!software?.externalLink) return "";
     const id = software.id.toLowerCase();
-    if (id === "library" || software.externalLink.includes("v.cvidyasolutions") || software.externalLink.includes("library")) {
-      return "/software/library/index.html";
+    const link = software.externalLink;
+    const isAutoConnected = Boolean(software.connectedToAutoDeploy);
+
+    if (!isAutoConnected) {
+      if (id === "library" && link.includes("v.cvidyasolutions.workers.dev")) {
+        return "/software/library/index.html";
+      }
+      if (id === "fitness" && link.includes("fitzone.cvidyasolutions.workers.dev")) {
+        return "/software/fitness/index.html";
+      }
+      if (id === "petrol-pump" && link.includes("c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev")) {
+        return "/software/petrol-pump/index.html";
+      }
+      if ((id === "pdf-media-tools" || id === "pdf-tools") && link.includes("c-vidya-pdf-saas-tools.cvidyasolutions.workers.dev")) {
+        return "/software/pdf-tools/index.html";
+      }
     }
-    if (id === "fitness" || software.externalLink.includes("fitzone") || software.externalLink.includes("fitness")) {
-      return "/software/fitness/index.html";
-    }
-    if (id === "petrol-pump" || software.externalLink.includes("c-vidya-cloud-petrol-pump") || software.externalLink.includes("petrol")) {
-      return "/software/petrol-pump/index.html";
-    }
-    if (id === "pdf-media-tools" || id === "pdf-tools" || software.externalLink.includes("c-vidya-pdf-saas-tools") || software.externalLink.includes("pdf")) {
-      return "/software/pdf-tools/index.html";
-    }
-    if (id === "farming" || id === "agrifusion" || software.externalLink.includes("fresh.cvidyasolutions")) {
-      return "https://fresh.cvidyasolutions.workers.dev/";
-    }
-    // For all AI agents and other SaaS products, load live software link
-    return software.externalLink;
+    return link;
   }, [software]);
 
   useEffect(() => {
     if (software) {
       document.body.style.overflow = "hidden";
       // Open immediately with zero artificial delay
-      const id = software.id.toLowerCase();
-      const isLocal = id === "library" || id === "fitness" || id === "petrol-pump" || id === "pdf-media-tools" || id === "pdf-tools";
+      const isLocal = effectiveIframeSrc.startsWith("/software/");
       setIframeLoaded(isLocal);
       setIframeError(false);
       setIframeKey((k) => k + 1);
@@ -885,6 +899,26 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
 
 
 
+            </div>
+          </div>
+        ) : isDisabledMaintenance ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="max-w-md space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center mx-auto">
+                <Clock className="w-8 h-8 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white">{software?.name} — Scheduled Maintenance</h3>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                This application endpoint has been temporarily paused by the administrator during an update cycle. Please try again shortly.
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all border border-slate-700 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Return to Website</span>
+              </button>
             </div>
           </div>
         ) : software?.externalLink ? (

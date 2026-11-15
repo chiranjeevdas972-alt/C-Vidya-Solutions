@@ -19,6 +19,16 @@ import {
   isGenericCatchAllReply,
 } from "./src/utils/aiResponder.ts";
 import { getPageSeo } from "./src/seoData.ts";
+import {
+  CANONICAL_PRODUCT_REGISTRY_SEED,
+  createInMemoryDeploymentRegistryStore,
+  validateAndProcessDeploymentRegistration,
+  adminUpdateDeploymentEntry,
+  toPublicRegistryView,
+  serializeAdminRegistrySnapshot,
+  normalizeProductLookupKey,
+  validateDeploymentUrl,
+} from "./src/shared/deploymentRegistry.ts";
 
 // Load environment variables
 dotenv.config();
@@ -148,8 +158,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware - allow up to 15mb payload for PDF resume attachments on application endpoint and 300kb for general APIs
-app.use(express.json({ limit: "15mb" }));
+// Middleware - allow up to 15mb payload for PDF resume attachments on application endpoint and capture rawBody for HMAC webhook verification
+app.use(express.json({
+  limit: "15mb",
+  verify: (req: any, _res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // In-memory log of client inquiries for demo/leads panel (fallback storage)
@@ -1088,6 +1103,9 @@ const ALLOWED_ADMIN_REST_COLLECTIONS = new Set([
   "call_logs",
   "demo_bookings",
   "handoff_tickets",
+  "cvidya_deployment_registry",
+  "cvidya_deployment_history",
+  "cvidya_deployment_audit_logs",
 ]);
 
 const FORBIDDEN_REST_PRIVILEGE_FIELDS = new Set([
@@ -1402,35 +1420,30 @@ const softwareWorkerMap: Record<string, string> = {
   "crm": "https://crm.cvidyasolutions.workers.dev/",
   "care-plus": "https://care-plus.cvidyasolutions.workers.dev/",
   "hospital": "https://care-plus.cvidyasolutions.workers.dev/",
-  "institutes": "https://institutes.cvidyasolutions.workers.dev/"
 };
 
 export function isAllowedSoftwareEmbedUrl(rawUrl: string): boolean {
   if (!rawUrl || typeof rawUrl !== "string" || rawUrl.length > 500) return false;
   const allowlistedUrls = new Set(Object.values(softwareWorkerMap));
   if (allowlistedUrls.has(rawUrl)) return true;
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.protocol !== "https:") return false;
-    if (parsed.username || parsed.password) return false;
-    const host = parsed.hostname.toLowerCase();
-    // Explicitly reject localhost, IPv4/IPv6 literals, and cloud metadata hosts
-    if (
-      host === "localhost" ||
-      host === "metadata.google.internal" ||
-      /^[0-9.]+$/.test(host) ||
-      host.includes(":")
-    ) {
-      return false;
-    }
-    return /^[a-z0-9-]+\.cvidyasolutions\.workers\.dev$/i.test(host);
-  } catch {
-    return false;
-  }
+  return validateDeploymentUrl(rawUrl).valid;
 }
 
 app.get("/api/live-software-embed", (req, res) => {
   const id = String(req.query.id || "").toLowerCase();
+  const canonicalId = normalizeProductLookupKey(id);
+  if (canonicalId) {
+    const regEntry = deploymentRegistryStore.entries.get(canonicalId);
+    if (regEntry) {
+      if (!regEntry.enabled) {
+        return res.status(403).send("Software temporarily unavailable.");
+      }
+      if (regEntry.deploymentUrl) {
+        return res.redirect(302, regEntry.deploymentUrl);
+      }
+      return res.status(404).send("Software deployment not yet available (Coming Soon).");
+    }
+  }
   const mappedUrl = softwareWorkerMap[id];
   if (mappedUrl) {
     return res.redirect(302, mappedUrl);
@@ -1587,7 +1600,7 @@ app.post("/api/user/subscribe", (req, res) => {
 });
 
 // API: Submit Inquiry (With Input Sanitization & Rate Limiting)
-app.post("/api/inquiry", contactFormRateLimiter, async (req, res) => {
+app.post(["/api/inquiry", "/api/inquiries"], contactFormRateLimiter, async (req, res) => {
   const { name, email, phone, service, message } = req.body;
 
   if (!name || !email || !phone) {
@@ -3190,6 +3203,216 @@ app.get("/api/hr-sales/overview", authAttemptsRateLimiter, async (req, res) => {
         status: "Available",
       },
     ],
+  });
+});
+
+// =========================================================================
+// AUTOMATIC SOFTWARE & AI AGENT DEPLOYMENT REGISTRY (14 CANONICAL PRODUCTS)
+// =========================================================================
+export const deploymentRegistryStore = createInMemoryDeploymentRegistryStore(
+  CANONICAL_PRODUCT_REGISTRY_SEED,
+);
+
+const deploymentWebhookCounts = new Map<string, number[]>();
+const deploymentWebhookRateLimiter = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) => {
+  const ip = req.ip || (req.headers["x-forwarded-for"] as string) || "unknown";
+  let ts = deploymentWebhookCounts.get(ip) || [];
+  ts = cleanOldTimestamps(ts, 60000);
+  if (ts.length >= 30) {
+    return res.status(429).json({
+      error: "Deployment webhook rate limit exceeded. Max 30 registrations per minute.",
+    });
+  }
+  ts.push(Date.now());
+  deploymentWebhookCounts.set(ip, ts);
+  next();
+};
+
+function timingSafeEqualStrings(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+export function verifyDeploymentWebhookAuth(options: {
+  rawBody: Buffer | string;
+  authHeader?: string;
+  signatureHeader?: string;
+  expectedSecret?: string;
+}): { ok: boolean; status: number; reason?: string } {
+  const secret = (options.expectedSecret ?? process.env.DEPLOYMENT_WEBHOOK_SECRET ?? "").trim();
+  const authHeader = (options.authHeader || "").trim();
+  const signatureHeader = (options.signatureHeader || "").trim();
+
+  if (!authHeader && !signatureHeader) {
+    return {
+      ok: false,
+      status: 401,
+      reason: "Missing webhook authentication credentials (Bearer token or X-CVidya-Signature-256).",
+    };
+  }
+
+  if (!secret) {
+    return {
+      ok: false,
+      status: 503,
+      reason: "Server DEPLOYMENT_WEBHOOK_SECRET is not configured.",
+    };
+  }
+
+  // If X-CVidya-Signature-256 is present, strictly verify HMAC-SHA256
+  if (signatureHeader) {
+    const rawBuf = Buffer.isBuffer(options.rawBody)
+      ? options.rawBody
+      : Buffer.from(options.rawBody || "", "utf8");
+    const expectedDigest = crypto
+      .createHmac("sha256", secret)
+      .update(rawBuf)
+      .digest("hex");
+    const providedHex = signatureHeader.replace(/^sha256=/i, "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(providedHex) || !timingSafeEqualStrings(providedHex, expectedDigest)) {
+      return {
+        ok: false,
+        status: 401,
+        reason: "Invalid X-CVidya-Signature-256 HMAC signature.",
+      };
+    }
+  }
+
+  // If Authorization Bearer header is present, verify timing-safely
+  if (authHeader) {
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!match || !timingSafeEqualStrings(match[1].trim(), secret)) {
+      return {
+        ok: false,
+        status: 401,
+        reason: "Invalid Bearer deployment webhook token.",
+      };
+    }
+  }
+
+  return { ok: true, status: 200 };
+}
+
+// 1. Public Read Endpoint: Synchronized registry feed for Website & Directory views
+app.get("/api/deployments/registry", (req, res) => {
+  const snapshot = toPublicRegistryView(deploymentRegistryStore);
+  if (req.headers["if-none-match"] === snapshot.etag) {
+    return res.status(304).end();
+  }
+  res.setHeader("ETag", snapshot.etag);
+  res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+  return res.json(snapshot);
+});
+
+// 2. Automated CI/CD Registration Endpoint (GitHub Actions -> C Vidya Website)
+app.post("/api/deployments/register", deploymentWebhookRateLimiter, (req: any, res) => {
+  const rawBody: Buffer | string = req.rawBody || JSON.stringify(req.body || {});
+  const authCheck = verifyDeploymentWebhookAuth({
+    rawBody,
+    authHeader: typeof req.headers.authorization === "string" ? req.headers.authorization : "",
+    signatureHeader:
+      typeof req.headers["x-cvidya-signature-256"] === "string"
+        ? req.headers["x-cvidya-signature-256"]
+        : "",
+  });
+
+  if (!authCheck.ok) {
+    return res.status(authCheck.status).json({
+      success: false,
+      error: authCheck.reason || "Unauthorized webhook request.",
+    });
+  }
+
+  const result = validateAndProcessDeploymentRegistration(
+    deploymentRegistryStore,
+    req.body,
+    { allowlistEnv: process.env.DEPLOYMENT_ALLOWED_REPOS || "" },
+  );
+
+  if (!result.ok) {
+    return res.status(result.status).json({
+      success: false,
+      error: result.message,
+    });
+  }
+
+  return res.status(result.status).json({
+    success: true,
+    duplicate: Boolean(result.duplicate),
+    failedRecorded: Boolean(result.failedRecorded),
+    message: result.message,
+    registryVersion: deploymentRegistryStore.registryVersion,
+    entry: result.entry,
+  });
+});
+
+// 3. Admin-Only Endpoint: Inspect all 14 products, history, audit logs & failure alerts
+app.get("/api/admin/deployments", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+  const snapshot = serializeAdminRegistrySnapshot(deploymentRegistryStore);
+  return res.json({
+    ...snapshot,
+    webhookSecretConfigured: Boolean((process.env.DEPLOYMENT_WEBHOOK_SECRET || "").trim()),
+  });
+});
+
+// 4. Admin-Only Endpoint: Toggle Enable/Disable, Override URL, Bind GitHub Repo, Clear Alerts
+app.patch("/api/admin/deployments/:productId", authAttemptsRateLimiter, async (req, res) => {
+  if (!(await verifyAdminRequest(req))) {
+    return res.status(401).json({
+      error: "Unauthorized access. Valid administrator credentials required.",
+    });
+  }
+
+  const adminToken = extractAdminTokenFromRequest(req);
+  let actorEmail = "admin@cvidyasolutions.com";
+  try {
+    const parts = adminToken.split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+      if (payload?.email) actorEmail = String(payload.email);
+    }
+  } catch {
+    // Ignore decode error
+  }
+
+  const result = adminUpdateDeploymentEntry(
+    deploymentRegistryStore,
+    req.params.productId || "",
+    req.body || {},
+    actorEmail,
+  );
+
+  if (!result.ok || !result.entry) {
+    return res.status(result.status).json({
+      success: false,
+      error: result.message,
+    });
+  }
+
+  // Persist update via authenticated Firestore REST Bridge when possible
+  await firestoreAdminRestPatchDocument(
+    "cvidya_deployment_registry",
+    result.entry.productId,
+    result.entry,
+    adminToken,
+  ).catch(() => false);
+
+  return res.json({
+    success: true,
+    message: result.message,
+    registryVersion: deploymentRegistryStore.registryVersion,
+    entry: result.entry,
   });
 });
 

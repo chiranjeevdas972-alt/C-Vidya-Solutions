@@ -57,6 +57,7 @@ export interface DashboardMetric {
 
 export interface ProductService {
   id: string;
+  canonicalProductId?: string;
   num: string;
   name: string;
   tagline: string;
@@ -68,6 +69,11 @@ export interface ProductService {
   categoryType?: "saas" | "ai-agent";
   badge?: string;
   aiModel?: string;
+  version?: string;
+  deploymentStatus?: "active" | "inactive" | "failed" | "coming-soon";
+  lastDeploymentAt?: string | null;
+  connectedToAutoDeploy?: boolean;
+  enabled?: boolean;
   mockData: {
     title: string;
     metrics: MetricCard[];

@@ -77,16 +77,17 @@ const edgeState = {
   ],
 };
 
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CVidya-Signature-256, X-GitHub-Delivery",
       "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
       "Permissions-Policy": "camera=(), microphone=*, geolocation=(), payment=(), usb=()",
       "X-Proxy-By": "Cloudflare-CVidya-Edge",
+      ...extraHeaders,
     },
   });
 }
@@ -268,7 +269,164 @@ async function firestoreEdgePatch(collectionName, docId, updates, bearerToken) {
   }
 }
 
-async function handleEdgeApiRequest(request, url, bodyBuffer) {
+// ============================================================================
+// AUTOMATIC SOFTWARE & AI AGENT DEPLOYMENT REGISTRY (EDGE STATE + KV PERSIST)
+// ============================================================================
+const EDGE_DEPLOYMENT_SEED = [
+  { productId: "cvidya-library-management", legacyId: "library", name: "Library Management System", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://v.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-library-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-fitness-zone", legacyId: "fitness", name: "Fitness Zone & Gym Management", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://fitzone.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-fitness-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-institutes-management", legacyId: "institutes", name: "Institutes Management System", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "", version: "0.0.0", commitSha: "", buildId: "seed-institutes-pending", deploymentStatus: "coming-soon", enabled: false, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Coming Soon", failureAlert: false },
+  { productId: "cvidya-coaching-management", legacyId: "coaching", name: "Coaching Management System", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://coaching.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-coaching-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-enterprise-crm", legacyId: "crm", name: "Enterprise CRM & Client Management", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://crm.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-crm-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-petrol-pump", legacyId: "petrol-pump", name: "Petrol Pump Management Software", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-petrol-pump-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-agrifusion", legacyId: "farming", name: "AgriFusion & Smart Farming Platform", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://fresh.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-agrifusion-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-jewellers-management", legacyId: "members", name: "Jewellers & Jewellery Management Software", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://jewelry.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-jewellers-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-care-plus", legacyId: "care-plus", name: "Care Plus Healthcare & Clinic System", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://care-plus.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-care-plus-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-pdf-media-tools", legacyId: "pdf-media-tools", name: "C Vidya PDF & Media Tools SaaS", category: "software", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-pdf-saas-tools.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-pdf-media-tools-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "Live SaaS", failureAlert: false },
+  { productId: "cvidya-ai-social-media-agent", legacyId: "ai-social", name: "AI Social Media Automation Agent", category: "ai-agent", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-ai-social-media-agent.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-ai-social-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "AI Agent", failureAlert: false },
+  { productId: "cvidya-ai-customer-support-agent", legacyId: "ai-support", name: "AI Customer Support & Resolution Agent", category: "ai-agent", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-ai-customer-support-saas.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-ai-support-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "AI Agent", failureAlert: false },
+  { productId: "cvidya-salesflow-ai-agent", legacyId: "ai-salesflow", name: "SalesFlow AI Outreach & Pipeline Agent", category: "ai-agent", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-solutions-salesflow-ai-agent.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-ai-salesflow-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "AI Agent", failureAlert: false },
+  { productId: "cvidya-b2b-saas-growth-agent", legacyId: "ai-marketing", name: "B2B SaaS Growth & Marketing AI Agent", category: "ai-agent", hostingPlatform: "cloudflare-workers", githubRepository: "", branch: "main", environment: "production", deploymentUrl: "https://c-vidya-ai-marketing-b2b-saas-companies.cvidyasolutions.workers.dev/", version: "1.0.0", commitSha: "", buildId: "seed-ai-marketing-1.0.0", deploymentStatus: "active", enabled: true, connectedToAutoDeploy: false, deployedBy: "initial-seed", lastDeploymentAt: null, updatedAt: "2026-01-01T00:00:00.000Z", badge: "AI Agent", failureAlert: false },
+];
+
+const edgeDeploymentRegistry = {
+  entries: new Map(EDGE_DEPLOYMENT_SEED.map((e) => [e.productId, { ...e }])),
+  history: [],
+  auditLogs: [],
+  seenBuildKeys: new Set(),
+  registryVersion: 1,
+  kvLoaded: false,
+};
+
+const EDGE_PRODUCT_ALIASES = (() => {
+  const m = {};
+  for (const e of EDGE_DEPLOYMENT_SEED) {
+    m[e.productId.toLowerCase()] = e.productId;
+    m[e.legacyId.toLowerCase()] = e.productId;
+  }
+  m["agrifusion"] = "cvidya-agrifusion";
+  m["jewellers"] = "cvidya-jewellers-management";
+  m["jewelry"] = "cvidya-jewellers-management";
+  m["fitzone"] = "cvidya-fitness-zone";
+  return m;
+})();
+
+function validateEdgeDeploymentUrl(rawUrl, allowEmpty = false) {
+  if (typeof rawUrl !== "string") return { valid: false, normalizedUrl: "", error: "Deployment URL must be a string." };
+  const trimmed = rawUrl.trim();
+  if (!trimmed) {
+    return allowEmpty ? { valid: true, normalizedUrl: "" } : { valid: false, normalizedUrl: "", error: "Deployment URL cannot be empty." };
+  }
+  if (trimmed.length > 500) return { valid: false, normalizedUrl: "", error: "Deployment URL exceeds 500 characters." };
+  let parsed;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return { valid: false, normalizedUrl: "", error: "Invalid deployment URL format." };
+  }
+  if (parsed.protocol !== "https:") return { valid: false, normalizedUrl: "", error: "Deployment URL must use https://." };
+  if (parsed.username || parsed.password) return { valid: false, normalizedUrl: "", error: "Deployment URL must not contain credentials." };
+  const host = parsed.hostname.toLowerCase();
+  if (host === "localhost" || host === "metadata.google.internal" || host.endsWith(".local") || host.endsWith(".internal") || /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":")) {
+    return { valid: false, normalizedUrl: "", error: "Local, private, IP, or internal hostnames are forbidden." };
+  }
+  if (parsed.searchParams.has("preview") || parsed.searchParams.has("staging")) {
+    return { valid: false, normalizedUrl: "", error: "Preview or staging query parameters are not permitted." };
+  }
+  if (host.endsWith(".pages.dev")) {
+    const labels = host.split(".");
+    if (labels.length > 3 || /^(preview|staging|dev|test|pr-\d+|branch)-/i.test(labels[0] || "")) {
+      return { valid: false, normalizedUrl: "", error: `Preview or staging URL '${host}' is rejected.` };
+    }
+  }
+  if (/^(preview|staging|stage|dev|qa|sandbox|local|localhost|pr-\d+)\./i.test(host) || /-(preview|staging|dev|pr-\d+)\./i.test(host)) {
+    return { valid: false, normalizedUrl: "", error: `Preview or staging URL '${host}' is rejected.` };
+  }
+  const isTrusted = host === "cvidyasolutions.com" || host === "www.cvidyasolutions.com" || host.endsWith(".cvidyasolutions.com") || host.endsWith(".cvidyasolutions.workers.dev") || host.endsWith(".pages.dev");
+  if (!isTrusted) return { valid: false, normalizedUrl: "", error: `Untrusted deployment hostname '${host}'.` };
+  return { valid: true, normalizedUrl: parsed.toString() };
+}
+
+function edgeTimingSafeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function verifyEdgeWebhookAuth(request, rawBodyBuffer, env) {
+  const secret = String((env && env.DEPLOYMENT_WEBHOOK_SECRET) || "").trim();
+  const authHeader = (request.headers.get("Authorization") || request.headers.get("authorization") || "").trim();
+  const sigHeader = (request.headers.get("X-CVidya-Signature-256") || request.headers.get("x-cvidya-signature-256") || "").trim();
+
+  if (!authHeader && !sigHeader) {
+    return { ok: false, status: 401, reason: "Missing webhook authentication credentials." };
+  }
+  if (!secret) {
+    return { ok: false, status: 503, reason: "Worker DEPLOYMENT_WEBHOOK_SECRET is not configured." };
+  }
+  if (sigHeader) {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBuf = await crypto.subtle.sign("HMAC", key, rawBodyBuffer || new ArrayBuffer(0));
+    const expectedHex = Array.from(new Uint8Array(sigBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    const providedHex = sigHeader.replace(/^sha256=/i, "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(providedHex) || !edgeTimingSafeEqual(providedHex, expectedHex)) {
+      return { ok: false, status: 401, reason: "Invalid X-CVidya-Signature-256 HMAC signature." };
+    }
+  }
+  if (authHeader) {
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!match || !edgeTimingSafeEqual(match[1].trim(), secret)) {
+      return { ok: false, status: 401, reason: "Invalid Bearer deployment webhook token." };
+    }
+  }
+  return { ok: true, status: 200 };
+}
+
+async function hydrateEdgeDeploymentKV(env) {
+  if (!env || !env.DEPLOYMENT_REGISTRY_KV || edgeDeploymentRegistry.kvLoaded) return;
+  try {
+    const saved = await env.DEPLOYMENT_REGISTRY_KV.get("registry_snapshot", "json");
+    if (saved && Array.isArray(saved.entries)) {
+      for (const item of saved.entries) {
+        if (item && item.productId && edgeDeploymentRegistry.entries.has(item.productId)) {
+          edgeDeploymentRegistry.entries.set(item.productId, item);
+        }
+      }
+      if (Array.isArray(saved.history)) edgeDeploymentRegistry.history = saved.history.slice(0, 100);
+      if (Array.isArray(saved.auditLogs)) edgeDeploymentRegistry.auditLogs = saved.auditLogs.slice(0, 200);
+      if (typeof saved.registryVersion === "number") edgeDeploymentRegistry.registryVersion = saved.registryVersion;
+    }
+    edgeDeploymentRegistry.kvLoaded = true;
+  } catch {
+    // Non-fatal
+  }
+}
+
+async function persistEdgeDeploymentKV(env) {
+  if (!env || !env.DEPLOYMENT_REGISTRY_KV) return;
+  try {
+    await env.DEPLOYMENT_REGISTRY_KV.put(
+      "registry_snapshot",
+      JSON.stringify({
+        registryVersion: edgeDeploymentRegistry.registryVersion,
+        entries: Array.from(edgeDeploymentRegistry.entries.values()),
+        history: edgeDeploymentRegistry.history.slice(0, 100),
+        auditLogs: edgeDeploymentRegistry.auditLogs.slice(0, 200),
+      })
+    );
+  } catch {
+    // Non-fatal
+  }
+}
+
+async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   const path = url.pathname;
   const method = request.method.toUpperCase();
 
@@ -686,6 +844,216 @@ async function handleEdgeApiRequest(request, url, bodyBuffer) {
     });
   }
 
+  // 9. Automatic Software & AI Agent Deployment Registry Endpoints
+  if (path === "/api/deployments/registry" && method === "GET") {
+    await hydrateEdgeDeploymentKV(env);
+    const entries = Array.from(edgeDeploymentRegistry.entries.values());
+    const etag = `"cvidya-reg-v${edgeDeploymentRegistry.registryVersion}"`;
+    if (request.headers.get("If-None-Match") === etag) {
+      return new Response(null, { status: 304, headers: { ETag: etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=120" } });
+    }
+    const items = entries.map((e) => ({
+      productId: e.productId,
+      legacyId: e.legacyId,
+      name: e.name,
+      category: e.category,
+      hostingPlatform: e.hostingPlatform,
+      deploymentUrl: e.enabled ? e.deploymentUrl : "",
+      version: e.version,
+      deploymentStatus: e.deploymentStatus,
+      enabled: e.enabled,
+      connectedToAutoDeploy: e.connectedToAutoDeploy,
+      lastDeploymentAt: e.lastDeploymentAt,
+      badge: e.badge,
+    }));
+    return jsonResponse(
+      {
+        registryVersion: edgeDeploymentRegistry.registryVersion,
+        etag,
+        updatedAt: entries.reduce((acc, e) => (e.updatedAt > acc ? e.updatedAt : acc), "2026-01-01T00:00:00.000Z"),
+        items,
+      },
+      200,
+      { ETag: etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=120" }
+    );
+  }
+
+  if (path === "/api/deployments/register" && method === "POST") {
+    await hydrateEdgeDeploymentKV(env);
+    const authCheck = await verifyEdgeWebhookAuth(request, bodyBuffer, env);
+    if (!authCheck.ok) {
+      return jsonResponse({ success: false, error: authCheck.reason }, authCheck.status);
+    }
+    const canonicalId = EDGE_PRODUCT_ALIASES[String(body.productId || "").trim().toLowerCase()];
+    if (!canonicalId || !edgeDeploymentRegistry.entries.has(canonicalId)) {
+      return jsonResponse({ success: false, error: `Unknown productId '${String(body.productId || "")}'.` }, 404);
+    }
+    const current = edgeDeploymentRegistry.entries.get(canonicalId);
+    const rawEnv = String(body.environment || "production").trim().toLowerCase();
+    if (rawEnv !== "production") {
+      return jsonResponse({ success: false, error: `Only 'production' deployments are accepted (received '${rawEnv}').` }, 400);
+    }
+    const rawBranch = String(body.branch || "main").trim().replace(/^refs\/heads\//i, "");
+    if (rawBranch !== "main") {
+      return jsonResponse({ success: false, error: `Only 'main' branch deployments are accepted (received '${rawBranch}').` }, 400);
+    }
+    const repoSlug = String(body.githubRepository || "").trim();
+    if (!/^[a-zA-Z0-9._-]{1,100}\/[a-zA-Z0-9._-]{1,100}$/.test(repoSlug)) {
+      return jsonResponse({ success: false, error: "githubRepository must match 'owner/repo' format." }, 400);
+    }
+    if (current.githubRepository && current.githubRepository.toLowerCase() !== repoSlug.toLowerCase()) {
+      return jsonResponse({ success: false, error: `Repository '${repoSlug}' does not match bound repository '${current.githubRepository}'.` }, 403);
+    }
+    const allowlistRaw = String((env && env.DEPLOYMENT_ALLOWED_REPOS) || "").trim();
+    if (allowlistRaw) {
+      const allowed = allowlistRaw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+      const repoLower = repoSlug.toLowerCase();
+      if (allowed.length > 0 && !allowed.some((p) => (p.endsWith("/*") ? repoLower.startsWith(p.slice(0, -1)) : p === repoLower))) {
+        return jsonResponse({ success: false, error: `Repository '${repoSlug}' is not in DEPLOYMENT_ALLOWED_REPOS.` }, 403);
+      }
+    }
+    const buildId = String(body.buildId || "").trim().slice(0, 120);
+    if (!buildId) {
+      return jsonResponse({ success: false, error: "buildId is required." }, 400);
+    }
+    const statusNorm = String(body.status || "success").trim().toLowerCase();
+    const replayKey = `${canonicalId}::${buildId}::${statusNorm}`;
+    if (edgeDeploymentRegistry.seenBuildKeys.has(replayKey)) {
+      return jsonResponse({ success: true, duplicate: true, message: "Duplicate buildId already processed.", entry: current }, 200);
+    }
+    const nowIso = new Date().toISOString();
+    const deployedAt = String(body.deployedAt || nowIso).slice(0, 64);
+    const version = String(body.version || current.version || "1.0.0").slice(0, 60);
+    const commitSha = String(body.commitSha || "").slice(0, 80);
+    const deployedBy = String(body.deployedBy || "github-actions").slice(0, 80);
+
+    if (statusNorm === "failed" || statusNorm === "failure" || statusNorm === "error") {
+      edgeDeploymentRegistry.seenBuildKeys.add(replayKey);
+      const reason = String(body.errorMessage || `Build ${buildId} failed`).slice(0, 300);
+      const updated = { ...current, githubRepository: current.githubRepository || repoSlug, failureAlert: true, lastFailedAt: deployedAt, lastFailureReason: reason, updatedAt: nowIso };
+      edgeDeploymentRegistry.entries.set(canonicalId, updated);
+      edgeDeploymentRegistry.history.unshift({ id: `hist_${Date.now()}`, productId: canonicalId, version, commitSha, buildId, deploymentUrl: current.deploymentUrl, hostingPlatform: current.hostingPlatform, githubRepository: repoSlug, branch: "main", environment: "production", status: "failed", deployedBy, deployedAt, message: reason });
+      edgeDeploymentRegistry.registryVersion += 1;
+      await persistEdgeDeploymentKV(env);
+      return jsonResponse({ success: true, failedRecorded: true, message: "Failed deployment recorded as alert; live URL preserved.", entry: updated }, 202);
+    }
+
+    const urlCheck = validateEdgeDeploymentUrl(body.deploymentUrl);
+    if (!urlCheck.valid) {
+      return jsonResponse({ success: false, error: urlCheck.error }, 400);
+    }
+    const platform = String(body.hostingPlatform || "").toLowerCase().includes("pages") || urlCheck.normalizedUrl.includes(".pages.dev")
+      ? "cloudflare-pages"
+      : "cloudflare-workers";
+    const shouldEnable = current.adminLockedDisabled ? false : true;
+    const updated = {
+      ...current,
+      hostingPlatform: platform,
+      githubRepository: repoSlug,
+      branch: "main",
+      environment: "production",
+      deploymentUrl: urlCheck.normalizedUrl,
+      version,
+      commitSha,
+      buildId,
+      deploymentStatus: current.adminLockedDisabled ? "inactive" : "active",
+      enabled: shouldEnable,
+      connectedToAutoDeploy: true,
+      deployedBy,
+      lastDeploymentAt: deployedAt,
+      updatedAt: nowIso,
+      badge: current.category === "ai-agent" ? "AI Agent" : shouldEnable ? "Live SaaS" : "Maintenance",
+      failureAlert: false,
+      lastFailureReason: null,
+    };
+    edgeDeploymentRegistry.seenBuildKeys.add(replayKey);
+    edgeDeploymentRegistry.entries.set(canonicalId, updated);
+    edgeDeploymentRegistry.history.unshift({ id: `hist_${Date.now()}`, productId: canonicalId, version, commitSha, buildId, deploymentUrl: urlCheck.normalizedUrl, hostingPlatform: platform, githubRepository: repoSlug, branch: "main", environment: "production", status: "success", deployedBy, deployedAt });
+    if (edgeDeploymentRegistry.history.length > 100) edgeDeploymentRegistry.history.length = 100;
+    edgeDeploymentRegistry.auditLogs.unshift({ id: `aud_${Date.now()}`, action: "webhook_register_success", productId: canonicalId, actor: deployedBy, timestamp: nowIso, details: `Updated ${canonicalId} -> ${urlCheck.normalizedUrl}` });
+    edgeDeploymentRegistry.registryVersion += 1;
+    await persistEdgeDeploymentKV(env);
+    return jsonResponse({ success: true, message: `Registered deployment for ${canonicalId}.`, entry: updated }, 200);
+  }
+
+  if (path === "/api/admin/deployments" && method === "GET") {
+    const authCheck = verifyEdgeAdminToken(request);
+    if (!authCheck.ok) {
+      return jsonResponse({ error: "Unauthorized admin access." }, 401);
+    }
+    await hydrateEdgeDeploymentKV(env);
+    const entries = Array.from(edgeDeploymentRegistry.entries.values());
+    return jsonResponse({
+      registryVersion: edgeDeploymentRegistry.registryVersion,
+      etag: `"cvidya-reg-v${edgeDeploymentRegistry.registryVersion}"`,
+      totalProducts: entries.length,
+      activeCount: entries.filter((e) => e.deploymentStatus === "active" && e.enabled).length,
+      autoDeployConnectedCount: entries.filter((e) => e.connectedToAutoDeploy).length,
+      failureAlertCount: entries.filter((e) => Boolean(e.failureAlert)).length,
+      entries,
+      history: edgeDeploymentRegistry.history.slice(0, 100),
+      auditLogs: edgeDeploymentRegistry.auditLogs.slice(0, 100),
+      webhookEndpoint: "/api/deployments/register",
+      webhookSecretConfigured: Boolean(env && env.DEPLOYMENT_WEBHOOK_SECRET),
+    });
+  }
+
+  if (path.startsWith("/api/admin/deployments/") && method === "PATCH") {
+    const authCheck = verifyEdgeAdminToken(request);
+    if (!authCheck.ok) {
+      return jsonResponse({ error: "Unauthorized admin access." }, 401);
+    }
+    await hydrateEdgeDeploymentKV(env);
+    const rawId = decodeURIComponent(path.slice("/api/admin/deployments/".length)).trim().toLowerCase();
+    const canonicalId = EDGE_PRODUCT_ALIASES[rawId];
+    if (!canonicalId || !edgeDeploymentRegistry.entries.has(canonicalId)) {
+      return jsonResponse({ success: false, error: `Unknown productId '${rawId}'.` }, 404);
+    }
+    const current = edgeDeploymentRegistry.entries.get(canonicalId);
+    let nextUrl = current.deploymentUrl;
+    if (typeof body.deploymentUrl === "string") {
+      const allowEmpty = canonicalId === "cvidya-institutes-management" && !body.deploymentUrl.trim();
+      const urlCheck = validateEdgeDeploymentUrl(body.deploymentUrl, allowEmpty);
+      if (!urlCheck.valid) {
+        return jsonResponse({ success: false, error: urlCheck.error }, 400);
+      }
+      nextUrl = urlCheck.normalizedUrl;
+    }
+    let nextRepo = current.githubRepository;
+    if (typeof body.githubRepository === "string") {
+      const trimmedRepo = body.githubRepository.trim();
+      if (trimmedRepo && !/^[a-zA-Z0-9._-]{1,100}\/[a-zA-Z0-9._-]{1,100}$/.test(trimmedRepo)) {
+        return jsonResponse({ success: false, error: "GitHub repository must follow 'owner/repo' format." }, 400);
+      }
+      nextRepo = trimmedRepo;
+    }
+    const nextEnabled = typeof body.enabled === "boolean" ? body.enabled : (nextUrl && current.deploymentStatus === "coming-soon" ? true : current.enabled);
+    const nextAdminLocked = typeof body.enabled === "boolean" ? !body.enabled : (nextUrl && current.deploymentStatus === "coming-soon" ? false : Boolean(current.adminLockedDisabled));
+    const nextStatus = !nextUrl ? "coming-soon" : nextEnabled ? "active" : "inactive";
+    const nowIso = new Date().toISOString();
+    const updated = {
+      ...current,
+      deploymentUrl: nextUrl,
+      githubRepository: nextRepo,
+      hostingPlatform: body.hostingPlatform === "cloudflare-pages" || nextUrl.includes(".pages.dev") ? "cloudflare-pages" : current.hostingPlatform,
+      version: typeof body.version === "string" && body.version.trim() ? body.version.trim().slice(0, 60) : current.version,
+      enabled: nextEnabled,
+      adminLockedDisabled: nextAdminLocked,
+      deploymentStatus: nextStatus,
+      badge: nextStatus === "coming-soon" ? "Coming Soon" : current.category === "ai-agent" ? "AI Agent" : nextEnabled ? "Live SaaS" : "Maintenance",
+      failureAlert: body.clearFailureAlert ? false : current.failureAlert,
+      lastFailureReason: body.clearFailureAlert ? null : current.lastFailureReason,
+      updatedAt: nowIso,
+    };
+    edgeDeploymentRegistry.entries.set(canonicalId, updated);
+    edgeDeploymentRegistry.registryVersion += 1;
+    await persistEdgeDeploymentKV(env);
+    if (authCheck.isFirebaseJwt) {
+      await firestoreEdgePatch("cvidya_deployment_registry", canonicalId, updated, authCheck.token);
+    }
+    return jsonResponse({ success: true, message: `Updated ${canonicalId}.`, entry: updated });
+  }
+
   return jsonResponse(
     {
       status: "ok",
@@ -771,7 +1139,7 @@ export default {
           }
         }
         // Serve API route directly from Cloudflare Edge + Cloud Firestore REST
-        return await handleEdgeApiRequest(request, url, bodyBuffer);
+        return await handleEdgeApiRequest(request, url, bodyBuffer, env);
       }
 
       // 3. Non-API dynamic fallback

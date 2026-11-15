@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { saasProductsData, aiAgentsData } from "../data";
 import { ProductService } from "../types";
 import SoftwareDetailModal from "./SoftwareDetailModal";
+import { useDeploymentRegistry } from "../services/deploymentRegistrySync";
 import { 
   Laptop, 
   BookOpen, 
@@ -58,7 +58,8 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
   const [interactiveLogs, setInteractiveLogs] = useState<Record<string, string[]>>({});
   const [simulatedScore, setSimulatedScore] = useState<number>(0);
 
-  const currentProducts = activeCategory === "saas" ? saasProductsData : aiAgentsData;
+  const { saasProducts, aiAgents } = useDeploymentRegistry();
+  const currentProducts = activeCategory === "saas" ? saasProducts : aiAgents;
   const currentSelectedId = activeCategory === "saas" ? selectedSaasId : selectedAgentId;
   const selectedService = currentProducts.find(p => p.id === currentSelectedId) || currentProducts[0];
 
@@ -195,7 +196,7 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ml-auto ${
                 activeCategory === "saas" ? "bg-brand-gold-500 text-slate-950" : "bg-slate-300 text-slate-700"
               }`}>
-                {saasProductsData.length} SaaS
+                {saasProducts.length} SaaS
               </span>
             </button>
 
@@ -215,13 +216,13 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
               <div className="text-left">
                 <div className="uppercase">C Vidya AI Agents (AI SaaS)</div>
                 <div className={`text-[10px] font-mono font-normal tracking-normal ${activeCategory === "ai-agent" ? "text-[#42A5F5]" : "text-slate-500"}`}>
-                  {aiAgentsData.length} Autonomous AI Agents
+                  {aiAgents.length} Autonomous AI Agents
                 </div>
               </div>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ml-auto ${
                 activeCategory === "ai-agent" ? "bg-[#42A5F5] text-slate-950" : "bg-slate-300 text-slate-700"
               }`}>
-                {aiAgentsData.length} Agents
+                {aiAgents.length} Agents
               </span>
             </button>
 
@@ -433,16 +434,22 @@ export default function ServicesSection({ id = "services-suite", onOpenInquiry }
               <iframe
                 key={frameKey}
                 src={
-                  liveAppViewing.id === "fitness" || liveAppViewing.externalLink?.includes("fitzone")
+                  !liveAppViewing.connectedToAutoDeploy &&
+                  liveAppViewing.id === "fitness" &&
+                  liveAppViewing.externalLink?.includes("fitzone.cvidyasolutions.workers.dev")
                     ? "/software/fitness/index.html"
-                    : liveAppViewing.id === "library" || liveAppViewing.externalLink?.includes("v.cvidyasolutions")
+                    : !liveAppViewing.connectedToAutoDeploy &&
+                      liveAppViewing.id === "library" &&
+                      liveAppViewing.externalLink?.includes("v.cvidyasolutions.workers.dev")
                     ? "/software/library/index.html"
-                    : liveAppViewing.id === "petrol-pump" || liveAppViewing.externalLink?.includes("c-vidya-cloud-petrol-pump")
+                    : !liveAppViewing.connectedToAutoDeploy &&
+                      liveAppViewing.id === "petrol-pump" &&
+                      liveAppViewing.externalLink?.includes("c-vidya-cloud-petrol-pump.cvidyasolutions.workers.dev")
                     ? "/software/petrol-pump/index.html"
-                    : liveAppViewing.id === "pdf-media-tools" || liveAppViewing.id === "pdf-tools" || liveAppViewing.externalLink?.includes("c-vidya-pdf-saas-tools")
+                    : !liveAppViewing.connectedToAutoDeploy &&
+                      (liveAppViewing.id === "pdf-media-tools" || liveAppViewing.id === "pdf-tools") &&
+                      liveAppViewing.externalLink?.includes("c-vidya-pdf-saas-tools.cvidyasolutions.workers.dev")
                     ? "/software/pdf-tools/index.html"
-                    : liveAppViewing.id === "institutes" || liveAppViewing.externalLink?.includes("institutes")
-                    ? "https://coaching.cvidyasolutions.workers.dev/?type=institutes"
                     : liveAppViewing.externalLink
                 }
                 title={liveAppViewing.name}

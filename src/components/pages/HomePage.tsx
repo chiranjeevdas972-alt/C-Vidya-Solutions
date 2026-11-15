@@ -37,6 +37,8 @@ import Logo from "../Logo";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
 import { coreCompanyServices, saasProductsData, aiAgentsData, type CoreServiceItem } from "../../data";
+import { type ProductService } from "../../types";
+import { useDeploymentRegistry } from "../../services/deploymentRegistrySync";
 import CoreServiceDetailModal from "../CoreServiceDetailModal";
 import {
   WordRotator,
@@ -54,9 +56,14 @@ interface HomePageProps {
   onSelectProduct?: (product: any) => void;
   onOpenSoftware?: (product: any) => void;
   onOpenConsultation?: () => void;
+  saasProducts?: ProductService[];
+  aiAgents?: ProductService[];
 }
 
-export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct, onOpenSoftware, onOpenConsultation: _onOpenConsultation }: HomePageProps) {
+export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct, onOpenSoftware, onOpenConsultation: _onOpenConsultation, saasProducts: propSaasProducts, aiAgents: propAiAgents }: HomePageProps) {
+  const { saasProducts: regSaasProducts, aiAgents: regAiAgents } = useDeploymentRegistry();
+  const activeSaasProducts = propSaasProducts && propSaasProducts.length > 0 ? propSaasProducts : regSaasProducts;
+  const activeAiAgents = propAiAgents && propAiAgents.length > 0 ? propAiAgents : regAiAgents;
   const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
 
   const handleOpenCoreService = (srv: CoreServiceItem) => {
@@ -284,7 +291,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[0]);
+                          onOpenSoftware(activeSaasProducts[0]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -314,7 +321,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[1]);
+                          onOpenSoftware(activeSaasProducts[1]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -344,7 +351,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[2]);
+                          onOpenSoftware(activeSaasProducts[2]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -374,7 +381,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[3]);
+                          onOpenSoftware(activeSaasProducts[3]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -404,7 +411,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[6]);
+                          onOpenSoftware(activeSaasProducts[6]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -434,7 +441,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[7]);
+                          onOpenSoftware(activeSaasProducts[7]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -464,7 +471,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[4]);
+                          onOpenSoftware(activeSaasProducts[4]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -494,7 +501,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[5]);
+                          onOpenSoftware(activeSaasProducts[5]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -524,7 +531,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[8]);
+                          onOpenSoftware(activeSaasProducts[8]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -554,7 +561,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(saasProductsData[9]);
+                          onOpenSoftware(activeSaasProducts[9]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -626,7 +633,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(aiAgentsData[1]);
+                          onOpenSoftware(activeAiAgents[1]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -656,7 +663,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(aiAgentsData[2]);
+                          onOpenSoftware(activeAiAgents[2]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -686,7 +693,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(aiAgentsData[0]);
+                          onOpenSoftware(activeAiAgents[0]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"
@@ -716,7 +723,7 @@ export default function HomePage({ onNavigate, onSelectProduct: _onSelectProduct
                       type="button"
                       onClick={() => {
                         if (onOpenSoftware) {
-                          onOpenSoftware(aiAgentsData[3]);
+                          onOpenSoftware(activeAiAgents[3]);
                         }
                       }}
                       className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer shrink-0"

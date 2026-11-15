@@ -1,10 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Global security helpers
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function isSignedIn() {
@@ -21,46 +19,35 @@ service cloud.firestore {
         );
     }
 
-    // Strict validation for inquiry payloads to protect against malicious injections and status spoofing
     function isValidInquiry(data) {
       return data != null
         && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
         && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
         && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
-        && (!('service' in data) || (data.service is string && data.service.size() <= 200))
-        && (!('message' in data) || (data.message is string && data.message.size() <= 5000))
-        && (!('status' in data) || isAdmin() || data.status in ["New", "New Lead", "Pending Callback", "registered", "Forwarded to cvidyasolutions@gmail.com"])
-        && !('isAdmin' in data)
-        && !('admin' in data);
+        && (!('status' in data) || data.status in ["New", "New Lead", "Pending Callback", "registered", "Forwarded to cvidyasolutions@gmail.com"])
+        && !('isAdmin' in data) && !('admin' in data);
     }
 
-    // Strict validation for job application submissions
     function isValidApplication(data) {
       return data != null
         && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
         && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
         && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
         && 'jobTitle' in data && data.jobTitle is string && data.jobTitle.size() > 0 && data.jobTitle.size() <= 200
-        && (!('experience' in data) || (data.experience is string && data.experience.size() <= 100))
-        && (!('message' in data) || (data.message is string && data.message.size() <= 5000))
-        && (!('jobCategory' in data) || (data.jobCategory is string && data.jobCategory.size() <= 100))
-        && (!('jobLocation' in data) || (data.jobLocation is string && data.jobLocation.size() <= 150))
-        && (!('roleType' in data) || (data.roleType is string && data.roleType.size() <= 50))
-        && (!('resumeFileName' in data) || (data.resumeFileName is string && data.resumeFileName.size() <= 250))
-        && (!('resumeFileSize' in data) || (data.resumeFileSize is string && data.resumeFileSize.size() <= 50))
-        && (!('resumeUrl' in data) || (data.resumeUrl is string && data.resumeUrl.size() <= 2000))
         && (!('resumeData' in data) || (data.resumeData is string && data.resumeData.size() <= 800000))
-        && (!('status' in data) || isAdmin() || data.status in ["New", "received", "Submitted / Under Review"])
-        && !('isAdmin' in data)
-        && !('admin' in data);
+        && !('isAdmin' in data) && !('admin' in data);
     }
 
-    // Global Default-Deny Catch-All
-    match /{document=**} {
-      allow read, write: if false;
+    function isValidAppRegistration(data) {
+      return data != null
+        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
+        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
+        && 'platform' in data && data.platform is string && (data.platform == "android" || data.platform == "ios")
+        && 'privacyConsent' in data && data.privacyConsent == true
+        && !('isAdmin' in data) && !('admin' in data);
     }
 
-    // Admins registry & owner security vault collection
     function isValidAdminVaultRecord(data, adminId) {
       return data != null
         && data.keys().hasOnly(['uid', 'email', 'passwordHash', 'updatedAt'])
@@ -70,57 +57,6 @@ service cloud.firestore {
         && 'updatedAt' in data && data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 64;
     }
 
-    match /admins/{adminId} {
-      allow read: if isAdmin() && request.auth.uid == adminId;
-      allow create, update: if isAdmin() && request.auth.uid == adminId && isValidAdminVaultRecord(request.resource.data, adminId);
-      allow delete: if false;
-    }
-
-    // Strict validation for mobile app download registrations
-    function isValidAppRegistration(data) {
-      return data != null
-        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
-        && 'email' in data && data.email is string && data.email.size() >= 5 && data.email.size() <= 200
-        && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
-        && 'platform' in data && data.platform is string && (data.platform == "android" || data.platform == "ios")
-        && 'privacyConsent' in data && data.privacyConsent == true
-        && (!('status' in data) || isAdmin() || data.status == "registered")
-        && (!('privacyPolicyVersion' in data) || (data.privacyPolicyVersion is string && data.privacyPolicyVersion.size() <= 50))
-        && (!('clientTimestamp' in data) || (data.clientTimestamp is string && data.clientTimestamp.size() <= 100))
-        && (!('userAgent' in data) || (data.userAgent is string && data.userAgent.size() <= 300))
-        && !('isAdmin' in data)
-        && !('admin' in data);
-    }
-
-    // Inquiries collection: Public can submit verified leads, ONLY authenticated admins can read (PII Isolation)
-    match /inquiries/{inquiryId} {
-      allow create: if isValidId(inquiryId) && isValidInquiry(request.resource.data);
-      allow read: if isAdmin();
-      allow update, delete: if isAdmin();
-    }
-
-    // Job applications collection: Public can submit application, ONLY authenticated admins can read applicant data
-    match /job_applications/{jobApplicationId} {
-      allow create: if isValidId(jobApplicationId) && isValidApplication(request.resource.data);
-      allow read: if isAdmin();
-      allow update, delete: if isAdmin();
-    }
-
-    // Legacy job applications collection compatibility: Same strict protection as job_applications
-    match /applications/{applicationId} {
-      allow create: if isValidId(applicationId) && isValidApplication(request.resource.data);
-      allow read: if isAdmin();
-      allow update, delete: if isAdmin();
-    }
-
-    // Mobile app registrations collection: Public can submit valid registration; ONLY authenticated admins can read/manage (Zero Public Read)
-    match /app_download_registrations/{regId} {
-      allow create: if isValidId(regId) && isValidAppRegistration(request.resource.data);
-      allow read: if isAdmin();
-      allow update, delete: if isAdmin();
-    }
-
-    // Strict validation for AI Calling logs
     function isValidCallLog(data) {
       return data != null
         && 'callId' in data && data.callId is string && data.callId.size() >= 2 && data.callId.size() <= 128
@@ -131,10 +67,9 @@ service cloud.firestore {
         && 'timestamp' in data && data.timestamp is string && data.timestamp.size() >= 10 && data.timestamp.size() <= 64;
     }
 
-    // Strict validation for Demo Bookings
     function isValidDemoBooking(data) {
       return data != null
-        && 'bookingId' in data && data.bookingId is string && data.bookingId is string && data.bookingId.size() >= 2 && data.bookingId.size() <= 128
+        && 'bookingId' in data && data.bookingId is string && data.bookingId.size() >= 2 && data.bookingId.size() <= 128
         && 'leadName' in data && data.leadName is string && data.leadName.size() >= 2 && data.leadName.size() <= 150
         && 'phone' in data && data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 50
         && 'product' in data && data.product is string && data.product.size() >= 2 && data.product.size() <= 200
@@ -144,7 +79,6 @@ service cloud.firestore {
         && 'createdAt' in data && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
     }
 
-    // Strict validation for Human Handoff Tickets
     function isValidHandoffTicket(data) {
       return data != null
         && 'ticketId' in data && data.ticketId is string && data.ticketId.size() >= 2 && data.ticketId.size() <= 128
@@ -157,24 +91,103 @@ service cloud.firestore {
         && 'createdAt' in data && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
     }
 
-    // AI Calling logs collection: Admin-only create, read, update, delete
+    function isValidDeploymentRegistry(data, productId) {
+      return data != null
+        && data.keys().hasOnly(['productId', 'legacyId', 'name', 'category', 'hostingPlatform', 'githubRepository', 'branch', 'environment', 'deploymentUrl', 'version', 'commitSha', 'buildId', 'deploymentStatus', 'enabled', 'connectedToAutoDeploy', 'deployedBy', 'lastDeploymentAt', 'updatedAt', 'badge', 'failureAlert', 'lastFailedAt', 'lastFailureReason', 'adminLockedDisabled', 'notes'])
+        && 'productId' in data && data.productId is string && data.productId == productId
+        && 'legacyId' in data && data.legacyId is string && data.legacyId.size() >= 1 && data.legacyId.size() <= 64
+        && 'name' in data && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && 'category' in data && (data.category == "software" || data.category == "ai-agent")
+        && 'hostingPlatform' in data && (data.hostingPlatform == "cloudflare-workers" || data.hostingPlatform == "cloudflare-pages")
+        && 'deploymentStatus' in data && (data.deploymentStatus == "active" || data.deploymentStatus == "inactive" || data.deploymentStatus == "failed" || data.deploymentStatus == "coming-soon")
+        && 'enabled' in data && data.enabled is bool
+        && (!('deploymentUrl' in data) || (data.deploymentUrl is string && data.deploymentUrl.size() <= 500))
+        && 'updatedAt' in data && data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 64
+        && !('isAdmin' in data) && !('admin' in data);
+    }
+
+    function isValidDeploymentHistory(data, entryId) {
+      return data != null
+        && data.keys().hasOnly(['id', 'productId', 'version', 'commitSha', 'buildId', 'deploymentUrl', 'hostingPlatform', 'githubRepository', 'branch', 'environment', 'status', 'deployedBy', 'deployedAt', 'message'])
+        && 'id' in data && data.id is string && data.id == entryId
+        && 'productId' in data && data.productId is string && data.productId.size() >= 2 && data.productId.size() <= 128
+        && 'buildId' in data && data.buildId is string && data.buildId.size() >= 1 && data.buildId.size() <= 120
+        && 'status' in data && (data.status == "success" || data.status == "failed")
+        && 'deployedAt' in data && data.deployedAt is string && data.deployedAt.size() >= 10 && data.deployedAt.size() <= 64;
+    }
+
+    function isValidDeploymentAuditLog(data, logId) {
+      return data != null
+        && data.keys().hasOnly(['id', 'action', 'productId', 'actor', 'timestamp', 'details'])
+        && 'id' in data && data.id is string && data.id == logId
+        && 'action' in data && data.action is string && data.action.size() >= 2 && data.action.size() <= 80
+        && 'productId' in data && data.productId is string && data.productId.size() >= 2 && data.productId.size() <= 128
+        && 'actor' in data && data.actor is string && data.actor.size() >= 1 && data.actor.size() <= 120
+        && 'timestamp' in data && data.timestamp is string && data.timestamp.size() >= 10 && data.timestamp.size() <= 64
+        && 'details' in data && data.details is string && data.details.size() >= 1 && data.details.size() <= 500;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin() && request.auth.uid == adminId;
+      allow create, update: if isAdmin() && request.auth.uid == adminId && isValidAdminVaultRecord(request.resource.data, adminId);
+      allow delete: if false;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if isValidId(inquiryId) && isValidInquiry(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /job_applications/{jobApplicationId} {
+      allow create: if isValidId(jobApplicationId) && isValidApplication(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow create: if isValidId(applicationId) && isValidApplication(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /app_download_registrations/{regId} {
+      allow create: if isValidId(regId) && isValidAppRegistration(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
     match /call_logs/{callId} {
       allow create: if isValidId(callId) && isValidCallLog(request.resource.data) && isAdmin();
       allow read, update, delete: if isAdmin();
     }
 
-    // Demo bookings collection: Public/Admin validated booking creation, ONLY authenticated admins can read/manage
     match /demo_bookings/{bookingId} {
       allow create: if isValidId(bookingId) && isValidDemoBooking(request.resource.data);
       allow read, update, delete: if isAdmin();
     }
 
-    // Human handoff tickets collection: Validated ticket creation, ONLY authenticated admins can read/manage
     match /handoff_tickets/{ticketId} {
       allow create: if isValidId(ticketId) && isValidHandoffTicket(request.resource.data);
       allow read, update, delete: if isAdmin();
     }
+
+    match /cvidya_deployment_registry/{productId} {
+      allow get, list: if true;
+      allow create, update: if isAdmin() && isValidId(productId) && isValidDeploymentRegistry(request.resource.data, productId);
+      allow delete: if false;
+    }
+
+    match /cvidya_deployment_history/{entryId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(entryId) && isValidDeploymentHistory(request.resource.data, entryId);
+      allow delete: if false;
+    }
+
+    match /cvidya_deployment_audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidId(logId) && isValidDeploymentAuditLog(request.resource.data, logId);
+      allow update, delete: if false;
+    }
   }
 }
-
-

@@ -15,6 +15,7 @@ import { CORE_PAGES_SEO } from "../../seoData";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { triggerSuccessFeedback, dispatchActivityPing } from "../ActivityPingsAndTour";
+import CongratulationsModal, { SubmittedDemoData } from "../CongratulationsModal";
 
 interface ContactPageProps {
   onOpenLeadsModal?: () => void;
@@ -34,6 +35,16 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [congratulationsData, setCongratulationsData] = useState<SubmittedDemoData | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlService = new URLSearchParams(window.location.search).get("service");
+      if (urlService) {
+        setFramework(decodeURIComponent(urlService));
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,36 +61,68 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
     setSubmitting(true);
     setErrorMessage("");
 
+    const refId = `CVD-DEMO-${Math.floor(100000 + Math.random() * 900000)}`;
+    const submittedName = fullName.trim();
+    const submittedPhone = phone.trim();
+    const submittedEmail = email.trim();
+    const submittedService = framework;
+    const submittedReqs = requirements.trim();
+
     try {
-      // 1. Direct Firestore Persistence
+      // 1. Immediate Local storage resilient backup (<1ms)
       try {
-        const inquiriesCol = collection(db, "inquiries");
-        await addDoc(inquiriesCol, {
-          name: fullName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          service: framework,
-          message: requirements.trim() || "Online Callback Requisition",
+        const localLeads = JSON.parse(localStorage.getItem("cvidya_local_leads") || "[]");
+        localLeads.unshift({
+          id: refId,
+          name: submittedName,
+          email: submittedEmail,
+          phone: submittedPhone,
+          service: submittedService,
+          message: submittedReqs,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem("cvidya_local_leads", JSON.stringify(localLeads.slice(0, 50)));
+      } catch (_) {}
+
+      // 2. Concurrently dispatch Firestore & Server API without UI blocking
+      Promise.allSettled([
+        addDoc(collection(db, "inquiries"), {
+          name: submittedName,
+          email: submittedEmail,
+          phone: submittedPhone,
+          service: submittedService,
+          message: submittedReqs || "Online Callback / Demo Requisition",
           timestamp: new Date().toISOString(),
           status: "pending_review",
-          source: "contact_page_form"
-        });
-      } catch (fbErr) {
-        console.warn("Direct Firestore lead record fallback:", fbErr);
-      }
+          source: isDemoMode ? "demo_mode_form" : "contact_page_form",
+          referenceId: refId
+        }).catch((fbErr) => {
+          console.warn("Direct Firestore lead record fallback:", fbErr);
+        }),
+        fetch("/api/inquiries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: submittedName,
+            email: submittedEmail,
+            phone: submittedPhone,
+            service: submittedService,
+            message: submittedReqs || "Online Callback / Demo Requisition",
+            referenceId: refId
+          })
+        }).catch(() => {})
+      ]);
 
-      // 2. Server API sync
-      await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: fullName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          service: framework,
-          message: requirements.trim() || "Online Callback Requisition"
-        })
-      }).catch(() => {});
+      // Trigger Congratulations Popup Message
+      setCongratulationsData({
+        name: submittedName,
+        phone: submittedPhone,
+        email: submittedEmail,
+        service: submittedService,
+        referenceId: refId,
+        requirements: submittedReqs
+      });
+      setSubmitted(true);
 
       setFullName("");
       setPhone("+91 ");
@@ -87,16 +130,16 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
       setFramework("General Company Inquiry");
       setRequirements("");
       setConsent(false);
-      setSubmitted(false);
+
       triggerSuccessFeedback({
-        title: "Successfully Saved!",
-        message: `Your inquiry for ${framework} has been recorded. Our engineering desk will call you shortly.`,
+        title: "Requisition Recorded!",
+        message: `Your booking for ${submittedService} has been saved. Reference: ${refId}`,
         actionLabel: "Explore Software Suites",
         actionPath: "/software/"
       });
       dispatchActivityPing({
-        category: "New Enquiry Received",
-        message: `Enquiry recorded for ${framework}`,
+        category: "Demo Requisition",
+        message: `Enquiry recorded for ${submittedService}`,
         timestampLabel: "Just now",
         targetPath: "/software/"
       });
@@ -108,26 +151,23 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
   };
 
   const renderFormCard = (isStandalone = false) => (
-    <div className={`bg-white border border-slate-200/80 rounded-2xl ${isStandalone ? "p-6 sm:p-10 shadow-lg" : "p-6 sm:p-8 shadow-xs"} space-y-6`}>
-      <div className="space-y-3">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-950 uppercase leading-snug">
+    <div className={`bg-white border border-slate-200/90 ${isStandalone ? "p-5 sm:p-8 md:p-10 shadow-md sm:shadow-xl rounded-2xl sm:rounded-3xl" : "p-5 sm:p-7 md:p-8 shadow-xs rounded-2xl"} space-y-5 sm:space-y-6 w-full transition-all`}>
+      <div>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-950 uppercase leading-snug">
           GET IN TOUCH
         </h2>
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-          We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
-        </p>
       </div>
 
       {submitted ? (
         <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-3">
           <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-900">Requisition Transmitted Successfully</h3>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs sm:text-sm text-slate-600">
             Your inquiry is assigned to our director desk. We will call you at <strong>{phone}</strong> shortly.
           </p>
           <button
             onClick={() => setSubmitted(false)}
-            className="mt-3 px-4 py-2 bg-blue-600 text-white rounded text-xs font-semibold cursor-pointer"
+            className="mt-3 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors"
           >
             Submit Another Requisition
           </button>
@@ -135,66 +175,77 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md">
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-lg">
               {errorMessage}
             </div>
           )}
 
           {/* Name & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase mb-1">
+              <label className="block text-[10px] sm:text-xs font-mono font-bold text-slate-600 uppercase mb-1.5 tracking-wider">
                 YOUR FULL NAME <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 required
+                autoComplete="name"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all placeholder:text-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase mb-1">
+              <label className="block text-[10px] sm:text-xs font-mono font-bold text-slate-600 uppercase mb-1.5 tracking-wider">
                 PHONE NUMBER <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 required
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 8987766981"
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[10px] sm:text-xs font-mono font-bold text-slate-600 uppercase mb-1.5 tracking-wider">
               EMAIL ADDRESS <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               required
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              enterKeyHint="next"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@company.com"
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all placeholder:text-slate-400"
             />
           </div>
 
           {/* Framework Selector */}
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[10px] sm:text-xs font-mono font-bold text-slate-600 uppercase mb-1.5 tracking-wider">
               SPECIFIC PRODUCT FRAMEWORK
             </label>
             <select
               value={framework}
               onChange={(e) => setFramework(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all cursor-pointer"
             >
               <option value="General Company Inquiry">General Company Inquiry</option>
               <option value="C Vidya Library Management">C Vidya Library Management</option>
@@ -211,7 +262,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
 
           {/* Requirements */}
           <div>
-            <label className="block text-[10px] font-mono font-bold text-slate-600 uppercase mb-1">
+            <label className="block text-[10px] sm:text-xs font-mono font-bold text-slate-600 uppercase mb-1.5 tracking-wider">
               REQUIREMENTS / INSTRUCTIONS
             </label>
             <textarea
@@ -219,20 +270,20 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
               placeholder="Tell us about your organization's workflow needs..."
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden focus:border-blue-600 focus:ring-1 focus:ring-blue-600 resize-none"
+              className="w-full px-3.5 py-3 sm:py-2.5 text-base sm:text-sm bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all placeholder:text-slate-400 resize-y min-h-[90px]"
             />
           </div>
 
           {/* Consent Checkbox */}
-          <div className="flex items-start gap-2 pt-1">
+          <div className="flex items-start gap-3 pt-1 select-none cursor-pointer group">
             <input
               type="checkbox"
               id="consent-cb"
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
-              className="mt-0.5 rounded text-blue-600 focus:ring-blue-500"
+              className="w-4 h-4 mt-0.5 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
-            <label htmlFor="consent-cb" className="text-[11px] text-slate-500 leading-tight">
+            <label htmlFor="consent-cb" className="text-xs sm:text-[11px] text-slate-600 leading-snug cursor-pointer group-hover:text-slate-900 transition-colors">
               I consent to secure database storage &amp; transmission of my details under standard encryption guidelines.
             </label>
           </div>
@@ -241,7 +292,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-[#1D70B8] hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-md shadow-xs transition-colors text-xs tracking-wider flex items-center justify-center gap-2 cursor-pointer uppercase"
+            className="w-full min-h-[48px] sm:min-h-[44px] py-3.5 sm:py-3 bg-[#1D70B8] hover:bg-blue-700 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-lg shadow-sm transition-all text-sm sm:text-xs tracking-wider flex items-center justify-center gap-2 cursor-pointer uppercase"
           >
             <Send className="w-4 h-4" />
             <span>{submitting ? "SUBMITTING..." : "SUBMIT"}</span>
@@ -252,7 +303,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
   );
 
   return (
-    <div className="w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-blue-600 selection:text-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className={`w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-blue-600 selection:text-white ${isDemoMode ? "min-h-[calc(100dvh-70px)] flex flex-col justify-center py-6 sm:py-10 md:py-14" : "py-8 sm:py-12"} px-3 sm:px-6 lg:px-8 pb-[max(2rem,env(safe-area-inset-bottom,2rem))]`}>
       <SeoHead
         title={CORE_PAGES_SEO.contact.title}
         description={CORE_PAGES_SEO.contact.description}
@@ -281,10 +332,10 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
           }
         }}
       />
-      <div className={isDemoMode ? "max-w-2xl mx-auto" : "max-w-7xl mx-auto"}>
+      <div className={isDemoMode ? "w-full max-w-xl md:max-w-2xl mx-auto" : "max-w-7xl mx-auto"}>
         {isDemoMode ? (
           /* Book Free Demo Mode: ONLY Get In Touch Section */
-          <div className="space-y-4">
+          <div className="w-full">
             {renderFormCard(true)}
           </div>
         ) : (
@@ -472,6 +523,14 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
         )}
 
       </div>
+
+      {/* Congratulations Popup Message */}
+      <CongratulationsModal
+        isOpen={Boolean(congratulationsData)}
+        onClose={() => setCongratulationsData(null)}
+        data={congratulationsData}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

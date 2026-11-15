@@ -11,20 +11,24 @@ import {
 import Breadcrumb from "../Breadcrumb";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
-import { aiAgentsData } from "../../data";
 import { ProductService } from "../../types";
+import { useDeploymentRegistry } from "../../services/deploymentRegistrySync";
 
 interface AiAgentsDirectoryPageProps {
   onNavigate: (path: string) => void;
   onOpenLiveApp?: (product: ProductService) => void;
   onOpenConsultation?: () => void;
+  aiAgents?: ProductService[];
 }
 
 export default function AiAgentsDirectoryPage({
   onNavigate,
   onOpenLiveApp,
-  onOpenConsultation
+  onOpenConsultation,
+  aiAgents: propAiAgents
 }: AiAgentsDirectoryPageProps) {
+  const { aiAgents: regAiAgents } = useDeploymentRegistry();
+  const activeAiAgents = propAiAgents && propAiAgents.length > 0 ? propAiAgents : regAiAgents;
   const agentItems = Object.values(PRODUCT_SEO_DATA).filter(p => p.type === "ai-agent");
 
   const getAgentIcon = (id: string) => {
@@ -83,7 +87,7 @@ export default function AiAgentsDirectoryPage({
       <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {agentItems.map((item) => {
-            const rawAgent = aiAgentsData.find(a => a.id === item.id) || aiAgentsData[0];
+            const rawAgent = activeAiAgents.find(a => a.id === item.id) || activeAiAgents[0];
             return (
               <div
                 key={item.id}

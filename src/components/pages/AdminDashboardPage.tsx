@@ -29,6 +29,17 @@ import {
   Calendar,
   ArrowLeft,
   Sparkles,
+  Rocket,
+  Globe,
+  GitBranch,
+  History,
+  Edit3,
+  Power,
+  Layers,
+  Check,
+  Copy,
+  Server,
+  XCircle,
 } from "lucide-react";
 import {
   auth,
@@ -45,6 +56,8 @@ import {
   computeOwnerVaultDigest,
   computeSha256Hex,
   AUTHORIZED_ADMIN_EMAILS,
+  handleFirestoreError,
+  OperationType,
 } from "../../firebase";
 import {
   collection,
@@ -58,6 +71,16 @@ import {
   limit,
 } from "firebase/firestore";
 import AiCallingConsolePanel from "../AiCallingConsolePanel";
+import {
+  CANONICAL_PRODUCT_REGISTRY_SEED,
+  adminUpdateDeploymentEntry,
+  createInMemoryDeploymentRegistryStore,
+  type DeploymentRegistryEntry,
+  type DeploymentHistoryEntry,
+  type DeploymentAuditLog,
+  type HostingPlatform,
+} from "../../shared/deploymentRegistry";
+import { deploymentRegistryManager } from "../../services/deploymentRegistrySync";
 
 export interface AdminInquiryRecord {
   id: string;
@@ -526,6 +549,7 @@ type DashboardTab =
   | "inquiries"
   | "applications"
   | "app_registrations"
+  | "deployments"
   | "ai_calling";
 
 const INQUIRY_STATUS_OPTIONS = [
@@ -635,6 +659,49 @@ export default function AdminDashboardPage({
   const [regPage, setRegPage] = useState(1);
   const [selectedRegistration, setSelectedRegistration] =
     useState<AdminAppRegistrationRecord | null>(null);
+
+  // Deployment Registry state
+  const [deploymentEntries, setDeploymentEntries] = useState<
+    DeploymentRegistryEntry[]
+  >(() => [...CANONICAL_PRODUCT_REGISTRY_SEED]);
+  const [deploymentHistory, setDeploymentHistory] = useState<
+    DeploymentHistoryEntry[]
+  >([]);
+  const [deploymentAuditLogs, setDeploymentAuditLogs] = useState<
+    DeploymentAuditLog[]
+  >([]);
+  const [deployCategoryFilter, setDeployCategoryFilter] = useState<
+    "all" | "software" | "ai-agent"
+  >("all");
+  const [deploySearch, setDeploySearch] = useState("");
+  const [editingDeployment, setEditingDeployment] =
+    useState<DeploymentRegistryEntry | null>(null);
+  const [editDeployForm, setEditDeployForm] = useState<{
+    deploymentUrl: string;
+    githubRepository: string;
+    hostingPlatform: HostingPlatform;
+    version: string;
+    enabled: boolean;
+    deploymentStatus: "active" | "inactive" | "coming-soon";
+    adminNotes?: string;
+    notes?: string;
+    clearFailureAlert: boolean;
+  }>({
+    deploymentUrl: "",
+    githubRepository: "",
+    hostingPlatform: "cloudflare-workers",
+    version: "1.0.0",
+    enabled: true,
+    deploymentStatus: "active",
+    notes: "",
+    clearFailureAlert: false,
+  });
+  const [savingDeployment, setSavingDeployment] = useState(false);
+  const [deployActionMessage, setDeployActionMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
 
   // Monitor Firebase Auth session & custom-domain Owner Vault session
   useEffect(() => {
@@ -939,6 +1006,95 @@ export default function AdminDashboardPage({
         sortedInquiries,
       );
       setAppRegistrations(mergedRegistrations);
+
+      // 4. Fetch Deployment Registry + History + Audit Logs from Backend API & Firestore
+      const registryMap = new Map<string, DeploymentRegistryEntry>(
+        CANONICAL_PRODUCT_REGISTRY_SEED.map((seed) => [seed.productId, { ...seed }]),
+      );
+      const historyItems: DeploymentHistoryEntry[] = [];
+      const auditItems: DeploymentAuditLog[] = [];
+
+      try {
+        const depRes = await fetch("/api/admin/deployments", { headers });
+        if (depRes.ok) {
+          const depPayload = await depRes.json();
+          if (Array.isArray(depPayload?.entries)) {
+            for (const item of depPayload.entries) {
+              if (item?.productId && registryMap.has(item.productId)) {
+                registryMap.set(item.productId, item);
+              }
+            }
+          }
+          if (Array.isArray(depPayload?.history)) {
+            historyItems.push(...depPayload.history);
+          }
+          if (Array.isArray(depPayload?.auditLogs)) {
+            auditItems.push(...depPayload.auditLogs);
+          }
+        }
+      } catch {
+        // Non-fatal; Firestore fallback below
+      }
+
+      try {
+        const fsRegSnap = await getDocs(
+          collection(db, "cvidya_deployment_registry"),
+        );
+        fsRegSnap.forEach((docSnap) => {
+          const d = docSnap.data() as Partial<DeploymentRegistryEntry>;
+          const pid = String(d?.productId || docSnap.id || "").trim();
+          const current = registryMap.get(pid);
+          if (!current) return;
+          const fsUpdatedAt = String(d?.updatedAt || "");
+          if (!current.updatedAt || fsUpdatedAt >= current.updatedAt) {
+            registryMap.set(pid, {
+              ...current,
+              ...(d as DeploymentRegistryEntry),
+              productId: pid,
+            });
+          }
+        });
+      } catch {
+        // Non-fatal if Firestore collection has no overrides yet
+      }
+
+      if (historyItems.length === 0) {
+        try {
+          const fsHistSnap = await getDocs(
+            query(
+              collection(db, "cvidya_deployment_history"),
+              orderBy("deployedAt", "desc"),
+              limit(50),
+            ),
+          );
+          fsHistSnap.forEach((docSnap) => {
+            historyItems.push(docSnap.data() as DeploymentHistoryEntry);
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      if (auditItems.length === 0) {
+        try {
+          const fsAuditSnap = await getDocs(
+            query(
+              collection(db, "cvidya_deployment_audit_logs"),
+              orderBy("timestamp", "desc"),
+              limit(50),
+            ),
+          );
+          fsAuditSnap.forEach((docSnap) => {
+            auditItems.push(docSnap.data() as DeploymentAuditLog);
+          });
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      setDeploymentEntries(Array.from(registryMap.values()));
+      setDeploymentHistory(historyItems.slice(0, 50));
+      setDeploymentAuditLogs(auditItems.slice(0, 50));
 
       setLastSyncedAt(new Date().toLocaleTimeString());
     } catch (err: any) {
@@ -1338,6 +1494,256 @@ export default function AdminDashboardPage({
       // Ignore if offline or legacy record
     } finally {
       setUpdatingApplicationId(null);
+    }
+  };
+
+  // Deployment Registry Handlers
+  const openEditDeploymentModal = (entry: DeploymentRegistryEntry) => {
+    setDeployActionMessage(null);
+    setEditingDeployment(entry);
+    setEditDeployForm({
+      deploymentUrl: entry.deploymentUrl || "",
+      githubRepository: entry.githubRepository || "",
+      hostingPlatform: entry.hostingPlatform || "cloudflare-workers",
+      version: entry.version || "1.0.0",
+      enabled: entry.enabled !== false,
+      deploymentStatus:
+        entry.deploymentStatus === "failed" ? "active" : entry.deploymentStatus || "active",
+      notes: entry.notes || "",
+      clearFailureAlert: Boolean(entry.failureAlert),
+    });
+  };
+
+  const syncSingleDeploymentToFirestore = async (
+    entry: DeploymentRegistryEntry,
+    actionSummary: string,
+  ) => {
+    try {
+      await setDoc(doc(db, "cvidya_deployment_registry", entry.productId), {
+        productId: entry.productId,
+        legacyId: entry.legacyId,
+        name: entry.name,
+        category: entry.category,
+        hostingPlatform: entry.hostingPlatform,
+        githubRepository: entry.githubRepository || "",
+        branch: entry.branch || "main",
+        environment: entry.environment || "production",
+        deploymentUrl: entry.deploymentUrl || "",
+        version: entry.version || "1.0.0",
+        commitSha: entry.commitSha || "",
+        buildId: entry.buildId || "",
+        deploymentStatus: entry.deploymentStatus,
+        enabled: Boolean(entry.enabled),
+        connectedToAutoDeploy: Boolean(entry.connectedToAutoDeploy),
+        deployedBy: entry.deployedBy || "admin",
+        lastDeploymentAt: entry.lastDeploymentAt || null,
+        updatedAt: entry.updatedAt || new Date().toISOString(),
+        badge: entry.badge || "Live SaaS",
+        failureAlert: Boolean(entry.failureAlert),
+        lastFailedAt: entry.lastFailedAt || null,
+        lastFailureReason: entry.lastFailureReason || null,
+        adminLockedDisabled: Boolean(entry.adminLockedDisabled),
+        notes: entry.notes || "",
+      });
+      const logId = `adm_${entry.productId}_${Date.now()}`.slice(0, 96);
+      await setDoc(doc(db, "cvidya_deployment_audit_logs", logId), {
+        id: logId,
+        action: "admin_update_entry",
+        productId: entry.productId,
+        actor: adminEmail || "authorized-admin",
+        timestamp: new Date().toISOString(),
+        details: actionSummary.slice(0, 500),
+      });
+    } catch (fsErr) {
+      if (auth.currentUser) {
+        handleFirestoreError(
+          fsErr,
+          OperationType.WRITE,
+          `cvidya_deployment_registry/${entry.productId}`,
+        );
+      }
+    }
+  };
+
+  const handleSaveDeploymentEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDeployment) return;
+    setSavingDeployment(true);
+    setDeployActionMessage(null);
+
+    try {
+      const headers = await getAdminAuthHeaders();
+      let updatedEntry: DeploymentRegistryEntry | null = null;
+      let apiErrorMsg = "";
+
+      try {
+        const res = await fetch(
+          `/api/admin/deployments/${encodeURIComponent(editingDeployment.productId)}`,
+          {
+            method: "PATCH",
+            headers: {
+              ...headers,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              deploymentUrl: editDeployForm.deploymentUrl.trim(),
+              githubRepository: editDeployForm.githubRepository.trim(),
+              hostingPlatform: editDeployForm.hostingPlatform,
+              version: editDeployForm.version.trim() || editingDeployment.version,
+              enabled:
+                editDeployForm.deploymentStatus === "inactive"
+                  ? false
+                  : editDeployForm.enabled,
+              notes: (editDeployForm.notes || "").trim(),
+              clearFailureAlert: editDeployForm.clearFailureAlert,
+            }),
+          },
+        );
+        const data = await res.json().catch(() => null);
+        if (res.ok && data?.entry) {
+          updatedEntry = data.entry as DeploymentRegistryEntry;
+          setDeploymentEntries((prev) =>
+            prev.map((item) =>
+              item.productId === updatedEntry!.productId ? updatedEntry! : item,
+            ),
+          );
+        } else if (data?.error) {
+          apiErrorMsg = String(data.error);
+        }
+      } catch {
+        // Fallback to local validator + Firestore sync when server endpoint unreachable
+      }
+
+      if (apiErrorMsg && !updatedEntry) {
+        setDeployActionMessage({ type: "error", text: apiErrorMsg });
+        return;
+      }
+
+      if (!updatedEntry) {
+        const tempStore = createInMemoryDeploymentRegistryStore(deploymentEntries);
+        const localRes = adminUpdateDeploymentEntry(
+          tempStore,
+          editingDeployment.productId,
+          {
+            deploymentUrl: editDeployForm.deploymentUrl.trim(),
+            githubRepository: editDeployForm.githubRepository.trim(),
+            hostingPlatform: editDeployForm.hostingPlatform,
+            version: editDeployForm.version.trim() || editingDeployment.version,
+            enabled:
+              editDeployForm.deploymentStatus === "inactive"
+                ? false
+                : editDeployForm.enabled,
+            notes: (editDeployForm.notes || "").trim(),
+            clearFailureAlert: editDeployForm.clearFailureAlert,
+          },
+          adminEmail || "authorized-admin",
+        );
+        if (!localRes.ok || !localRes.entry) {
+          setDeployActionMessage({
+            type: "error",
+            text: localRes.message || "Invalid deployment configuration.",
+          });
+          return;
+        }
+        updatedEntry = localRes.entry;
+        setDeploymentEntries(Array.from(tempStore.entries.values()));
+      }
+
+      await syncSingleDeploymentToFirestore(
+        updatedEntry,
+        `Admin updated ${updatedEntry.productId} (${updatedEntry.deploymentStatus})`,
+      );
+      await deploymentRegistryManager.refresh(true);
+
+      setDeployActionMessage({
+        type: "success",
+        text: `Updated ${updatedEntry.name} and synchronized across website launch targets.`,
+      });
+      setEditingDeployment(null);
+    } catch (err: any) {
+      setDeployActionMessage({
+        type: "error",
+        text: err?.message || "Failed to update deployment entry.",
+      });
+    } finally {
+      setSavingDeployment(false);
+    }
+  };
+
+  const handleToggleDeploymentEnabled = async (entry: DeploymentRegistryEntry) => {
+    const nextEnabled = !entry.enabled;
+
+    setDeployActionMessage(null);
+    try {
+      const headers = await getAdminAuthHeaders();
+      let updatedEntry: DeploymentRegistryEntry | null = null;
+
+      try {
+        const res = await fetch(
+          `/api/admin/deployments/${encodeURIComponent(entry.productId)}`,
+          {
+            method: "PATCH",
+            headers: {
+              ...headers,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              enabled: nextEnabled,
+            }),
+          },
+        );
+        const data = await res.json().catch(() => null);
+        if (res.ok && data?.entry) {
+          updatedEntry = data.entry as DeploymentRegistryEntry;
+        }
+      } catch {
+        // Fallback below
+      }
+
+      if (!updatedEntry) {
+        const tempStore = createInMemoryDeploymentRegistryStore(deploymentEntries);
+        const localRes = adminUpdateDeploymentEntry(
+          tempStore,
+          entry.productId,
+          { enabled: nextEnabled },
+          adminEmail || "authorized-admin",
+        );
+        if (localRes.ok && localRes.entry) {
+          updatedEntry = localRes.entry;
+        }
+      }
+
+      if (updatedEntry) {
+        setDeploymentEntries((prev) =>
+          prev.map((item) =>
+            item.productId === updatedEntry!.productId ? updatedEntry! : item,
+          ),
+        );
+        await syncSingleDeploymentToFirestore(
+          updatedEntry,
+          `Admin ${nextEnabled ? "enabled" : "disabled"} ${updatedEntry.productId}`,
+        );
+        await deploymentRegistryManager.refresh(true);
+        setDeployActionMessage({
+          type: "success",
+          text: `${updatedEntry.name} ${nextEnabled ? "enabled" : "paused (inactive)"}.`,
+        });
+      }
+    } catch (err: any) {
+      setDeployActionMessage({
+        type: "error",
+        text: err?.message || "Failed to toggle product status.",
+      });
+    }
+  };
+
+  const handleCopyProductId = (productId: string) => {
+    try {
+      navigator.clipboard?.writeText(productId);
+      setCopiedProductId(productId);
+      setTimeout(() => setCopiedProductId(null), 1800);
+    } catch {
+      // Ignore clipboard failures
     }
   };
 
@@ -1919,6 +2325,21 @@ export default function AdminDashboardPage({
             Mobile App Registrations
             <span className="font-mono tabular-nums text-[11px] opacity-80">
               ({appRegistrations.length})
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("deployments")}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+              activeTab === "deployments"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+            }`}
+          >
+            <Rocket className="w-3.5 h-3.5" />
+            Deployment Registry
+            <span className="font-mono tabular-nums text-[11px] opacity-80">
+              ({deploymentEntries.length})
             </span>
           </button>
           <button
@@ -2732,7 +3153,485 @@ export default function AdminDashboardPage({
           </div>
         )}
 
-        {/* TAB 5: AI CALLING & HR AUTOMATION CONSOLE */}
+        {/* TAB 5: DEPLOYMENT REGISTRY & AUTO-SYNC */}
+        {activeTab === "deployments" && (() => {
+          const activeCount = deploymentEntries.filter(
+            (e) => e.deploymentStatus === "active" && e.enabled,
+          ).length;
+          const autoConnectedCount = deploymentEntries.filter(
+            (e) => e.connectedToAutoDeploy,
+          ).length;
+          const failureAlertCount = deploymentEntries.filter((e) =>
+            Boolean(e.failureAlert),
+          ).length;
+
+          const q = deploySearch.trim().toLowerCase();
+          const filteredDeployments = deploymentEntries.filter((entry) => {
+            if (
+              deployCategoryFilter !== "all" &&
+              entry.category !== deployCategoryFilter
+            ) {
+              return false;
+            }
+            if (q) {
+              const hay = [
+                entry.name,
+                entry.productId,
+                entry.legacyId,
+                entry.githubRepository,
+                entry.deploymentUrl,
+                entry.version,
+              ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+              if (!hay.includes(q)) return false;
+            }
+            return true;
+          });
+
+          return (
+            <div className="space-y-6">
+              {/* Top KPI Strip */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Registered Products
+                  </div>
+                  <div className="text-2xl font-bold text-white mt-1 font-mono tabular-nums">
+                    {deploymentEntries.length}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    10 SaaS Suites &amp; 4 AI Agents
+                  </div>
+                </div>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Live Active URLs
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-400 mt-1 font-mono tabular-nums">
+                    {activeCount}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    Verified production endpoints
+                  </div>
+                </div>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Auto-Deploy Synced
+                  </div>
+                  <div className="text-2xl font-bold text-blue-400 mt-1 font-mono tabular-nums">
+                    {autoConnectedCount}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    GitHub Actions webhook verified
+                  </div>
+                </div>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Failed Deploy Alerts
+                  </div>
+                  <div
+                    className={`text-2xl font-bold mt-1 font-mono tabular-nums ${
+                      failureAlertCount > 0 ? "text-rose-400" : "text-slate-300"
+                    }`}
+                  >
+                    {failureAlertCount}
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    Last known good URLs preserved
+                  </div>
+                </div>
+              </div>
+
+              {deployActionMessage && (
+                <div
+                  className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 ${
+                    deployActionMessage.type === "success"
+                      ? "bg-emerald-950/50 border-emerald-700/60 text-emerald-200"
+                      : "bg-rose-950/50 border-rose-700/60 text-rose-200"
+                  }`}
+                >
+                  <span>{deployActionMessage.text}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDeployActionMessage(null)}
+                    className="text-current opacity-70 hover:opacity-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Filters & Webhook Endpoint Banner */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(["all", "software", "ai-agent"] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setDeployCategoryFilter(cat)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
+                        deployCategoryFilter === cat
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                      }`}
+                    >
+                      {cat === "all"
+                        ? "All 14 Products"
+                        : cat === "software"
+                        ? "Software (10)"
+                        : "AI Agents (4)"}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-xl justify-end">
+                  <div className="relative flex-1 max-w-xs">
+                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={deploySearch}
+                      onChange={(e) => setDeploySearch(e.target.value)}
+                      placeholder="Filter by product ID, repo, URL..."
+                      className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 flex items-center gap-2">
+                    <Server className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <span className="truncate">
+                      POST /api/deployments/register
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 14-Product Registry Table */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider">
+                        <th className="py-3 px-4">Product / Canonical ID</th>
+                        <th className="py-3 px-4">Hosting &amp; Repo</th>
+                        <th className="py-3 px-4">Live Production URL</th>
+                        <th className="py-3 px-4">Version &amp; Build</th>
+                        <th className="py-3 px-4">Last Deployed</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-right">Controls</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {filteredDeployments.map((entry) => {
+                        const isCopied = copiedProductId === entry.productId;
+                        return (
+                          <tr
+                            key={entry.productId}
+                            className="hover:bg-slate-800/30 transition-colors"
+                          >
+                            <td className="py-3.5 px-4 align-top">
+                              <div className="font-semibold text-white">
+                                {entry.name}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <code className="text-[11px] font-mono text-blue-300 bg-blue-950/50 border border-blue-900/50 px-1.5 py-0.5 rounded">
+                                  {entry.productId}
+                                </code>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleCopyProductId(entry.productId)
+                                  }
+                                  className="text-slate-500 hover:text-white cursor-pointer"
+                                  title="Copy Canonical productId"
+                                >
+                                  {isCopied ? (
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                  ) : (
+                                    <Copy className="w-3 h-3" />
+                                  )}
+                                </button>
+                              </div>
+                              <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                legacyId: {entry.legacyId} • {entry.category}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top space-y-1.5">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                                  entry.hostingPlatform === "cloudflare-pages"
+                                    ? "bg-indigo-950/60 text-indigo-300 border border-indigo-800/60"
+                                    : "bg-amber-950/50 text-amber-300 border border-amber-800/60"
+                                }`}
+                              >
+                                <Layers className="w-3 h-3" />
+                                {entry.hostingPlatform === "cloudflare-pages"
+                                  ? "Cloudflare Pages"
+                                  : "Cloudflare Workers"}
+                              </span>
+                              <div className="flex items-center gap-1 text-[11px] text-slate-300 font-mono">
+                                <GitBranch className="w-3 h-3 text-slate-500 shrink-0" />
+                                {entry.githubRepository ? (
+                                  <span className="text-emerald-300">
+                                    {entry.githubRepository}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-500 italic">
+                                    Not Connected Yet
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top max-w-[260px]">
+                              {entry.deploymentUrl ? (
+                                <div className="space-y-1">
+                                  <a
+                                    href={entry.deploymentUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 font-mono text-[11px] break-all inline-flex items-center gap-1"
+                                  >
+                                    <span>{entry.deploymentUrl}</span>
+                                    <ExternalLink className="w-3 h-3 shrink-0" />
+                                  </a>
+                                  <div className="text-[10px] text-slate-500">
+                                    {entry.connectedToAutoDeploy
+                                      ? "Auto-updated via CI webhook"
+                                      : "Initial seed / manual URL"}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-slate-500 italic text-[11px]">
+                                  No live URL (Coming Soon / Paused)
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top font-mono">
+                              <div className="text-slate-200 font-semibold">
+                                v{entry.version || "1.0.0"}
+                              </div>
+                              <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                                {entry.buildId || "—"}
+                              </div>
+                              {entry.commitSha && (
+                                <div className="text-[10px] text-slate-500">
+                                  sha: {entry.commitSha.slice(0, 7)}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top text-slate-300">
+                              {entry.lastDeploymentAt ? (
+                                <span>
+                                  {formatTimestamp(entry.lastDeploymentAt)}
+                                </span>
+                              ) : (
+                                <span className="text-slate-500 italic">
+                                  Initial Seed
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top space-y-1">
+                              <div>
+                                {entry.deploymentStatus === "active" &&
+                                entry.enabled ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-700/60">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Active Live
+                                  </span>
+                                ) : entry.deploymentStatus === "coming-soon" ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-950/70 text-amber-300 border border-amber-700/60">
+                                    <Clock className="w-3 h-3" />
+                                    Coming Soon
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                                    <XCircle className="w-3 h-3" />
+                                    Inactive
+                                  </span>
+                                )}
+                              </div>
+                              {entry.failureAlert && (
+                                <div
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-700/60 text-[10px]"
+                                  title={entry.lastFailureReason || ""}
+                                >
+                                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                                  Failure Alert
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4 align-top text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditDeploymentModal(entry)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleDeploymentEnabled(entry)
+                                  }
+                                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                                    entry.enabled
+                                      ? "bg-slate-800 hover:bg-amber-700 text-slate-300 hover:text-white"
+                                      : "bg-emerald-700 hover:bg-emerald-600 text-white"
+                                  }`}
+                                  title={
+                                    entry.enabled
+                                      ? "Pause / Disable public launch"
+                                      : "Enable public launch"
+                                  }
+                                >
+                                  <Power className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Deployment History & Security Audit Trail */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <History className="w-4 h-4 text-blue-400" />
+                      Recent Deployment History
+                    </h3>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      Latest {deploymentHistory.length} events
+                    </span>
+                  </div>
+                  {deploymentHistory.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      No CI/CD deployment webhook deliveries recorded yet. Push
+                      a production workflow on GitHub to see live history here.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {deploymentHistory.map((h) => (
+                        <div
+                          key={h.id}
+                          className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex items-start justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-mono text-white font-semibold truncate">
+                              {h.productId} • v{h.version}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate">
+                              {h.githubRepository || "manual"} (
+                              {h.branch || "main"}) → {h.deploymentUrl || "—"}
+                            </div>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase shrink-0 ${
+                              h.status === "success"
+                                ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                                : "bg-rose-950 text-rose-300 border border-rose-800"
+                            }`}
+                          >
+                            {h.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-emerald-400" />
+                      Security &amp; Audit Logs
+                    </h3>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      Latest {deploymentAuditLogs.length} checks
+                    </span>
+                  </div>
+                  {deploymentAuditLogs.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      Webhook signature checks, URL validations, and admin
+                      overrides will appear here.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {deploymentAuditLogs.map((log) => {
+                        const isRejected = log.action === "webhook_rejected" || log.action === "webhook_register_failed_build";
+                        return (
+                          <div
+                            key={log.id}
+                            className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex items-start justify-between gap-3"
+                          >
+                            <div className="min-w-0">
+                              <div className="font-mono text-slate-200 truncate">
+                                [{log.action}] {log.productId || "unknown"}
+                              </div>
+                              <div className="text-[11px] text-slate-400">
+                                {log.details} ({log.actor})
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase shrink-0 ${
+                                !isRejected
+                                  ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                                  : "bg-rose-950 text-rose-300 border border-rose-800"
+                              }`}
+                            >
+                              {isRejected ? "alert" : "verified"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Webhook Setup Summary (Zero Secrets Displayed) */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs space-y-2">
+                <div className="font-bold text-white flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-blue-400" />
+                  GitHub Actions → Production Registry Webhook Contract
+                </div>
+                <p className="text-slate-400">
+                  Configure repository secret{" "}
+                  <code className="text-amber-300 font-mono">
+                    CVIDYA_DEPLOY_WEBHOOK_SECRET
+                  </code>{" "}
+                  in each software repository to match server environment
+                  variable{" "}
+                  <code className="text-amber-300 font-mono">
+                    DEPLOYMENT_WEBHOOK_SECRET
+                  </code>
+                  . Only <code className="text-slate-200 font-mono">main</code>{" "}
+                  branch production HTTPS URLs on trusted Cloudflare domains are
+                  accepted.
+                </p>
+                <div className="font-mono text-[11px] bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 overflow-x-auto">
+                  Endpoint: POST https://www.cvidyasolutions.com/api/deployments/register
+                  {" • "}Headers: Authorization: Bearer &lt;SECRET&gt;,
+                  X-CVidya-Signature-256: sha256=&lt;HMAC&gt;
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* TAB 6: AI CALLING & HR AUTOMATION CONSOLE */}
         {activeTab === "ai_calling" && (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
             <AiCallingConsolePanel
@@ -3109,6 +4008,210 @@ export default function AdminDashboardPage({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: EDIT DEPLOYMENT REGISTRY ENTRY */}
+      {editingDeployment && (
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[11px] font-mono uppercase text-blue-400">
+                  Manual Override &amp; Repo Binding
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">
+                  {editingDeployment.name}
+                </h3>
+                <p className="text-xs font-mono text-slate-400">
+                  {editingDeployment.productId} (legacyId:{" "}
+                  {editingDeployment.legacyId})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingDeployment(null)}
+                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDeploymentEdit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">
+                  Production Deployment URL (HTTPS Only)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://example.cvidyasolutions.workers.dev/"
+                  value={editDeployForm.deploymentUrl}
+                  onChange={(e) =>
+                    setEditDeployForm((prev) => ({
+                      ...prev,
+                      deploymentUrl: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Allowed: *.cvidyasolutions.workers.dev, *.pages.dev (non-preview),
+                  or *.cvidyasolutions.com. Leave blank for Coming Soon.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    GitHub Repository (owner/repo)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="owner/repo-name"
+                    value={editDeployForm.githubRepository}
+                    onChange={(e) =>
+                      setEditDeployForm((prev) => ({
+                        ...prev,
+                        githubRepository: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    Hosting Platform
+                  </label>
+                  <select
+                    value={editDeployForm.hostingPlatform}
+                    onChange={(e) =>
+                      setEditDeployForm((prev) => ({
+                        ...prev,
+                        hostingPlatform: e.target.value as HostingPlatform,
+                      }))
+                    }
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white [color-scheme:dark]"
+                  >
+                    <option value="cloudflare-workers">
+                      Cloudflare Workers
+                    </option>
+                    <option value="cloudflare-pages">Cloudflare Pages</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    Version Tag
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1.0.0"
+                    value={editDeployForm.version}
+                    onChange={(e) =>
+                      setEditDeployForm((prev) => ({
+                        ...prev,
+                        version: e.target.value,
+                      }))
+                    }
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    Deployment Status
+                  </label>
+                  <select
+                    value={editDeployForm.deploymentStatus}
+                    onChange={(e) =>
+                      setEditDeployForm((prev) => ({
+                        ...prev,
+                        deploymentStatus: e.target.value as
+                          | "active"
+                          | "inactive"
+                          | "coming-soon",
+                      }))
+                    }
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white [color-scheme:dark]"
+                  >
+                    <option value="active">Active Live</option>
+                    <option value="coming-soon">Coming Soon</option>
+                    <option value="inactive">Inactive / Maintenance</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                <label className="inline-flex items-center gap-2 text-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editDeployForm.enabled}
+                    onChange={(e) =>
+                      setEditDeployForm((prev) => ({
+                        ...prev,
+                        enabled: e.target.checked,
+                      }))
+                    }
+                    className="rounded border-slate-600 bg-slate-950 text-blue-600"
+                  />
+                  <span>Enabled on Public Website</span>
+                </label>
+
+                {editingDeployment.failureAlert && (
+                  <label className="inline-flex items-center gap-2 text-amber-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editDeployForm.clearFailureAlert}
+                      onChange={(e) =>
+                        setEditDeployForm((prev) => ({
+                          ...prev,
+                          clearFailureAlert: e.target.checked,
+                        }))
+                      }
+                      className="rounded border-slate-600 bg-slate-950 text-amber-500"
+                    />
+                    <span>Clear Failure Alert</span>
+                  </label>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">
+                  Admin Notes
+                </label>
+                <textarea
+                  rows={2}
+                  value={editDeployForm.notes || ""}
+                  onChange={(e) =>
+                    setEditDeployForm((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
+                  }
+                  placeholder="Optional deployment verification notes..."
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingDeployment(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingDeployment}
+                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold cursor-pointer disabled:opacity-50"
+                >
+                  {savingDeployment ? "Saving & Syncing..." : "Save Deployment"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

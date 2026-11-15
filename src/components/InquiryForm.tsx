@@ -11,6 +11,7 @@ import {
 } from "../firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { triggerSuccessFeedback, dispatchActivityPing } from "./ActivityPingsAndTour";
+import CongratulationsModal, { SubmittedDemoData } from "./CongratulationsModal";
 
 interface InquiryFormProps {
   onInquirySubmitted?: () => void;
@@ -18,6 +19,7 @@ interface InquiryFormProps {
 }
 
 export default function InquiryForm({ onInquirySubmitted, isModal = false }: InquiryFormProps) {
+  const [congratulationsData, setCongratulationsData] = useState<SubmittedDemoData | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -283,6 +285,14 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
     setIsSubmitting(false);
 
     if (writeSucceeded) {
+      setCongratulationsData({
+        name: recordPayload.name,
+        phone: recordPayload.phone,
+        email: recordPayload.email,
+        service: recordPayload.service,
+        referenceId: `CVD-DEMO-${recordPayload.id.slice(-6).toUpperCase()}`,
+        requirements: recordPayload.message
+      });
       setSubmitResult({
         success: true,
         message: "Thank you! Your requisition has been logged securely in our system. A technical advisor will contact you shortly."
@@ -312,12 +322,9 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
   if (isModal) {
     return (
       <div className="bg-slate-50 border border-slate-200/65 p-5 md:p-7 rounded-2xl shadow-sm relative text-slate-800">
-        <h3 className="font-display font-extrabold text-base text-brand-navy-900 mb-1 leading-none uppercase">
+        <h3 className="font-display font-extrabold text-base text-brand-navy-900 mb-4 leading-none uppercase">
           SUBMIT AN OFFICIAL CALLBACK INQUIRY
         </h3>
-        <p className="text-slate-700 text-[11px] mb-4 font-semibold">
-          We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
-        </p>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           
@@ -521,6 +528,12 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
             </div>
           )
         )}
+
+        <CongratulationsModal
+          isOpen={Boolean(congratulationsData)}
+          onClose={() => setCongratulationsData(null)}
+          data={congratulationsData}
+        />
       </div>
     );
   }
@@ -622,9 +635,6 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
                 <h3 className="font-display font-extrabold text-xl text-brand-navy-950 uppercase tracking-tight leading-snug">
                   GET IN TOUCH
                 </h3>
-                <p className="mt-1 text-slate-600 text-xs sm:text-sm font-normal">
-                  We respond to all verified regional phone inquiries on the same day. All fields are handled securely.
-                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -1019,6 +1029,12 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
 
         </div>
       </div>
+
+      <CongratulationsModal
+        isOpen={Boolean(congratulationsData)}
+        onClose={() => setCongratulationsData(null)}
+        data={congratulationsData}
+      />
     </section>
   );
 }

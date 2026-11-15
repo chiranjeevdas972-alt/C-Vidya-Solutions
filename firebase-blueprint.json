@@ -126,6 +126,72 @@
         "createdAt": { "type": "string", "description": "ISO 8601 creation timestamp." }
       },
       "required": ["ticketId", "leadName", "phone", "reason", "urgency", "targetDepartment", "status", "createdAt"]
+    },
+    "DeploymentRegistryItem": {
+      "title": "DeploymentRegistryItem",
+      "description": "Canonical production deployment record for a C Vidya software solution or AI agent.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$", "maxLength": 128, "description": "Canonical immutable product identifier." },
+        "legacyId": { "type": "string", "maxLength": 64, "description": "Legacy frontend route identifier." },
+        "name": { "type": "string", "maxLength": 150, "description": "Human-readable product or AI agent title." },
+        "category": { "type": "string", "enum": ["software", "ai-agent"], "description": "Product category." },
+        "hostingPlatform": { "type": "string", "enum": ["cloudflare-workers", "cloudflare-pages"], "description": "Cloudflare hosting runtime." },
+        "githubRepository": { "type": "string", "maxLength": 200, "description": "Bound GitHub owner/repo slug." },
+        "branch": { "type": "string", "maxLength": 80, "description": "Source branch (main)." },
+        "environment": { "type": "string", "maxLength": 40, "description": "Deployment environment (production)." },
+        "deploymentUrl": { "type": "string", "maxLength": 500, "description": "Live HTTPS Cloudflare production URL." },
+        "version": { "type": "string", "maxLength": 60, "description": "Semantic or release version identifier." },
+        "commitSha": { "type": "string", "maxLength": 80, "description": "Git commit SHA." },
+        "buildId": { "type": "string", "maxLength": 120, "description": "Unique build/run ID." },
+        "deploymentStatus": { "type": "string", "enum": ["active", "inactive", "failed", "coming-soon"], "description": "Current operational status." },
+        "enabled": { "type": "boolean", "description": "Whether product launch links are enabled." },
+        "connectedToAutoDeploy": { "type": "boolean", "description": "Whether GitHub Actions auto-deploy has registered." },
+        "deployedBy": { "type": "string", "maxLength": 80, "description": "Deployment actor or CI pipeline." },
+        "lastDeploymentAt": { "type": "string", "maxLength": 64, "description": "ISO timestamp of latest deployment." },
+        "updatedAt": { "type": "string", "maxLength": 64, "description": "ISO timestamp of last update." },
+        "badge": { "type": "string", "maxLength": 40, "description": "Display status badge." },
+        "failureAlert": { "type": "boolean", "description": "Indicates an unresolved failed build alert." },
+        "lastFailedAt": { "type": "string", "maxLength": 64, "description": "Timestamp of last failed deployment attempt." },
+        "lastFailureReason": { "type": "string", "maxLength": 300, "description": "Reason recorded on last failed deployment." },
+        "adminLockedDisabled": { "type": "boolean", "description": "Preserves admin disabled override across automated builds." },
+        "notes": { "type": "string", "maxLength": 300, "description": "Administrative notes." }
+      },
+      "required": ["productId", "legacyId", "name", "category", "hostingPlatform", "deploymentStatus", "enabled", "updatedAt"]
+    },
+    "DeploymentHistoryEntry": {
+      "title": "DeploymentHistoryEntry",
+      "description": "Bounded historical record of a production deployment event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "description": "Unique history record ID." },
+        "productId": { "type": "string", "maxLength": 128, "description": "Canonical product identifier." },
+        "version": { "type": "string", "maxLength": 60, "description": "Deployed version." },
+        "commitSha": { "type": "string", "maxLength": 80, "description": "Git commit SHA." },
+        "buildId": { "type": "string", "maxLength": 120, "description": "CI build ID." },
+        "deploymentUrl": { "type": "string", "maxLength": 500, "description": "Deployment URL at that point in time." },
+        "hostingPlatform": { "type": "string", "enum": ["cloudflare-workers", "cloudflare-pages"], "description": "Hosting platform." },
+        "githubRepository": { "type": "string", "maxLength": 200, "description": "Source GitHub repo." },
+        "status": { "type": "string", "enum": ["success", "failed"], "description": "Build/deployment outcome." },
+        "deployedBy": { "type": "string", "maxLength": 80, "description": "Actor or workflow." },
+        "deployedAt": { "type": "string", "maxLength": 64, "description": "ISO timestamp." },
+        "message": { "type": "string", "maxLength": 300, "description": "Optional status or error summary." }
+      },
+      "required": ["id", "productId", "buildId", "status", "deployedAt"]
+    },
+    "DeploymentAuditLog": {
+      "title": "DeploymentAuditLog",
+      "description": "Security and operational audit event for deployment registry mutations.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "description": "Unique audit log ID." },
+        "action": { "type": "string", "maxLength": 80, "description": "Action name." },
+        "productId": { "type": "string", "maxLength": 128, "description": "Target product ID." },
+        "actor": { "type": "string", "maxLength": 120, "description": "Acting admin or CI system." },
+        "timestamp": { "type": "string", "maxLength": 64, "description": "ISO timestamp." },
+        "details": { "type": "string", "maxLength": 500, "description": "Event details." }
+      },
+      "required": ["id", "action", "productId", "actor", "timestamp", "details"]
     }
   },
   "firestore": {
@@ -152,6 +218,18 @@
     "handoff_tickets/{ticketId}": {
       "schema": "HandoffTicket",
       "description": "A collection containing human specialist escalation tickets."
+    },
+    "cvidya_deployment_registry/{productId}": {
+      "schema": "DeploymentRegistryItem",
+      "description": "Synchronized production deployment registry for all 14 C Vidya software products and AI agents."
+    },
+    "cvidya_deployment_history/{entryId}": {
+      "schema": "DeploymentHistoryEntry",
+      "description": "Historical log of automated and manual production deployments."
+    },
+    "cvidya_deployment_audit_logs/{logId}": {
+      "schema": "DeploymentAuditLog",
+      "description": "Restricted audit log of webhook registrations and admin overrides."
     }
   }
 }

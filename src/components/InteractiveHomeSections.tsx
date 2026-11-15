@@ -36,6 +36,7 @@ import {
 } from "../data";
 import type { ProductService } from "../types";
 import { dispatchActivityPing } from "./ActivityPingsAndTour";
+import { useDeploymentRegistry } from "../services/deploymentRegistrySync";
 
 // ============================================================================
 // FEATURE 02 — WORD ROTATOR
@@ -259,8 +260,9 @@ export function BentoFeaturesSection({
   onNavigate: (path: string) => void;
   onOpenSoftware?: (product: ProductService) => void;
 }) {
+  const { saasProducts, aiAgents } = useDeploymentRegistry();
   const findProduct = (id: string) =>
-    [...saasProductsData, ...aiAgentsData].find((p) => p.id === id);
+    [...saasProducts, ...aiAgents].find((p) => p.id === id);
 
   const bentoModules = [
     {

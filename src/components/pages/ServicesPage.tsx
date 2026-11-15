@@ -30,7 +30,9 @@ import {
 } from "lucide-react";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO } from "../../seoData";
-import { saasProductsData, aiAgentsData, otherServicesData, coreCompanyServices, type CoreServiceItem } from "../../data";
+import { coreCompanyServices, type CoreServiceItem } from "../../data";
+import { type ProductService } from "../../types";
+import { useDeploymentRegistry } from "../../services/deploymentRegistrySync";
 import CoreServiceDetailModal from "../CoreServiceDetailModal";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -39,9 +41,16 @@ interface ServicesPageProps {
   onSelectProduct: (product: any) => void;
   onOpenSoftware?: (product: any) => void;
   onOpenConsultation?: () => void;
+  saasProducts?: ProductService[];
+  aiAgents?: ProductService[];
+  otherServices?: ProductService[];
 }
 
-export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenConsultation }: ServicesPageProps) {
+export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenConsultation, saasProducts: propSaas, aiAgents: propAgents, otherServices: propOther }: ServicesPageProps) {
+  const { saasProducts: regSaas, aiAgents: regAgents, otherServices: regOther } = useDeploymentRegistry();
+  const activeSaasProducts = propSaas && propSaas.length > 0 ? propSaas : regSaas;
+  const activeAiAgents = propAgents && propAgents.length > 0 ? propAgents : regAgents;
+  const activeOtherServices = propOther && propOther.length > 0 ? propOther : regOther;
   const [selectedCoreService, setSelectedCoreService] = useState<CoreServiceItem | null>(null);
 
   const handleOpenCoreService = (srv: CoreServiceItem) => {
@@ -257,7 +266,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[0])}
+                onClick={() => onSelectProduct(activeSaasProducts[0])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -268,7 +277,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[0]);
+                    onOpenSoftware(activeSaasProducts[0]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -297,7 +306,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[1])}
+                onClick={() => onSelectProduct(activeSaasProducts[1])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -308,7 +317,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[1]);
+                    onOpenSoftware(activeSaasProducts[1]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -337,7 +346,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[2])}
+                onClick={() => onSelectProduct(activeSaasProducts[2])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -348,7 +357,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[2]);
+                    onOpenSoftware(activeSaasProducts[2]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -377,7 +386,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[3])}
+                onClick={() => onSelectProduct(activeSaasProducts[3])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -388,7 +397,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[3]);
+                    onOpenSoftware(activeSaasProducts[3]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -417,7 +426,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[4])}
+                onClick={() => onSelectProduct(activeSaasProducts[4])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -428,7 +437,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[4]);
+                    onOpenSoftware(activeSaasProducts[4]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -457,7 +466,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[5])}
+                onClick={() => onSelectProduct(activeSaasProducts[5])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -468,7 +477,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[5]);
+                    onOpenSoftware(activeSaasProducts[5]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -497,7 +506,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(saasProductsData[6])}
+                onClick={() => onSelectProduct(activeSaasProducts[6])}
                 className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shadow-xs cursor-pointer active:scale-95"
                 title="View details"
                 aria-label="View details"
@@ -508,7 +517,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(saasProductsData[6]);
+                    onOpenSoftware(activeSaasProducts[6]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer whitespace-nowrap"
@@ -535,7 +544,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           <div 
             onClick={() => {
               if (onOpenSoftware) {
-                onOpenSoftware(aiAgentsData[0]);
+                onOpenSoftware(activeAiAgents[0]);
               }
             }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
@@ -559,7 +568,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectProduct(aiAgentsData[0]);
+                  onSelectProduct(activeAiAgents[0]);
                 }}
                 className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="View details"
@@ -573,7 +582,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onOpenSoftware) {
-                    onOpenSoftware(aiAgentsData[0]);
+                    onOpenSoftware(activeAiAgents[0]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -587,7 +596,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           <div 
             onClick={() => {
               if (onOpenSoftware) {
-                onOpenSoftware(aiAgentsData[1]);
+                onOpenSoftware(activeAiAgents[1]);
               }
             }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
@@ -611,7 +620,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectProduct(aiAgentsData[1]);
+                  onSelectProduct(activeAiAgents[1]);
                 }}
                 className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="View details"
@@ -625,7 +634,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onOpenSoftware) {
-                    onOpenSoftware(aiAgentsData[1]);
+                    onOpenSoftware(activeAiAgents[1]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -639,7 +648,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           <div 
             onClick={() => {
               if (onOpenSoftware) {
-                onOpenSoftware(aiAgentsData[2]);
+                onOpenSoftware(activeAiAgents[2]);
               }
             }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
@@ -663,7 +672,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectProduct(aiAgentsData[2]);
+                  onSelectProduct(activeAiAgents[2]);
                 }}
                 className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="View details"
@@ -677,7 +686,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onOpenSoftware) {
-                    onOpenSoftware(aiAgentsData[2]);
+                    onOpenSoftware(activeAiAgents[2]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -691,7 +700,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           <div 
             onClick={() => {
               if (onOpenSoftware) {
-                onOpenSoftware(aiAgentsData[3]);
+                onOpenSoftware(activeAiAgents[3]);
               }
             }}
             className="bg-[#071739] text-white rounded-xl p-6 shadow-sm hover:border-blue-500/50 border border-slate-800 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
@@ -715,7 +724,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectProduct(aiAgentsData[3]);
+                  onSelectProduct(activeAiAgents[3]);
                 }}
                 className="w-9 h-9 rounded-lg bg-slate-800/90 hover:bg-blue-600 text-slate-200 hover:text-white border border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="View details"
@@ -729,7 +738,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onOpenSoftware) {
-                    onOpenSoftware(aiAgentsData[3]);
+                    onOpenSoftware(activeAiAgents[3]);
                   }
                 }}
                 className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer whitespace-nowrap"
@@ -944,7 +953,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(otherServicesData[0])}
+                onClick={() => onSelectProduct(activeOtherServices[0])}
                 className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title="View details"
                 aria-label="View details"
@@ -955,7 +964,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(otherServicesData[0]);
+                    onOpenSoftware(activeOtherServices[0]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
@@ -990,7 +999,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(otherServicesData[1])}
+                onClick={() => onSelectProduct(activeOtherServices[1])}
                 className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title="View details"
                 aria-label="View details"
@@ -1001,7 +1010,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(otherServicesData[1]);
+                    onOpenSoftware(activeOtherServices[1]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"
@@ -1036,7 +1045,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
               <button 
                 type="button"
-                onClick={() => onSelectProduct(otherServicesData[2])}
+                onClick={() => onSelectProduct(activeOtherServices[2])}
                 className="w-9 h-9 rounded-lg border border-slate-300 hover:border-blue-600 hover:bg-blue-50 text-slate-700 hover:text-blue-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 title="View details"
                 aria-label="View details"
@@ -1047,7 +1056,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
                 type="button"
                 onClick={() => {
                   if (onOpenSoftware) {
-                    onOpenSoftware(otherServicesData[2]);
+                    onOpenSoftware(activeOtherServices[2]);
                   }
                 }}
                 className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center whitespace-nowrap inline-flex items-center justify-center"

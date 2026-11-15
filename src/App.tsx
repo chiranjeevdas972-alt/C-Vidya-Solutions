@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -37,8 +37,7 @@ import {
 import { type ProductService } from "./types";
 import { saasProductsData, aiAgentsData, otherServicesData } from "./data";
 import { PRODUCT_SEO_DATA, CORE_PAGES_SEO } from "./seoData";
-
-const allProducts: ProductService[] = [...saasProductsData, ...aiAgentsData, ...otherServicesData];
+import { useDeploymentRegistry } from "./services/deploymentRegistrySync";
 import { ARTICLES_DATA } from "./articleData";
 import { 
   Lock, 
@@ -147,6 +146,14 @@ export function resolveRoute(pathname: string, hash: string, search: string = ""
 }
 
 export default function App() {
+  const { saasProducts, aiAgents, otherServices } = useDeploymentRegistry();
+  const allProducts = useMemo<ProductService[]>(
+    () => [...saasProducts, ...aiAgents, ...otherServices],
+    [saasProducts, aiAgents, otherServices],
+  );
+  const allProductsRef = useRef<ProductService[]>(allProducts);
+  allProductsRef.current = allProducts;
+
   const [aiOpen, setAiOpen] = useState(false);
   const [complianceOpen, setComplianceOpen] = useState(false);
   const [complianceTab, setComplianceTab] = useState("privacy");
@@ -156,6 +163,14 @@ export default function App() {
   const [previousPreviewProduct, setPreviousPreviewProduct] = useState<ProductService | null>(null);
   const [architectureOpen, setArchitectureOpen] = useState(false);
   const [architectureTab, setArchitectureTab] = useState<"prd" | "trd" | "flow" | "uiux" | "schema" | "plan">("prd");
+
+  const openBookDemo = (product?: string) => {
+    if (product && product !== "General Company Inquiry") {
+      navigateTo(`/contact/?mode=demo&service=${encodeURIComponent(product)}`);
+    } else {
+      navigateTo("/contact/?mode=demo");
+    }
+  };
 
   // Router State
   const [route, setRoute] = useState<RouteState>(() => {
@@ -390,14 +405,14 @@ export default function App() {
 
       // Check if state indicates a modal or live software was opened
       if (state && state.isModal) {
-        const prod = allProducts.find((p) => p.id === state.productId);
+        const prod = allProductsRef.current.find((p) => p.id === state.productId);
         if (prod) {
           if (state.modalType === "live-software") {
             setActiveLiveSoftware(prod);
             setActiveSoftwareDetail(null);
             setSelectedProduct(null);
             if (state.previewProductId) {
-              const prev = allProducts.find((p) => p.id === state.previewProductId);
+              const prev = allProductsRef.current.find((p) => p.id === state.previewProductId);
               if (prev) setPreviousPreviewProduct(prev);
             }
             return;
@@ -636,11 +651,11 @@ export default function App() {
     setLeadsModalOpen(false);
   };
 
-  // Find product data from dataset
+  // Find product data from synchronized deployment registry dataset
   const activeProductData = useMemo<ProductService | null>(() => {
     if (route.type !== "product") return null;
-    const allProducts = [...saasProductsData, ...aiAgentsData];
-    const found = allProducts.find(p => p.id === route.productKey);
+    const syncedProducts = [...saasProducts, ...aiAgents];
+    const found = syncedProducts.find(p => p.id === route.productKey);
     if (found) return found;
     const seo = PRODUCT_SEO_DATA[route.productKey];
     return {
@@ -656,7 +671,7 @@ export default function App() {
         recentActivity: []
       }
     };
-  }, [route]);
+  }, [route, saasProducts, aiAgents]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between selection:bg-blue-600 selection:text-white font-sans overflow-x-clip">
@@ -669,7 +684,7 @@ export default function App() {
         activePage={headerActivePage}
         onOpenAssistant={() => setAiOpen(true)} 
         onOpenHub={(path) => navigateTo(path)}
-        onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+        onOpenConsultation={() => openBookDemo("General Company Inquiry")}
         onOpenArchitecture={() => {
           setArchitectureTab("prd");
           setArchitectureOpen(true);
@@ -681,10 +696,10 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div
             key={route.type === "product" ? `product-${route.productKey}` : `page-${route.id}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.08, ease: "easeOut" }}
           >
             {/* 1. HOME PAGE */}
             {route.type === "page" && route.id === "home" && (
@@ -692,7 +707,9 @@ export default function App() {
                 onNavigate={navigateTo}
                 onSelectProduct={openSoftwareDetail}
                 onOpenSoftware={openLiveSoftware}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("General Company Inquiry")}
+                saasProducts={saasProducts}
+                aiAgents={aiAgents}
               />
             )}
 
@@ -701,7 +718,8 @@ export default function App() {
               <SoftwareDirectoryPage 
                 onNavigate={navigateTo}
                 onOpenLiveApp={openLiveSoftware}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("General Company Inquiry")}
+                saasProducts={saasProducts}
               />
             )}
 
@@ -710,7 +728,8 @@ export default function App() {
               <AiAgentsDirectoryPage 
                 onNavigate={navigateTo}
                 onOpenLiveApp={openLiveSoftware}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("AI Autonomous Agents Suite")}
+                aiAgents={aiAgents}
               />
             )}
 
@@ -718,7 +737,7 @@ export default function App() {
             {route.type === "page" && route.id === "pricing" && (
               <PricingPage 
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("General Company Inquiry")}
               />
             )}
 
@@ -734,7 +753,10 @@ export default function App() {
               <ServicesPage 
                 onSelectProduct={openSoftwareDetail}
                 onOpenSoftware={openLiveSoftware}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("General Company Inquiry")}
+                saasProducts={saasProducts}
+                aiAgents={aiAgents}
+                otherServices={otherServices}
               />
             )}
 
@@ -780,7 +802,7 @@ export default function App() {
             {route.type === "page" && (route.id === "mobile-app" || route.id === "coming-soon") && (
               <MobileAppPage
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("C Vidya Mobile App")}
                 initialShowComingSoon={route.id === "coming-soon"}
               />
             )}
@@ -790,7 +812,7 @@ export default function App() {
               <BlogArticlePage
                 article={ARTICLES_DATA[route.articleSlug]}
                 onNavigate={navigateTo}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo("General Company Inquiry")}
               />
             )}
 
@@ -801,7 +823,7 @@ export default function App() {
                 productData={activeProductData}
                 onNavigate={navigateTo}
                 onOpenLiveApp={openLiveSoftware}
-                onOpenConsultation={() => navigateTo("/contact/?mode=demo")}
+                onOpenConsultation={() => openBookDemo(activeProductData.title || "General Company Inquiry")}
               />
             )}
 
@@ -862,8 +884,9 @@ export default function App() {
             openLiveSoftware(product, selectedProduct);
           }}
           onOpenConsultation={() => {
+            const prodName = selectedProduct?.title || "General Company Inquiry";
             closeProductDetail();
-            navigateTo("/contact/?mode=demo");
+            openBookDemo(prodName);
           }}
         />
       )}

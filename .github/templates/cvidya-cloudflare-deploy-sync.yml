@@ -1,0 +1,162 @@
+# ==============================================================================
+# C Vidya Solutions — Reusable Production Deployment Notification Workflow
+# Copy this file to `.github/workflows/cvidya-cloudflare-deploy-sync.yml` inside
+# any of your 14 C Vidya Software or AI Agent GitHub repositories.
+#
+# Required GitHub Repository Secrets:
+#   - CLOUDFLARE_API_TOKEN         (Cloudflare scoped Workers/Pages deploy token)
+#   - CLOUDFLARE_ACCOUNT_ID        (Your Cloudflare Account ID)
+#   - CVIDYA_DEPLOY_WEBHOOK_SECRET (Matches server DEPLOYMENT_WEBHOOK_SECRET)
+#
+# Required Repository Variable or literal below:
+#   - CVIDYA_PRODUCT_ID            (Exact canonical ID, e.g. cvidya-enterprise-crm)
+#   - CVIDYA_HOSTING_PLATFORM      (cloudflare-workers or cloudflare-pages)
+#   - CVIDYA_PRODUCTION_URL        (Verified https://... production URL)
+# ==============================================================================
+name: Deploy to Cloudflare & Sync C Vidya Registry
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  # Replace fallback strings or set GitHub Repository Variables under Settings -> Secrets and variables -> Actions
+  PRODUCT_ID: ${{ vars.CVIDYA_PRODUCT_ID || 'REPLACE_WITH_CANONICAL_PRODUCT_ID' }}
+  HOSTING_PLATFORM: ${{ vars.CVIDYA_HOSTING_PLATFORM || 'cloudflare-workers' }}
+  PRODUCTION_URL: ${{ vars.CVIDYA_PRODUCTION_URL || 'https://example.cvidyasolutions.workers.dev/' }}
+  CVIDYA_REGISTRY_ENDPOINT: https://www.cvidyasolutions.com/api/deployments/register
+
+jobs:
+  deploy_and_register:
+    name: Build, Deploy & Register Production Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies & build
+        run: |
+          npm ci --prefer-offline || npm install
+          npm run build
+
+      # ------------------------------------------------------------------------
+      # OPTION A: Deploy via Cloudflare Workers (Wrangler)
+      # Comment out if this repository uses Cloudflare Pages instead.
+      # ------------------------------------------------------------------------
+      - name: Deploy to Cloudflare Workers (Production)
+        if: ${{ env.HOSTING_PLATFORM == 'cloudflare-workers' }}
+        id: cf_worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      # ------------------------------------------------------------------------
+      # OPTION B: Deploy via Cloudflare Pages (Production branch: main)
+      # Only `main` production deployments trigger website updates.
+      # ------------------------------------------------------------------------
+      - name: Deploy to Cloudflare Pages (Production)
+        if: ${{ env.HOSTING_PLATFORM == 'cloudflare-pages' }}
+        id: cf_pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ env.PRODUCT_ID }}
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Version & Resolved Production URL
+        id: meta
+        shell: bash
+        run: |
+          PKG_VER=$(node -e "try{console.log(require('./package.json').version||'1.0.0')}catch{console.log('1.0.0')}")
+          BUILD_VERSION="${PKG_VER}+${{ github.run_number }}.${GITHUB_SHA::7}"
+          echo "version=$BUILD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "deploy_url=$PRODUCTION_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Notify C Vidya Main Website Registry (Signed Production Sync)
+        if: success() && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          WEBHOOK_SECRET: ${{ secrets.CVIDYA_DEPLOY_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            echo "::error::CVIDYA_DEPLOY_WEBHOOK_SECRET secret is missing"
+            exit 1
+          fi
+
+          PAYLOAD=$(node -e "console.log(JSON.stringify({
+            productId: process.env.PRODUCT_ID,
+            hostingPlatform: process.env.HOSTING_PLATFORM,
+            githubRepository: process.env.GITHUB_REPOSITORY,
+            branch: 'main',
+            environment: 'production',
+            deploymentUrl: process.env.DEPLOY_URL,
+            version: process.env.BUILD_VERSION,
+            commitSha: process.env.GITHUB_SHA,
+            buildId: 'gh-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT,
+            status: 'success',
+            deployedBy: process.env.GITHUB_ACTOR || 'github-actions'
+          }))" DEPLOY_URL="${{ steps.meta.outputs.deploy_url }}" BUILD_VERSION="${{ steps.meta.outputs.version }}")
+
+          SIGNATURE=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | awk '{print $2}')
+
+          HTTP_STATUS=$(curl -sS -o /tmp/cvidya_reg_resp.json -w "%{http_code}" \
+            -X POST "$CVIDYA_REGISTRY_ENDPOINT" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $WEBHOOK_SECRET" \
+            -H "X-CVidya-Signature-256: sha256=$SIGNATURE" \
+            -d "$PAYLOAD")
+
+          cat /tmp/cvidya_reg_resp.json
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "::error::Registry notification failed with HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Report Deployment Failure Alert (Preserves Last Active URL)
+        if: failure() && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          WEBHOOK_SECRET: ${{ secrets.CVIDYA_DEPLOY_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            exit 0
+          fi
+
+          PAYLOAD=$(node -e "console.log(JSON.stringify({
+            productId: process.env.PRODUCT_ID,
+            hostingPlatform: process.env.HOSTING_PLATFORM,
+            githubRepository: process.env.GITHUB_REPOSITORY,
+            branch: 'main',
+            environment: 'production',
+            buildId: 'gh-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT,
+            commitSha: process.env.GITHUB_SHA,
+            status: 'failed',
+            deployedBy: process.env.GITHUB_ACTOR || 'github-actions',
+            errorMessage: 'Production deployment workflow failed on ' + process.env.GITHUB_REPOSITORY
+          }))")
+
+          SIGNATURE=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | awk '{print $2}')
+
+          curl -sS -X POST "$CVIDYA_REGISTRY_ENDPOINT" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $WEBHOOK_SECRET" \
+            -H "X-CVidya-Signature-256: sha256=$SIGNATURE" \
+            -d "$PAYLOAD" || true

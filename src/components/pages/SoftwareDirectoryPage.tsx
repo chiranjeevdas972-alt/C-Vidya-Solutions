@@ -16,20 +16,24 @@ import {
 import Breadcrumb from "../Breadcrumb";
 import SeoHead from "../SeoHead";
 import { CORE_PAGES_SEO, PRODUCT_SEO_DATA } from "../../seoData";
-import { saasProductsData } from "../../data";
 import { ProductService } from "../../types";
+import { useDeploymentRegistry } from "../../services/deploymentRegistrySync";
 
 interface SoftwareDirectoryPageProps {
   onNavigate: (path: string) => void;
   onOpenLiveApp?: (product: ProductService) => void;
   onOpenConsultation?: () => void;
+  saasProducts?: ProductService[];
 }
 
 export default function SoftwareDirectoryPage({
   onNavigate,
   onOpenLiveApp,
-  onOpenConsultation
+  onOpenConsultation,
+  saasProducts: propSaasProducts
 }: SoftwareDirectoryPageProps) {
+  const { saasProducts: regSaasProducts } = useDeploymentRegistry();
+  const activeSaasProducts = propSaasProducts && propSaasProducts.length > 0 ? propSaasProducts : regSaasProducts;
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const softwareItems = Object.values(PRODUCT_SEO_DATA).filter(p => p.type === "software");
@@ -128,7 +132,7 @@ export default function SoftwareDirectoryPage({
       <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item) => {
-            const rawProduct = saasProductsData.find(p => p.id === item.id) || saasProductsData[0];
+            const rawProduct = activeSaasProducts.find(p => p.id === item.id) || activeSaasProducts[0];
             return (
               <div
                 key={item.id}
