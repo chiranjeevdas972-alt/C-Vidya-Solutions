@@ -84,11 +84,11 @@ export default function LiveSoftwareApp({ software, onClose }: LiveSoftwareAppPr
         await addDoc(inquiriesCol, {
           name: instituteLeadName.trim() || instituteName.trim() || "Institute Administrator",
           email: instituteEmail.trim() || "institutes-early-access@cvidya.com",
-          phone: institutePhone.trim(),
+          phone: institutePhone.trim().length >= 5 ? institutePhone.trim() : "Not Provided",
           service: "C Vidya Institutes Management (Coming Soon Early Access)",
           message: `Institution: ${instituteName.trim()} | Size: ${instituteStudents} | Early access request`,
           timestamp: new Date().toISOString(),
-          status: "pending_review"
+          status: "Pending Callback"
         });
       } catch (fbErr) {
         console.warn("Firestore save fallback:", fbErr);

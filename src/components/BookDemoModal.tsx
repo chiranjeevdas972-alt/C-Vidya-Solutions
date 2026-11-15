@@ -95,7 +95,7 @@ export default function BookDemoModal({
         service: framework,
         message: requirements.trim() || "Free Live Demo Requisition",
         timestamp: new Date().toISOString(),
-        status: "pending_review",
+        status: "Pending Callback",
         source: "book_free_demo_modal",
         referenceId: refId
       };
@@ -109,8 +109,8 @@ export default function BookDemoModal({
         console.warn("Local storage cache notice:", cacheErr);
       }
 
-      // 2. Concurrently dispatch Firestore & Server API without blocking UI
-      Promise.allSettled([
+      // 2. Concurrently dispatch Firestore & Server API cleanly
+      await Promise.allSettled([
         addDoc(collection(db, "inquiries"), demoPayload).catch((fbErr) => {
           console.warn("Direct Firestore lead record fallback:", fbErr);
         }),

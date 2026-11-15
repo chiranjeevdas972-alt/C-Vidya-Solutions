@@ -376,15 +376,22 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             try {
               addDoc(collection(db, "inquiries"), {
                 name: customerDetails.name || "Website Chatbot Lead",
-                phone: customerDetails.phone !== "Not Provided" ? customerDetails.phone : "",
+                phone:
+                  customerDetails.phone &&
+                  customerDetails.phone !== "Not Provided" &&
+                  customerDetails.phone.trim().length >= 5
+                    ? customerDetails.phone.trim()
+                    : "Not Provided",
                 email: customerDetails.email !== "Not Provided" ? customerDetails.email : "contact@cvidyasolutions.com",
+                service: customerDetails.productOfInterest || "General Software / AI Inquiry",
                 product: customerDetails.productOfInterest || "General Software / AI Inquiry",
                 message: `[AI Chatbot • ${customerDetails.leadIntent.toUpperCase()}] ${customerDetails.requirements}`,
                 source: "website_ai_chatbot",
                 sessionId: sessionIdRef.current,
                 language: activeLang,
                 leadIntent: customerDetails.leadIntent,
-                status: customerDetails.leadIntent === "demo" ? "Demo Scheduled" : "New",
+                status: customerDetails.leadIntent === "demo" ? "Pending Callback" : "New",
+                timestamp: new Date().toISOString(),
                 createdAt: serverTimestamp()
               }).catch(() => {});
             } catch (_) {

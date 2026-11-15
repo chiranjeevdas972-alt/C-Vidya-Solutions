@@ -35,35 +35,23 @@ import {
   isAllowedSoftwareEmbedUrl,
 } from "../../server";
 
-describe("Admin Authentication & Allowlist Enforcement", () => {
-  it("contains only the two authorized administrator emails on both client and server", () => {
-    expect(AUTHORIZED_ADMIN_EMAILS).toEqual([
-      "cvidyasolutions@gmail.com",
-      "chiranjeevdas972@gmail.com",
-    ]);
-    expect(getAuthorizedAdminEmails()).toEqual([
-      "cvidyasolutions@gmail.com",
-      "chiranjeevdas972@gmail.com",
-    ]);
+describe("Admin Authentication & Single-Owner Allowlist Enforcement", () => {
+  it("contains ONLY chiranjeevdas972@gmail.com as the authorized owner email on both client and server", () => {
+    expect(AUTHORIZED_ADMIN_EMAILS).toEqual(["chiranjeevdas972@gmail.com"]);
+    expect(getAuthorizedAdminEmails()).toEqual(["chiranjeevdas972@gmail.com"]);
   });
 
-  it("validates authorized admin emails case-insensitively", () => {
-    expect(isAuthorizedAdminEmail("cvidyasolutions@gmail.com")).toBe(true);
-    expect(isAuthorizedAdminEmail("CVIDYASOLUTIONS@GMAIL.COM")).toBe(true);
+  it("validates ONLY the single authorized owner email case-insensitively and rejects cvidyasolutions@gmail.com", () => {
     expect(isAuthorizedAdminEmail("chiranjeevdas972@gmail.com")).toBe(true);
+    expect(isAuthorizedAdminEmail("CHIRANJEEVDAS972@GMAIL.COM")).toBe(true);
+    expect(isAuthorizedAdminEmail("cvidyasolutions@gmail.com")).toBe(false);
+    expect(isAuthorizedAdminEmail("CVIDYASOLUTIONS@GMAIL.COM")).toBe(false);
     expect(isAuthorizedAdminEmail("attacker@gmail.com")).toBe(false);
     expect(isAuthorizedAdminEmail("")).toBe(false);
     expect(isAuthorizedAdminEmail(null)).toBe(false);
   });
 
-  it("requires both allowlisted email and emailVerified === true on User objects", () => {
-    expect(
-      isAuthorizedAdminUser({
-        email: "cvidyasolutions@gmail.com",
-        emailVerified: true,
-      } as any),
-    ).toBe(true);
-
+  it("requires both chiranjeevdas972@gmail.com and emailVerified === true on User objects", () => {
     expect(
       isAuthorizedAdminUser({
         email: "chiranjeevdas972@gmail.com",
@@ -71,10 +59,18 @@ describe("Admin Authentication & Allowlist Enforcement", () => {
       } as any),
     ).toBe(true);
 
-    // Unverified email must be rejected
+    // Secondary/company inbox must NEVER have admin portal access
     expect(
       isAuthorizedAdminUser({
         email: "cvidyasolutions@gmail.com",
+        emailVerified: true,
+      } as any),
+    ).toBe(false);
+
+    // Unverified email must be rejected
+    expect(
+      isAuthorizedAdminUser({
+        email: "chiranjeevdas972@gmail.com",
         emailVerified: false,
       } as any),
     ).toBe(false);
@@ -106,11 +102,15 @@ describe("Admin Authentication & Allowlist Enforcement", () => {
     expect(await verifyAdminRequest(fakeReq)).toBe(false);
   });
 
-  it("rejects expired, unverified, wrong-audience, or unauthorized Firebase JWTs on the backend", async () => {
-    const makeJwt = (payload: Record<string, any>) => {
-      const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
+  it("rejects expired, unverified, wrong-audience, unauthorized, or cryptographically forged/client-minted JWTs on the backend", async () => {
+    const makeJwt = (
+      payload: Record<string, any>,
+      headerOverride: Record<string, any> = { alg: "RS256", typ: "JWT", kid: "test-key" },
+      sig = "fakesignature",
+    ) => {
+      const header = Buffer.from(JSON.stringify(headerOverride)).toString("base64url");
       const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-      return `${header}.${body}.fakesignature`;
+      return `${header}.${body}.${sig}`;
     };
 
     const futureExp = Math.floor(Date.now() / 1000) + 3600;
@@ -120,9 +120,11 @@ describe("Admin Authentication & Allowlist Enforcement", () => {
     expect(
       await verifyFirebaseAdminIdToken(
         makeJwt({
-          email: "cvidyasolutions@gmail.com",
+          sub: "owner_uid_1",
+          email: "chiranjeevdas972@gmail.com",
           email_verified: true,
           aud: "c-vidya-solutions",
+          iss: "https://securetoken.google.com/c-vidya-solutions",
           exp: pastExp,
         }),
       ),
@@ -132,21 +134,25 @@ describe("Admin Authentication & Allowlist Enforcement", () => {
     expect(
       await verifyFirebaseAdminIdToken(
         makeJwt({
-          email: "cvidyasolutions@gmail.com",
+          sub: "owner_uid_1",
+          email: "chiranjeevdas972@gmail.com",
           email_verified: false,
           aud: "c-vidya-solutions",
+          iss: "https://securetoken.google.com/c-vidya-solutions",
           exp: futureExp,
         }),
       ),
     ).toBe(false);
 
-    // Unauthorized email -> false
+    // Unauthorized email (including cvidyasolutions@gmail.com) -> false
     expect(
       await verifyFirebaseAdminIdToken(
         makeJwt({
-          email: "intruder@gmail.com",
+          sub: "other_uid",
+          email: "cvidyasolutions@gmail.com",
           email_verified: true,
           aud: "c-vidya-solutions",
+          iss: "https://securetoken.google.com/c-vidya-solutions",
           exp: futureExp,
         }),
       ),
@@ -156,11 +162,49 @@ describe("Admin Authentication & Allowlist Enforcement", () => {
     expect(
       await verifyFirebaseAdminIdToken(
         makeJwt({
-          email: "cvidyasolutions@gmail.com",
+          sub: "owner_uid_1",
+          email: "chiranjeevdas972@gmail.com",
           email_verified: true,
           aud: "wrong-firebase-project",
+          iss: "https://securetoken.google.com/wrong-firebase-project",
           exp: futureExp,
         }),
+      ),
+    ).toBe(false);
+
+    // Forged client vault token (`cvidya-owner-vault-v1`) -> strictly rejected
+    expect(
+      await verifyFirebaseAdminIdToken(
+        makeJwt(
+          {
+            sub: "owner_uid_1",
+            email: "chiranjeevdas972@gmail.com",
+            email_verified: true,
+            aud: "c-vidya-solutions",
+            iss: "https://securetoken.google.com/c-vidya-solutions",
+            exp: futureExp,
+          },
+          { alg: "HS256", typ: "JWT", kid: "cvidya-owner-vault-v1" },
+          "forged_digest_sig",
+        ),
+      ),
+    ).toBe(false);
+
+    // Valid-looking owner claims with arbitrary forged RS256 signature -> strictly rejected by JWKS verify
+    expect(
+      await verifyFirebaseAdminIdToken(
+        makeJwt(
+          {
+            sub: "owner_uid_1",
+            email: "chiranjeevdas972@gmail.com",
+            email_verified: true,
+            aud: "c-vidya-solutions",
+            iss: "https://securetoken.google.com/c-vidya-solutions",
+            exp: futureExp,
+          },
+          { alg: "RS256", typ: "JWT", kid: "nonexistent-kid" },
+          "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo",
+        ),
       ),
     ).toBe(false);
   });
@@ -519,14 +563,14 @@ describe("Admin Dashboard Search & Filter Helpers & Missing Field Resilience", (
 });
 
 describe("Firestore Security Rules & Bundle Secret Hygiene", () => {
-  it("enforces email_verified == true, default deny, status spoofing prevention, and protected collections in firestore.rules", () => {
+  it("enforces email_verified == true, single-owner email lock, default deny, status spoofing prevention, and protected collections in firestore.rules", () => {
     const rulesContent = fs.readFileSync(
       path.resolve(process.cwd(), "firestore.rules"),
       "utf-8",
     );
     expect(rulesContent).toContain("request.auth.token.email_verified == true");
     expect(rulesContent).toContain('request.auth.token.email == "chiranjeevdas972@gmail.com"');
-    expect(rulesContent).toContain('request.auth.token.email == "cvidyasolutions@gmail.com"');
+    expect(rulesContent).not.toContain('request.auth.token.email == "cvidyasolutions@gmail.com"');
     expect(rulesContent).toContain("match /inquiries/{inquiryId}");
     expect(rulesContent).toContain("match /job_applications/{jobApplicationId}");
     expect(rulesContent).toContain("match /applications/{applicationId}");

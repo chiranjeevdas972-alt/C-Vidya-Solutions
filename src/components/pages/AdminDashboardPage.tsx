@@ -46,23 +46,20 @@ import {
   db,
   onAuthStateChanged,
   signInAdminWithGoogle,
+  completeAdminRedirectSignIn,
   signOutAdmin,
   isAuthorizedAdminEmail,
   isAuthorizedAdminUser,
   getAdminAuthHeaders,
-  getStoredAdminToken,
-  setStoredAdminToken,
-  createOwnerVaultClientToken,
   computeOwnerVaultDigest,
-  computeSha256Hex,
-  AUTHORIZED_ADMIN_EMAILS,
+  PRIMARY_ADMIN_EMAIL,
   handleFirestoreError,
   OperationType,
 } from "../../firebase";
 import {
   collection,
   getDocs,
-  getDoc,
+  getDocFromServer,
   setDoc,
   doc,
   updateDoc,
@@ -596,8 +593,29 @@ export default function AdminDashboardPage({
   const [ownerEmailInput, setOwnerEmailInput] = useState("");
   const [ownerPasswordInput, setOwnerPasswordInput] = useState("");
   const [showOwnerPassword, setShowOwnerPassword] = useState(false);
-  const [failedLoginAttempts, setFailedLoginAttempts] = useState(0);
-  const [lockoutUntilMs, setLockoutUntilMs] = useState<number>(0);
+  const [failedLoginAttempts, setFailedLoginAttempts] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const raw = window.localStorage.getItem("cvidya_admin_lockout_v1");
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw);
+      return Number(parsed?.attempts || 0);
+    } catch {
+      return 0;
+    }
+  });
+  const [lockoutUntilMs, setLockoutUntilMs] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const raw = window.localStorage.getItem("cvidya_admin_lockout_v1");
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw);
+      const until = Number(parsed?.lockoutUntilMs || 0);
+      return until > Date.now() ? until : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // Owner Password Change Modal state
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -703,40 +721,31 @@ export default function AdminDashboardPage({
   } | null>(null);
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
 
-  // Monitor Firebase Auth session & custom-domain Owner Vault session
+  // Monitor Firebase Auth session & handle mobile redirect sign-in completion cleanly
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        const storedToken = getStoredAdminToken();
-        if (storedToken) {
-          try {
-            const parts = storedToken.split(".");
-            if (parts.length === 3) {
-              const payload = JSON.parse(
-                atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-              );
-              const nowSec = Math.floor(Date.now() / 1000);
-              const tokenEmail = String(payload?.email || "")
-                .trim()
-                .toLowerCase();
-              if (
-                payload?.exp > nowSec &&
-                payload?.email_verified === true &&
-                isAuthorizedAdminEmail(tokenEmail)
-              ) {
-                setIsAuthorized(true);
-                setAdminEmail(tokenEmail);
-                setIsVaultUnlocked(true);
-                setUnauthorizedEmail(null);
-                setAuthError(null);
-                setAuthChecking(false);
-                return;
-              }
-            }
-          } catch {
-            // Ignore malformed stored token
+    let active = true;
+
+    completeAdminRedirectSignIn()
+      .then((res) => {
+        if (!active || !res.hasResult) return;
+        if (!res.authorized) {
+          if (res.unauthorizedEmail) {
+            setUnauthorizedEmail(res.unauthorizedEmail);
           }
+          setAuthError(
+            res.message ||
+              `Access denied. Only ${PRIMARY_ADMIN_EMAIL} is permitted to access the Admin Dashboard.`,
+          );
+          setIsAuthorized(false);
+          setIsVaultUnlocked(false);
         }
+      })
+      .catch(() => {});
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!active) return;
+
+      if (!user) {
         setIsAuthorized(false);
         setIsVaultUnlocked(false);
         setAdminEmail(null);
@@ -758,38 +767,76 @@ export default function AdminDashboardPage({
         setAdminEmail(null);
         setUnauthorizedEmail(rejectedEmail);
         setAuthError(
-          `Access denied for ${rejectedEmail}. Only the authorized owner Google account is permitted.`,
+          `Access denied for ${rejectedEmail}. Only ${PRIMARY_ADMIN_EMAIL} is permitted.`,
         );
         setAuthChecking(false);
         await signOutAdmin();
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
+  const parseFirestoreTimestampIso = (val: any): string => {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    if (typeof val?.toDate === "function") {
+      try {
+        return val.toDate().toISOString();
+      } catch {
+        return "";
+      }
+    }
+    if (typeof val?.seconds === "number") {
+      return new Date(val.seconds * 1000).toISOString();
+    }
+    return String(val);
+  };
+
   const fetchAllAdminData = useCallback(async () => {
-    if (!isAuthorized || !isVaultUnlocked) return;
+    const activeUser = auth.currentUser;
+    if (!isAuthorized || !isVaultUnlocked || !activeUser || !isAuthorizedAdminUser(activeUser)) {
+      return;
+    }
     setLoadingData(true);
     setDataError(null);
 
     try {
-      const headers = await getAdminAuthHeaders();
+      let headers = await getAdminAuthHeaders(false);
+      const fetchWithAuthRetry = async (url: string): Promise<Response> => {
+        const firstRes = await fetch(url, { headers });
+        if (firstRes.status === 401) {
+          headers = await getAdminAuthHeaders(true);
+          return await fetch(url, { headers });
+        }
+        return firstRes;
+      };
 
-      // 1. Fetch Inquiries from Firestore + Backend API fallback
+      let anySyncSuccess = false;
+      const syncErrors: string[] = [];
+
+      // 1. Fetch Inquiries directly from Firestore (without orderBy filter so docs lacking `timestamp` are NEVER dropped) + API fallback
       const rawInquiriesMap = new Map<string, AdminInquiryRecord>();
+      let firestoreInquiriesOk = false;
       try {
-        const inqSnap = await getDocs(
-          query(collection(db, "inquiries"), orderBy("timestamp", "desc"), limit(500)),
-        );
+        const inqSnap = await getDocs(collection(db, "inquiries"));
+        firestoreInquiriesOk = true;
+        anySyncSuccess = true;
         inqSnap.forEach((docSnap) => {
           const d = docSnap.data();
+          const resolvedTs =
+            parseFirestoreTimestampIso(d.timestamp) ||
+            parseFirestoreTimestampIso(d.createdAt) ||
+            new Date().toISOString();
           rawInquiriesMap.set(docSnap.id, {
             id: docSnap.id,
             name: String(d.name || "Unknown").trim(),
             email: String(d.email || "—").trim(),
             phone: String(d.phone || "—").trim(),
-            service: String(d.service || "General Inquiry").trim(),
+            service: String(d.service || d.product || "General Inquiry").trim(),
             message: d.message ? String(d.message) : undefined,
             company: d.company ? String(d.company) : undefined,
             cityCountry: d.cityCountry ? String(d.cityCountry) : undefined,
@@ -797,45 +844,18 @@ export default function AdminDashboardPage({
             requirements: d.requirements ? String(d.requirements) : undefined,
             source: d.source ? String(d.source) : "website",
             status: String(d.status || "New").trim(),
-            timestamp: String(
-              d.timestamp || d.createdAt || new Date().toISOString(),
-            ),
-            createdAt: d.createdAt ? String(d.createdAt) : undefined,
+            timestamp: resolvedTs,
+            createdAt: d.createdAt ? parseFirestoreTimestampIso(d.createdAt) : undefined,
           });
         });
-      } catch {
-        // Fallback to un-ordered getDocs if composite/single index not ready
-        try {
-          const inqSnapFallback = await getDocs(collection(db, "inquiries"));
-          inqSnapFallback.forEach((docSnap) => {
-            const d = docSnap.data();
-            rawInquiriesMap.set(docSnap.id, {
-              id: docSnap.id,
-              name: String(d.name || "Unknown").trim(),
-              email: String(d.email || "—").trim(),
-              phone: String(d.phone || "—").trim(),
-              service: String(d.service || "General Inquiry").trim(),
-              message: d.message ? String(d.message) : undefined,
-              company: d.company ? String(d.company) : undefined,
-              cityCountry: d.cityCountry ? String(d.cityCountry) : undefined,
-              businessType: d.businessType ? String(d.businessType) : undefined,
-              requirements: d.requirements ? String(d.requirements) : undefined,
-              source: d.source ? String(d.source) : "website",
-              status: String(d.status || "New").trim(),
-              timestamp: String(
-                d.timestamp || d.createdAt || new Date().toISOString(),
-              ),
-              createdAt: d.createdAt ? String(d.createdAt) : undefined,
-            });
-          });
-        } catch {
-          // Will rely on API fallback below
-        }
+      } catch (err: any) {
+        syncErrors.push(err?.message || "Firestore inquiries read blocked");
       }
 
       try {
-        const res = await fetch("/api/inquiries", { headers });
+        const res = await fetchWithAuthRetry("/api/inquiries");
         if (res.ok) {
+          anySyncSuccess = true;
           const payload = await res.json();
           const apiInquiries = Array.isArray(payload)
             ? payload
@@ -849,7 +869,7 @@ export default function AdminDashboardPage({
                 name: String(d.name || "Unknown").trim(),
                 email: String(d.email || "—").trim(),
                 phone: String(d.phone || "—").trim(),
-                service: String(d.service || "General Inquiry").trim(),
+                service: String(d.service || d.product || "General Inquiry").trim(),
                 message: d.message ? String(d.message) : undefined,
                 company: d.company ? String(d.company) : undefined,
                 cityCountry: d.cityCountry ? String(d.cityCountry) : undefined,
@@ -858,14 +878,18 @@ export default function AdminDashboardPage({
                 source: d.source ? String(d.source) : "website",
                 status: String(d.status || "New").trim(),
                 timestamp: String(
-                  d.timestamp || d.createdAt || new Date().toISOString(),
+                  parseFirestoreTimestampIso(d.timestamp) ||
+                    parseFirestoreTimestampIso(d.createdAt) ||
+                    new Date().toISOString(),
                 ),
               });
             }
           }
+        } else if (!firestoreInquiriesOk) {
+          syncErrors.push(`Inquiries API returned HTTP ${res.status}`);
         }
       } catch {
-        // Non-fatal
+        // Non-fatal if Firestore succeeded
       }
 
       const sortedInquiries = Array.from(rawInquiriesMap.values()).sort(
@@ -897,13 +921,16 @@ export default function AdminDashboardPage({
         resumeUrl: typeof d.resumeUrl === "string" ? d.resumeUrl : undefined,
         status: String(d.status || "New").trim(),
         timestamp: String(
-          d.timestamp || d.createdAt || new Date().toISOString(),
+          parseFirestoreTimestampIso(d.timestamp) ||
+            parseFirestoreTimestampIso(d.createdAt) ||
+            new Date().toISOString(),
         ),
         sourceCollection,
       });
 
       try {
         const jobAppsSnap = await getDocs(collection(db, "job_applications"));
+        anySyncSuccess = true;
         jobAppsSnap.forEach((docSnap) => {
           rawAppsMap.set(
             docSnap.id,
@@ -916,6 +943,7 @@ export default function AdminDashboardPage({
 
       try {
         const legacyAppsSnap = await getDocs(collection(db, "applications"));
+        anySyncSuccess = true;
         legacyAppsSnap.forEach((docSnap) => {
           if (!rawAppsMap.has(docSnap.id)) {
             rawAppsMap.set(
@@ -929,8 +957,9 @@ export default function AdminDashboardPage({
       }
 
       try {
-        const res = await fetch("/api/applications", { headers });
+        const res = await fetchWithAuthRetry("/api/applications");
         if (res.ok) {
+          anySyncSuccess = true;
           const payload = await res.json();
           const apiApps = Array.isArray(payload)
             ? payload
@@ -963,6 +992,7 @@ export default function AdminDashboardPage({
         const regSnap = await getDocs(
           collection(db, "app_download_registrations"),
         );
+        anySyncSuccess = true;
         regSnap.forEach((docSnap) => {
           const d = docSnap.data();
           primaryAppRegs.push({
@@ -975,8 +1005,10 @@ export default function AdminDashboardPage({
             source: d.source,
             privacyConsent: d.privacyConsent,
             privacyPolicyVersion: d.privacyPolicyVersion,
-            clientTimestamp: d.clientTimestamp,
-            timestamp: d.clientTimestamp || d.timestamp,
+            clientTimestamp: parseFirestoreTimestampIso(d.clientTimestamp),
+            timestamp:
+              parseFirestoreTimestampIso(d.clientTimestamp) ||
+              parseFirestoreTimestampIso(d.timestamp),
             status: d.status || "registered",
           });
         });
@@ -985,8 +1017,9 @@ export default function AdminDashboardPage({
       }
 
       try {
-        const res = await fetch("/api/app-registrations", { headers });
+        const res = await fetchWithAuthRetry("/api/app-registrations");
         if (res.ok) {
+          anySyncSuccess = true;
           const payload = await res.json();
           const apiRegs = Array.isArray(payload)
             ? payload
@@ -1015,7 +1048,7 @@ export default function AdminDashboardPage({
       const auditItems: DeploymentAuditLog[] = [];
 
       try {
-        const depRes = await fetch("/api/admin/deployments", { headers });
+        const depRes = await fetchWithAuthRetry("/api/admin/deployments");
         if (depRes.ok) {
           const depPayload = await depRes.json();
           if (Array.isArray(depPayload?.entries)) {
@@ -1096,6 +1129,12 @@ export default function AdminDashboardPage({
       setDeploymentHistory(historyItems.slice(0, 50));
       setDeploymentAuditLogs(auditItems.slice(0, 50));
 
+      if (!anySyncSuccess && syncErrors.length > 0) {
+        setDataError(
+          `Database synchronization failed (${syncErrors[0]}). Please click Refresh Data or re-authenticate with ${PRIMARY_ADMIN_EMAIL}.`,
+        );
+      }
+
       setLastSyncedAt(new Date().toLocaleTimeString());
     } catch (err: any) {
       setDataError(
@@ -1113,12 +1152,30 @@ export default function AdminDashboardPage({
     }
   }, [isAuthorized, isVaultUnlocked, fetchAllAdminData]);
 
+  const persistLockoutState = (attempts: number, untilMs: number) => {
+    if (typeof window === "undefined") return;
+    try {
+      if (attempts === 0 && untilMs === 0) {
+        window.localStorage.removeItem("cvidya_admin_lockout_v1");
+      } else {
+        window.localStorage.setItem(
+          "cvidya_admin_lockout_v1",
+          JSON.stringify({ attempts, lockoutUntilMs: untilMs }),
+        );
+      }
+    } catch {
+      // Ignore storage quota errors
+    }
+  };
+
   const registerFailedAttempt = (errorMessage: string) => {
     setFailedLoginAttempts((prev) => {
       const next = prev + 1;
+      const nextUntil = next >= 5 ? Date.now() + 5 * 60 * 1000 : lockoutUntilMs;
       if (next >= 5) {
-        setLockoutUntilMs(Date.now() + 5 * 60 * 1000);
+        setLockoutUntilMs(nextUntil);
       }
+      persistLockoutState(next, nextUntil);
       return next;
     });
     setAuthError(errorMessage);
@@ -1130,54 +1187,98 @@ export default function AdminDashboardPage({
     rawPassword: string,
   ): Promise<{ ok: boolean; error?: string }> => {
     const cleanEmail = verifiedEmail.trim().toLowerCase();
-    if (!isAuthorizedAdminEmail(cleanEmail)) {
+    const activeUser = auth.currentUser;
+    if (
+      !activeUser ||
+      activeUser.uid !== uid ||
+      !isAuthorizedAdminUser(activeUser) ||
+      !isAuthorizedAdminEmail(cleanEmail)
+    ) {
       return {
         ok: false,
-        error: "Access Denied: Only the authorized owner email ID is permitted.",
+        error: `Access Denied: Only the verified Google account (${PRIMARY_ADMIN_EMAIL}) is permitted.`,
       };
     }
 
-    const vaultDigest = await computeOwnerVaultDigest(cleanEmail, rawPassword);
-    const rawDigest = await computeSha256Hex(rawPassword.trim());
+    const vaultDigest = (
+      await computeOwnerVaultDigest(cleanEmail, rawPassword)
+    ).toLowerCase();
+    const vaultRef = doc(db, "admins", uid);
 
-    // 1. Synchronize encrypted SHA-256 passwordHash in Firestore /admins/{uid} for the verified owner
+    let serverCheckHandled = false;
     try {
-      const vaultRef = doc(db, "admins", uid);
-      await setDoc(
-        vaultRef,
-        {
+      const snap = await getDocFromServer(vaultRef);
+      if (snap.exists()) {
+        const storedData = snap.data() || {};
+        const storedEmail = String(storedData.email || "").trim().toLowerCase();
+        const storedHash = String(storedData.passwordHash || "").trim().toLowerCase();
+        if (storedEmail !== cleanEmail || !storedHash || storedHash !== vaultDigest) {
+          return {
+            ok: false,
+            error: "Incorrect Owner Security Password. Access strictly denied.",
+          };
+        }
+        serverCheckHandled = true;
+      } else {
+        // First-time Owner Security Vault creation requires >= 6 character password
+        if (rawPassword.trim().length < 6) {
+          return {
+            ok: false,
+            error: "Initial Owner Security Password setup requires at least 6 characters.",
+          };
+        }
+        await setDoc(vaultRef, {
           uid,
           email: cleanEmail,
-          passwordHash: vaultDigest.toLowerCase(),
+          passwordHash: vaultDigest,
           updatedAt: new Date().toISOString(),
-        },
-        { merge: true },
-      );
+        });
+        serverCheckHandled = true;
+      }
     } catch {
-      // Non-fatal if Firestore write is temporarily unreachable or using custom-domain vault session
+      // Fall through to backend verification when offline or server-bound check required
     }
 
-    // 2. Synchronize with server-side /api/admin/vault/verify endpoint
+    // Secondary server-side verification against /api/admin/vault/verify
     try {
-      const headers = await getAdminAuthHeaders();
-      await fetch("/api/admin/vault/verify", {
+      const headers = await getAdminAuthHeaders(true);
+      const res = await fetch("/api/admin/vault/verify", {
         method: "POST",
         headers: {
           ...headers,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          uid,
-          email: cleanEmail,
-          passwordHash: vaultDigest.toLowerCase(),
-          rawDigest: rawDigest.toLowerCase(),
+          passwordHash: vaultDigest,
         }),
       });
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+      if (res.status === 401 || res.status === 403 || res.status === 400 || res.status === 429) {
+        let serverErr = "Incorrect Owner Security Password. Access strictly denied.";
+        if (contentType.includes("application/json")) {
+          const errPayload = await res.json().catch(() => null);
+          if (errPayload?.error) serverErr = String(errPayload.error);
+        }
+        return { ok: false, error: serverErr };
+      }
+      if (res.ok && contentType.includes("application/json")) {
+        const payload = await res.json().catch(() => null);
+        if (payload?.success) {
+          return { ok: true };
+        }
+      }
     } catch {
-      // Non-fatal if server-side endpoint is warming up
+      // Tolerate API unavailability only if direct Firestore getDocFromServer verified the vault
     }
 
-    return { ok: true };
+    if (serverCheckHandled) {
+      return { ok: true };
+    }
+
+    return {
+      ok: false,
+      error: "Unable to verify Owner Security Password against Cloud Firestore. Access denied.",
+    };
   };
 
   const handleGoogleSignIn = async (e?: React.FormEvent) => {
@@ -1204,38 +1305,34 @@ export default function AdminDashboardPage({
     if (!isAuthorizedAdminEmail(candidateEmail)) {
       setUnauthorizedEmail(candidateEmail);
       registerFailedAttempt(
-        "Access Denied: Only the authorized owner email ID is permitted to sign in.",
+        `Access Denied: Only ${PRIMARY_ADMIN_EMAIL} is permitted to sign in.`,
       );
       return;
     }
 
     if (!candidatePassword || candidatePassword.length < 1) {
-      registerFailedAttempt(
-        "Please enter your Owner Security Password.",
-      );
+      registerFailedAttempt("Please enter your Owner Security Password.");
       return;
     }
 
     setSigningIn(true);
     try {
       let activeUser = auth.currentUser;
-      let resolvedUid = "";
-      let verifiedEmail = candidateEmail;
 
       if (!activeUser || !isAuthorizedAdminUser(activeUser)) {
         const result = await signInAdminWithGoogle(candidateEmail);
+        if (result.redirectStarted) {
+          setAuthError(
+            result.message ||
+              "Redirecting to Google Sign-In... Return to enter your Owner Security Password.",
+          );
+          return;
+        }
         if (result.authorized && result.user) {
           activeUser = result.user;
-          resolvedUid = result.user.uid;
-          verifiedEmail = result.user.email?.trim().toLowerCase() || candidateEmail;
         } else {
           if (result.unauthorizedEmail) {
             setUnauthorizedEmail(result.unauthorizedEmail);
-            registerFailedAttempt(
-              result.message ||
-                "Google authentication failed. Only the authorized owner Google account is permitted.",
-            );
-            return;
           }
           if (result.errorCode === "auth/popup-closed-by-user") {
             setAuthError(
@@ -1243,48 +1340,24 @@ export default function AdminDashboardPage({
             );
             return;
           }
-
-          // Fallback for custom-domain deployments (e.g., cvidyasolutions.com) where Firebase popup
-          // may be blocked by browser popup policy or custom-domain OAuth restrictions:
-          // Issue a cryptographic Owner Vault token bound to the allowlisted owner email + SHA-256 vault digest.
-          const vaultDigest = await computeOwnerVaultDigest(
-            candidateEmail,
-            candidatePassword,
+          registerFailedAttempt(
+            result.message ||
+              `Google authentication failed. Only ${PRIMARY_ADMIN_EMAIL} is permitted.`,
           );
-          const rawDigest = await computeSha256Hex(candidatePassword);
-          const fallbackToken = createOwnerVaultClientToken(
-            candidateEmail,
-            vaultDigest,
-          );
-          setStoredAdminToken(fallbackToken);
-          resolvedUid = `owner_${candidateEmail.replace(/[^a-z0-9]/g, "_")}`;
-          verifiedEmail = candidateEmail;
-
-          try {
-            await fetch("/api/admin/vault/session", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${fallbackToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                uid: resolvedUid,
-                email: candidateEmail,
-                passwordHash: vaultDigest.toLowerCase(),
-                rawDigest: rawDigest.toLowerCase(),
-              }),
-            });
-          } catch {
-            // Non-fatal
-          }
+          return;
         }
-      } else {
-        resolvedUid = activeUser.uid;
-        verifiedEmail = activeUser.email?.trim().toLowerCase() || candidateEmail;
       }
 
+      if (!activeUser || !isAuthorizedAdminUser(activeUser)) {
+        registerFailedAttempt(
+          `Access Denied: Verified Google Sign-In as ${PRIMARY_ADMIN_EMAIL} is strictly required.`,
+        );
+        return;
+      }
+
+      const verifiedEmail = activeUser.email?.trim().toLowerCase() || candidateEmail;
       const vaultCheck = await verifyAndBindOwnerVault(
-        resolvedUid || `owner_${verifiedEmail.replace(/[^a-z0-9]/g, "_")}`,
+        activeUser.uid,
         verifiedEmail,
         candidatePassword,
       );
@@ -1301,6 +1374,7 @@ export default function AdminDashboardPage({
 
       setFailedLoginAttempts(0);
       setLockoutUntilMs(0);
+      persistLockoutState(0, 0);
       setOwnerPasswordInput("");
       setIsAuthorized(true);
       setAdminEmail(verifiedEmail);
@@ -1316,9 +1390,14 @@ export default function AdminDashboardPage({
     e.preventDefault();
     setVaultChangeMessage(null);
     const activeUser = auth.currentUser;
-    if (!adminEmail) return;
-    const ownerUid =
-      activeUser?.uid || `owner_${adminEmail.trim().toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+    if (!activeUser || !isAuthorizedAdminUser(activeUser) || !adminEmail) {
+      setVaultChangeMessage({
+        type: "error",
+        text: "Verified Google owner session required.",
+      });
+      return;
+    }
+    const ownerUid = activeUser.uid;
 
     if (!currentVaultPassword.trim()) {
       setVaultChangeMessage({
@@ -1327,10 +1406,10 @@ export default function AdminDashboardPage({
       });
       return;
     }
-    if (newVaultPassword.trim().length < 4) {
+    if (newVaultPassword.trim().length < 6) {
       setVaultChangeMessage({
         type: "error",
-        text: "New Owner Security Password must be at least 4 characters.",
+        text: "New Owner Security Password must be at least 6 characters.",
       });
       return;
     }
@@ -1345,47 +1424,56 @@ export default function AdminDashboardPage({
     setUpdatingVaultPassword(true);
     try {
       const cleanEmail = adminEmail.trim().toLowerCase();
-      const currentHash = await computeOwnerVaultDigest(
-        cleanEmail,
-        currentVaultPassword.trim(),
-      );
-      const currentRaw = await computeSha256Hex(currentVaultPassword.trim());
-      const newHash = await computeOwnerVaultDigest(
-        cleanEmail,
-        newVaultPassword.trim(),
-      );
+      const currentHash = (
+        await computeOwnerVaultDigest(cleanEmail, currentVaultPassword.trim())
+      ).toLowerCase();
+      const newHash = (
+        await computeOwnerVaultDigest(cleanEmail, newVaultPassword.trim())
+      ).toLowerCase();
 
-      try {
-        const vaultRef = doc(db, "admins", ownerUid);
-        await setDoc(
-          vaultRef,
-          {
-            uid: ownerUid,
-            email: cleanEmail,
-            passwordHash: newHash.toLowerCase(),
-            updatedAt: new Date().toISOString(),
-          },
-          { merge: true },
-        );
-      } catch {
-        // Non-fatal if using custom-domain vault session
+      const vaultRef = doc(db, "admins", ownerUid);
+      const existingSnap = await getDocFromServer(vaultRef).catch(() => null);
+      if (existingSnap && existingSnap.exists()) {
+        const storedHash = String(existingSnap.data()?.passwordHash || "")
+          .trim()
+          .toLowerCase();
+        if (!storedHash || storedHash !== currentHash) {
+          setVaultChangeMessage({
+            type: "error",
+            text: "Current Owner Security Password is incorrect.",
+          });
+          return;
+        }
       }
 
-      const headers = await getAdminAuthHeaders();
-      await fetch("/api/admin/vault/update", {
+      const headers = await getAdminAuthHeaders(true);
+      const apiRes = await fetch("/api/admin/vault/update", {
         method: "POST",
         headers: {
           ...headers,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          uid: ownerUid,
-          email: cleanEmail,
-          currentPasswordHash: currentHash.toLowerCase(),
-          currentRawDigest: currentRaw.toLowerCase(),
-          newPasswordHash: newHash.toLowerCase(),
+          currentPasswordHash: currentHash,
+          newPasswordHash: newHash,
         }),
-      }).catch(() => {});
+      }).catch(() => null);
+
+      if (apiRes && (apiRes.status === 401 || apiRes.status === 403 || apiRes.status === 400)) {
+        const errData = await apiRes.json().catch(() => null);
+        setVaultChangeMessage({
+          type: "error",
+          text: errData?.error || "Current Owner Security Password verification failed.",
+        });
+        return;
+      }
+
+      await setDoc(vaultRef, {
+        uid: ownerUid,
+        email: cleanEmail,
+        passwordHash: newHash,
+        updatedAt: new Date().toISOString(),
+      });
 
       setCurrentVaultPassword("");
       setNewVaultPassword("");
@@ -1987,6 +2075,13 @@ export default function AdminDashboardPage({
             </div>
           )}
 
+          {isAuthorized && adminEmail && (
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-700/50 text-emerald-300 text-xs font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              Google Verified • Enter Owner Password to Unlock
+            </div>
+          )}
+
           <form onSubmit={handleGoogleSignIn} className="mt-6 space-y-4">
             <div>
               <label
@@ -2059,6 +2154,11 @@ export default function AdminDashboardPage({
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   Verifying Owner Credentials &amp; Google Auth...
+                </>
+              ) : isAuthorized && adminEmail ? (
+                <>
+                  <Shield className="w-4 h-4" />
+                  Unlock Owner Dashboard Vault
                 </>
               ) : (
                 <>

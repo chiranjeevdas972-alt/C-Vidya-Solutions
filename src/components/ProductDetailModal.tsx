@@ -47,7 +47,7 @@ export default function ProductDetailModal({ product, onClose, onOpenConsultatio
           service: product.name,
           message: `Product modal callback request for ${product.name}`,
           timestamp: new Date().toISOString(),
-          status: "pending_review"
+          status: "Pending Callback"
         });
       } catch (fbErr) {
         console.warn("Direct Firestore fallback:", fbErr);

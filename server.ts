@@ -6,8 +6,6 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { collection, getDocs, setDoc, doc, query, orderBy } from "firebase/firestore";
-import { db, OperationType, handleFirestoreError } from "./src/firebase.ts";
 import {
   getSmartAssistantResponse,
   generateCustomerResponse,
@@ -71,8 +69,10 @@ async function sendLeadNotificationEmail(lead: {
       source: lead.source,
       status: "Forwarded to cvidyasolutions@gmail.com"
     };
-    await setDoc(doc(db, "inquiries", leadId), leadRecord);
-    console.log(`✅ Lead ${leadId} persisted to Firestore inquiries for ${targetEmail}`);
+    const created = await firestoreRestCreateDocument("inquiries", leadId, leadRecord);
+    if (created) {
+      console.log(`✅ Lead ${leadId} persisted to Firestore inquiries for ${targetEmail}`);
+    }
   } catch (err) {
     console.warn("Firestore lead persistence warning:", err);
   }
@@ -881,7 +881,6 @@ const authAttemptsRateLimiter = (req: express.Request, res: express.Response, ne
 };
 
 const STRICT_AUTHORIZED_ADMIN_EMAILS = [
-  "cvidyasolutions@gmail.com",
   "chiranjeevdas972@gmail.com",
 ] as const;
 
@@ -894,42 +893,116 @@ export function isAuthorizedOwner(_provided: unknown): boolean {
   return false;
 }
 
-// Verify Firebase ID token via JWT claims and Google Identity Toolkit lookup for authorized admin emails
-export async function verifyFirebaseAdminIdToken(idToken: string): Promise<boolean> {
-  if (!idToken || typeof idToken !== "string") return false;
-  const parts = idToken.trim().split(".");
-  if (parts.length !== 3) return false;
+interface GoogleJwkEntry {
+  kid: string;
+  kty: string;
+  alg?: string;
+  use?: string;
+  n: string;
+  e: string;
+}
+
+let cachedGoogleJwks: { keys: GoogleJwkEntry[]; expiresAtMs: number } = {
+  keys: [],
+  expiresAtMs: 0,
+};
+
+async function fetchGoogleSecureTokenJwks(forceRefresh = false): Promise<GoogleJwkEntry[]> {
+  if (!forceRefresh && cachedGoogleJwks.keys.length > 0 && cachedGoogleJwks.expiresAtMs > Date.now()) {
+    return cachedGoogleJwks.keys;
+  }
+  const jwksUrl = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
   try {
-    const headerSegment = parts[0];
-    const payloadSegment = parts[1];
-    const sigSegment = parts[2];
+    const resp = await fetch(jwksUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      return cachedGoogleJwks.keys;
+    }
+    const cacheControl = resp.headers.get("cache-control") || "";
+    const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+    const maxAgeSec = maxAgeMatch ? Math.max(60, parseInt(maxAgeMatch[1], 10)) : 3600;
+    const data = (await resp.json()) as { keys?: GoogleJwkEntry[] };
+    const keys = Array.isArray(data?.keys) ? data.keys : [];
+    if (keys.length > 0) {
+      cachedGoogleJwks = {
+        keys,
+        expiresAtMs: Date.now() + maxAgeSec * 1000,
+      };
+    }
+    return cachedGoogleJwks.keys;
+  } catch {
+    return cachedGoogleJwks.keys;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export interface VerifiedAdminTokenPayload {
+  uid: string;
+  email: string;
+  token: string;
+}
+
+export async function verifyAndDecodeAdminToken(
+  idToken: string
+): Promise<VerifiedAdminTokenPayload | null> {
+  if (!idToken || typeof idToken !== "string") return null;
+  const trimmedToken = idToken.trim();
+  const parts = trimmedToken.split(".");
+  if (parts.length !== 3) return null;
+
+  try {
+    const [headerSegment, payloadSegment, sigSegment] = parts;
     if (!sigSegment || sigSegment === "fakesignature") {
-      return false;
+      return null;
     }
 
     let header: any = {};
     try {
       header = JSON.parse(Buffer.from(headerSegment, "base64url").toString("utf8"));
     } catch {
-      return false;
+      return null;
+    }
+
+    // Strictly require RS256 Firebase Auth tokens with a valid key ID; reject client-minted vault tokens
+    if (
+      header?.alg !== "RS256" ||
+      header?.kid === "cvidya-owner-vault-v1" ||
+      typeof header?.kid !== "string" ||
+      !header.kid.trim()
+    ) {
+      return null;
     }
 
     const decodedJson = Buffer.from(payloadSegment, "base64url").toString("utf8");
     const payload = JSON.parse(decodedJson);
     const nowSec = Math.floor(Date.now() / 1000);
-    if (!payload.exp || typeof payload.exp !== "number" || payload.exp < nowSec) {
-      return false;
+
+    if (!payload.exp || typeof payload.exp !== "number" || payload.exp <= nowSec) {
+      return null;
+    }
+    if (typeof payload.iat === "number" && payload.iat > nowSec + 300) {
+      return null;
+    }
+    if (typeof payload.auth_time === "number" && payload.auth_time > nowSec + 300) {
+      return null;
     }
     if (payload.email_verified !== true) {
-      return false;
+      return null;
     }
-    if (payload.sub !== undefined && (typeof payload.sub !== "string" || !payload.sub.trim())) {
-      return false;
+    if (typeof payload.sub !== "string" || !payload.sub.trim() || payload.sub.length > 128) {
+      return null;
     }
+
     const email = String(payload.email || "").trim().toLowerCase();
     const allowedEmails = getAuthorizedAdminEmails();
     if (!email || !allowedEmails.includes(email)) {
-      return false;
+      return null;
     }
 
     const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
@@ -941,24 +1014,38 @@ export async function verifyFirebaseAdminIdToken(idToken: string): Promise<boole
       if (cfg?.apiKey) apiKey = cfg.apiKey;
     }
 
-    if (payload.aud && payload.aud !== expectedProjectId) {
-      return false;
+    if (payload.aud !== expectedProjectId) {
+      return null;
     }
     const expectedIssuer = `https://securetoken.google.com/${expectedProjectId}`;
-    if (payload.iss && payload.iss !== expectedIssuer) {
-      return false;
+    if (payload.iss !== expectedIssuer) {
+      return null;
     }
 
-    // Support verified C Vidya Owner Vault tokens issued when custom-domain popup is restricted
-    if (
-      header?.kid === "cvidya-owner-vault-v1" &&
-      /^[a-f0-9]{64}$/i.test(sigSegment) &&
-      payload.aud === expectedProjectId &&
-      payload.iss === expectedIssuer
-    ) {
-      return true;
+    // Cryptographically verify RS256 signature against Google's official SecureToken JWK public key
+    let keys = await fetchGoogleSecureTokenJwks(false);
+    let matchedKey = keys.find((k) => k.kid === header.kid);
+    if (!matchedKey) {
+      keys = await fetchGoogleSecureTokenJwks(true);
+      matchedKey = keys.find((k) => k.kid === header.kid);
+    }
+    if (!matchedKey) {
+      return null;
     }
 
+    const publicKey = crypto.createPublicKey({ key: matchedKey as any, format: "jwk" });
+    const signatureBuf = Buffer.from(sigSegment, "base64url");
+    const isSigValid = crypto.verify(
+      "RSA-SHA256",
+      Buffer.from(`${headerSegment}.${payloadSegment}`, "utf8"),
+      publicKey,
+      signatureBuf
+    );
+    if (!isSigValid) {
+      return null;
+    }
+
+    // Also verify user account status (not disabled/revoked) via Identity Toolkit when available
     if (apiKey) {
       try {
         const resp = await fetch(
@@ -970,52 +1057,50 @@ export async function verifyFirebaseAdminIdToken(idToken: string): Promise<boole
               Referer: `https://${expectedProjectId}.firebaseapp.com/`,
               Origin: `https://${expectedProjectId}.firebaseapp.com`,
             },
-            body: JSON.stringify({ idToken }),
+            body: JSON.stringify({ idToken: trimmedToken }),
           }
         );
         if (resp.ok) {
           const data = (await resp.json()) as any;
           const userRecord = data?.users?.[0];
           if (!userRecord || userRecord.emailVerified !== true || userRecord.disabled === true) {
-            return false;
+            return null;
           }
           const verifiedEmail = String(userRecord.email || "").trim().toLowerCase();
-          return Boolean(verifiedEmail && allowedEmails.includes(verifiedEmail));
-        }
-        // If Identity Toolkit rejected only due to HTTP referrer restriction on server-to-server call,
-        // allow structurally valid RS256 Firebase JWT with full matching claims and long cryptographic signature.
-        const errBody = (await resp.json().catch(() => ({}))) as any;
-        const errMsg = String(errBody?.error?.message || "");
-        if (
-          errMsg.includes("REFERER") ||
-          errMsg.includes("API_KEY_HTTP_REFERRER_BLOCKED") ||
-          resp.status >= 500
-        ) {
+          if (!verifiedEmail || !allowedEmails.includes(verifiedEmail)) {
+            return null;
+          }
+        } else {
+          const errBody = (await resp.json().catch(() => ({}))) as any;
+          const errMsg = String(errBody?.error?.message || "");
+          // Only tolerate server-side API-key referrer blocks because full RS256 JWK signature already succeeded above
           if (
-            header?.alg === "RS256" &&
-            sigSegment.length >= 64 &&
-            payload.aud === expectedProjectId &&
-            payload.iss === expectedIssuer
+            !errMsg.includes("REFERER") &&
+            !errMsg.includes("API_KEY_HTTP_REFERRER_BLOCKED") &&
+            resp.status < 500
           ) {
-            return true;
+            return null;
           }
         }
       } catch {
-        if (
-          header?.alg === "RS256" &&
-          sigSegment.length >= 64 &&
-          payload.aud === expectedProjectId &&
-          payload.iss === expectedIssuer
-        ) {
-          return true;
-        }
+        // Network issue on accounts:lookup is safe to tolerate ONLY because RS256 JWK cryptographic signature succeeded above
       }
-      return false;
     }
-    return false;
+
+    return {
+      uid: payload.sub.trim(),
+      email,
+      token: trimmedToken,
+    };
   } catch {
-    return false;
+    return null;
   }
+}
+
+// Verify Firebase ID token via cryptographic Google RS256 JWKS + claims verification
+export async function verifyFirebaseAdminIdToken(idToken: string): Promise<boolean> {
+  const verified = await verifyAndDecodeAdminToken(idToken);
+  return verified !== null;
 }
 
 export function extractAdminTokenFromRequest(req: express.Request): string {
@@ -1234,6 +1319,72 @@ export async function firestoreAdminRestPatchDocument(
   }
 }
 
+function getFirebaseWebApiKey(): string {
+  try {
+    const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (!fs.existsSync(firebaseConfigPath)) return "";
+    const cfg = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf8"));
+    return typeof cfg?.apiKey === "string" ? cfg.apiKey.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+export async function firestoreRestCreateDocument(
+  collectionName: string,
+  docId: string,
+  data: Record<string, any>,
+  bearerToken = ""
+): Promise<boolean> {
+  const baseUrl = getFirestoreRestBaseUrl();
+  if (
+    !baseUrl ||
+    !docId ||
+    !/^[a-zA-Z0-9_-]{1,128}$/.test(docId) ||
+    !ALLOWED_ADMIN_REST_COLLECTIONS.has(collectionName)
+  ) {
+    return false;
+  }
+  try {
+    const fieldsPayload: Record<string, any> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v !== undefined && !FORBIDDEN_REST_PRIVILEGE_FIELDS.has(k)) {
+        fieldsPayload[k] = toFirestoreRestValue(v);
+      }
+    }
+    const apiKey = getFirebaseWebApiKey();
+    const queryParams = new URLSearchParams({ documentId: docId });
+    if (apiKey) queryParams.set("key", apiKey);
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (bearerToken) {
+      headers["Authorization"] = `Bearer ${bearerToken}`;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    let resp: Response;
+    try {
+      resp = await fetch(
+        `${baseUrl}/${encodeURIComponent(collectionName)}?${queryParams.toString()}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ fields: fieldsPayload }),
+          signal: controller.signal,
+        }
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
 // Safe Input Sanitization and Formatting checks
 function sanitizeInput(str: any, maxLength: number): string {
   if (typeof str !== "string") return "";
@@ -1276,12 +1427,8 @@ app.post("/api/admin/verify", authAttemptsRateLimiter, async (req, res) => {
   });
 });
 
-// Owner Security Vault — Precomputed SHA-256 Master Digests & Per-Owner Vault Store
-// Never stores or compares plaintext passwords; requires a verified Firebase Google ID token first.
-const OWNER_MASTER_SHA256_DIGESTS = [
-  "f2d11a260a4708049e370a1c7a4e420e9b9c836988f761a178f8431b1793524a",
-  "508d8d090f28188799640c11653c8b0f0a4f1b2b2c0d98864c9744d15a16e246",
-];
+// Owner Security Vault — Strictly verifies SHA-256 vault password hash against Firestore `/admins/{uid}`
+// Never overwrites an existing owner password unless the matching current password hash is verified in constant time.
 const ownerVaultMemoryHashes = new Map<string, string>();
 
 function constantTimeHexEquals(hexA: string, hexB: string): boolean {
@@ -1297,79 +1444,211 @@ function constantTimeHexEquals(hexA: string, hexB: string): boolean {
   }
 }
 
+async function fetchOwnerVaultFromFirestore(
+  uid: string,
+  adminToken: string
+): Promise<{ status: "found"; passwordHash: string; email: string } | { status: "not_found" } | { status: "error" }> {
+  const baseUrl = getFirestoreRestBaseUrl();
+  if (!baseUrl || !uid || !/^[a-zA-Z0-9_-]{1,128}$/.test(uid)) {
+    return { status: "error" };
+  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const resp = await fetch(`${baseUrl}/admins/${encodeURIComponent(uid)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        Accept: "application/json",
+      },
+      signal: controller.signal,
+    });
+    if (resp.status === 404) {
+      return { status: "not_found" };
+    }
+    if (!resp.ok) {
+      return { status: "error" };
+    }
+    const docData = (await resp.json()) as any;
+    const fields = docData?.fields || {};
+    const storedHash = String(fields?.passwordHash?.stringValue || "").trim().toLowerCase();
+    const storedEmail = String(fields?.email?.stringValue || "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(storedHash)) {
+      return { status: "error" };
+    }
+    ownerVaultMemoryHashes.set(uid, storedHash);
+    return { status: "found", passwordHash: storedHash, email: storedEmail };
+  } catch {
+    return { status: "error" };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function upsertOwnerVaultInFirestore(
+  uid: string,
+  email: string,
+  passwordHash: string,
+  adminToken: string
+): Promise<boolean> {
+  const baseUrl = getFirestoreRestBaseUrl();
+  if (!baseUrl || !uid || !/^[a-zA-Z0-9_-]{1,128}$/.test(uid)) {
+    return false;
+  }
+  const fieldsPayload = {
+    uid: toFirestoreRestValue(uid),
+    email: toFirestoreRestValue(email),
+    passwordHash: toFirestoreRestValue(passwordHash),
+    updatedAt: toFirestoreRestValue(new Date().toISOString()),
+  };
+  const maskParams = "updateMask.fieldPaths=uid&updateMask.fieldPaths=email&updateMask.fieldPaths=passwordHash&updateMask.fieldPaths=updatedAt";
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const resp = await fetch(`${baseUrl}/admins/${encodeURIComponent(uid)}?${maskParams}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields: fieldsPayload }),
+      signal: controller.signal,
+    });
+    if (resp.ok) {
+      ownerVaultMemoryHashes.set(uid, passwordHash);
+    }
+    return resp.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 app.post("/api/admin/vault/verify", authAttemptsRateLimiter, async (req, res) => {
-  if (!(await verifyAdminRequest(req))) {
+  const token = extractAdminTokenFromRequest(req);
+  const verifiedAdmin = await verifyAndDecodeAdminToken(token);
+  if (!verifiedAdmin) {
     return res.status(401).json({
       success: false,
       error: "Unauthorized access. Verified Google administrator session required.",
     });
   }
-  const { uid, passwordHash } = req.body || {};
-  const cleanUid = typeof uid === "string" ? uid.trim() : "";
-  const cleanVaultHash = typeof passwordHash === "string" ? passwordHash.trim().toLowerCase() : "";
 
-  if (!cleanUid || !/^[a-f0-9]{64}$/.test(cleanVaultHash)) {
+  const { passwordHash } = req.body || {};
+  const cleanVaultHash = typeof passwordHash === "string" ? passwordHash.trim().toLowerCase() : "";
+  if (!/^[a-f0-9]{64}$/.test(cleanVaultHash)) {
     return res.status(400).json({
       success: false,
       error: "Invalid cryptographic vault verification payload.",
     });
   }
 
-  ownerVaultMemoryHashes.set(cleanUid, cleanVaultHash);
-  return res.json({ success: true, verifiedAt: new Date().toISOString() });
-});
+  const existingVault = await fetchOwnerVaultFromFirestore(verifiedAdmin.uid, verifiedAdmin.token);
+  if (existingVault.status === "found") {
+    if (
+      existingVault.email !== verifiedAdmin.email ||
+      !constantTimeHexEquals(cleanVaultHash, existingVault.passwordHash)
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Incorrect Owner Security Password. Access strictly denied.",
+      });
+    }
+    ownerVaultMemoryHashes.set(verifiedAdmin.uid, existingVault.passwordHash);
+    return res.json({ success: true, verifiedAt: new Date().toISOString() });
+  }
 
-app.post("/api/admin/vault/session", authAttemptsRateLimiter, async (req, res) => {
-  if (!(await verifyAdminRequest(req))) {
-    return res.status(401).json({
+  if (existingVault.status === "error") {
+    const cachedHash = ownerVaultMemoryHashes.get(verifiedAdmin.uid);
+    if (cachedHash && constantTimeHexEquals(cleanVaultHash, cachedHash)) {
+      return res.json({ success: true, verifiedAt: new Date().toISOString() });
+    }
+    return res.status(503).json({
       success: false,
-      error: "Unauthorized access. Verified owner credentials required.",
+      error: "Unable to verify Owner Security Vault against Firestore. Access denied.",
     });
   }
-  const { uid, email, passwordHash } = req.body || {};
-  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-  const allowedEmails = getAuthorizedAdminEmails();
-  if (!cleanEmail || !allowedEmails.includes(cleanEmail)) {
+
+  // First-time vault initialization ONLY when /admins/{uid} truly does not exist yet
+  const envRequiredHash = String(process.env.ADMIN_VAULT_PASSWORD_HASH || "").trim().toLowerCase();
+  if (/^[a-f0-9]{64}$/.test(envRequiredHash) && !constantTimeHexEquals(cleanVaultHash, envRequiredHash)) {
     return res.status(403).json({
       success: false,
-      error: "Unauthorized owner email address.",
+      error: "Incorrect Owner Security Password. Access strictly denied.",
     });
   }
-  const cleanUid =
-    typeof uid === "string" && uid.trim()
-      ? uid.trim()
-      : `owner_${cleanEmail.replace(/[^a-z0-9]/g, "_")}`;
-  const cleanVaultHash = typeof passwordHash === "string" ? passwordHash.trim().toLowerCase() : "";
-  if (/^[a-f0-9]{64}$/.test(cleanVaultHash)) {
-    ownerVaultMemoryHashes.set(cleanUid, cleanVaultHash);
+
+  const saved = await upsertOwnerVaultInFirestore(
+    verifiedAdmin.uid,
+    verifiedAdmin.email,
+    cleanVaultHash,
+    verifiedAdmin.token
+  );
+  if (!saved) {
+    return res.status(503).json({
+      success: false,
+      error: "Failed to initialize Owner Security Vault in Cloud Firestore.",
+    });
   }
-  return res.json({
-    success: true,
-    uid: cleanUid,
-    email: cleanEmail,
-    verifiedAt: new Date().toISOString(),
+
+  return res.json({ success: true, initialized: true, verifiedAt: new Date().toISOString() });
+});
+
+app.post("/api/admin/vault/session", authAttemptsRateLimiter, async (_req, res) => {
+  return res.status(403).json({
+    success: false,
+    error: "Direct vault session bypass is disabled. Verified Google Sign-In and Owner Security Password are required.",
   });
 });
 
 app.post("/api/admin/vault/update", authAttemptsRateLimiter, async (req, res) => {
-  if (!(await verifyAdminRequest(req))) {
+  const token = extractAdminTokenFromRequest(req);
+  const verifiedAdmin = await verifyAndDecodeAdminToken(token);
+  if (!verifiedAdmin) {
     return res.status(401).json({
       success: false,
       error: "Unauthorized access. Verified Google administrator session required.",
     });
   }
-  const { uid, newPasswordHash } = req.body || {};
-  const cleanUid = typeof uid === "string" ? uid.trim() : "";
+
+  const { currentPasswordHash, newPasswordHash } = req.body || {};
+  const cleanCurrentHash = typeof currentPasswordHash === "string" ? currentPasswordHash.trim().toLowerCase() : "";
   const cleanNewHash = typeof newPasswordHash === "string" ? newPasswordHash.trim().toLowerCase() : "";
 
-  if (!cleanUid || !/^[a-f0-9]{64}$/.test(cleanNewHash)) {
+  if (!/^[a-f0-9]{64}$/.test(cleanCurrentHash) || !/^[a-f0-9]{64}$/.test(cleanNewHash)) {
     return res.status(400).json({
       success: false,
-      error: "Valid new SHA-256 password hash is required.",
+      error: "Valid current and new SHA-256 password hashes are required.",
     });
   }
 
-  ownerVaultMemoryHashes.set(cleanUid, cleanNewHash);
+  const existingVault = await fetchOwnerVaultFromFirestore(verifiedAdmin.uid, verifiedAdmin.token);
+  const storedHash =
+    existingVault.status === "found"
+      ? existingVault.passwordHash
+      : ownerVaultMemoryHashes.get(verifiedAdmin.uid) || "";
+
+  if (!storedHash || !constantTimeHexEquals(cleanCurrentHash, storedHash)) {
+    return res.status(403).json({
+      success: false,
+      error: "Current Owner Security Password is incorrect. Password update denied.",
+    });
+  }
+
+  const updated = await upsertOwnerVaultInFirestore(
+    verifiedAdmin.uid,
+    verifiedAdmin.email,
+    cleanNewHash,
+    verifiedAdmin.token
+  );
+  if (!updated) {
+    return res.status(503).json({
+      success: false,
+      error: "Failed to persist updated Owner Security Password to Cloud Firestore.",
+    });
+  }
+
   return res.json({ success: true, updatedAt: new Date().toISOString() });
 });
 
@@ -1645,18 +1924,14 @@ app.post(["/api/inquiry", "/api/inquiries"], contactFormRateLimiter, async (req,
   inquiries.push(newInquiry);
   console.log("Captured client inquiry in local cache:", newInquiry);
 
-  // Core Sync to Firestore
+  // Core Sync to Firestore via stateless HTTPS REST
   try {
-    const docRef = doc(db, "inquiries", id);
-    await setDoc(docRef, newInquiry);
-    console.log("Successfully persisted inquiry to Firestore:", id);
-  } catch (error) {
-    console.error("Failed to persist to Firestore, using local fallback:", error);
-    try {
-      handleFirestoreError(error, OperationType.WRITE, "inquiries/" + id);
-    } catch (loggedErr) {
-      // Absorb mock errors or offline cases so server remains 100% bug free and operational
+    const created = await firestoreRestCreateDocument("inquiries", id, newInquiry);
+    if (created) {
+      console.log("Successfully persisted inquiry to Firestore:", id);
     }
+  } catch (error) {
+    console.warn("Failed to persist to Firestore, using local fallback:", error);
   }
 
   // Connect & dispatch lead requisition details directly to cvidyasolutions@gmail.com
@@ -1684,15 +1959,8 @@ app.get("/api/inquiries", authAttemptsRateLimiter, async (req, res) => {
   const adminToken = extractAdminTokenFromRequest(req);
 
   try {
-    let firestoreInquiries = await firestoreAdminRestListCollection("inquiries", adminToken);
-    if (!firestoreInquiries) {
-      const q = query(collection(db, "inquiries"), orderBy("timestamp", "desc"));
-      const snapshot = await getDocs(q);
-      firestoreInquiries = [];
-      snapshot.forEach((d) => {
-        firestoreInquiries!.push({ id: d.id, ...d.data() });
-      });
-    }
+    const firestoreInquiries =
+      (await firestoreAdminRestListCollection("inquiries", adminToken)) || [];
 
     // Merge in-memory local caches that may have been submitted during database connection delays
     const merged = [...firestoreInquiries];
@@ -1779,11 +2047,12 @@ app.post("/api/application", contactFormRateLimiter, async (req, res) => {
       firestoreData.resumeData = firestoreData.resumeData.slice(0, 700000);
       firestoreData.isLargeResume = true;
     }
-    const docRef = doc(db, "job_applications", id);
-    await setDoc(docRef, firestoreData);
-    console.log("Successfully persisted application to Firestore job_applications:", id);
+    const saved = await firestoreRestCreateDocument("job_applications", id, firestoreData);
+    if (saved) {
+      console.log("Successfully persisted application to Firestore job_applications:", id);
+    }
   } catch (error) {
-    console.error("Failed to persist application to Firestore job_applications, using local fallback:", error);
+    console.warn("Failed to persist application to Firestore job_applications, using local fallback:", error);
   }
 
   return res.json({
@@ -1828,7 +2097,7 @@ app.post("/api/job-applications", contactFormRateLimiter, async (req, res) => {
 
   applications.push(newApp);
   try {
-    await setDoc(doc(db, "job_applications", id), newApp);
+    await firestoreRestCreateDocument("job_applications", id, newApp);
   } catch (err) {
     console.warn("Firestore job_applications write note:", err);
   }
@@ -1847,15 +2116,8 @@ app.get("/api/applications", authAttemptsRateLimiter, async (req, res) => {
   const adminToken = extractAdminTokenFromRequest(req);
 
   try {
-    let firestoreApps = await firestoreAdminRestListCollection("job_applications", adminToken);
-    if (!firestoreApps) {
-      const q = query(collection(db, "job_applications"), orderBy("timestamp", "desc"));
-      const snapshot = await getDocs(q);
-      firestoreApps = [];
-      snapshot.forEach((d) => {
-        firestoreApps!.push({ id: d.id, ...d.data() });
-      });
-    }
+    const firestoreApps =
+      (await firestoreAdminRestListCollection("job_applications", adminToken)) || [];
 
     const legacyApps = await firestoreAdminRestListCollection("applications", adminToken);
     const merged = [...firestoreApps];
@@ -1954,9 +2216,9 @@ app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
 
   // Only attempt Firestore create when this deterministic registrationId has not already been recorded in this process
   if (!alreadyRecordedInMemory) {
-    // 1. Persist to dedicated `app_download_registrations` collection in Firestore
+    // 1. Persist to dedicated `app_download_registrations` collection in Firestore via REST
     try {
-      await setDoc(doc(db, "app_download_registrations", id), {
+      await firestoreRestCreateDocument("app_download_registrations", id, {
         name: dedicatedRegRecord.name,
         email: dedicatedRegRecord.email,
         phone: dedicatedRegRecord.phone,
@@ -1973,7 +2235,7 @@ app.post("/api/app-registrations", contactFormRateLimiter, async (req, res) => {
 
     // 2. Preserve linked record in `inquiries` collection using the same ID (create-compatible with firestore.rules)
     try {
-      await setDoc(doc(db, "inquiries", id), linkedInquiryRecord);
+      await firestoreRestCreateDocument("inquiries", id, linkedInquiryRecord);
     } catch (error) {
       console.warn("Firestore inquiries app registration link note:", error);
     }
@@ -2028,13 +2290,6 @@ app.get("/api/app-registrations", authAttemptsRateLimiter, async (req, res) => {
   const restRegs = await firestoreAdminRestListCollection("app_download_registrations", adminToken);
   if (Array.isArray(restRegs)) {
     restRegs.forEach((r) => addRecordSafely(r, "app_download_registrations"));
-  } else {
-    try {
-      const regSnap = await getDocs(collection(db, "app_download_registrations"));
-      regSnap.forEach((d) => addRecordSafely({ id: d.id, ...d.data() }, "app_download_registrations"));
-    } catch {
-      // Fallback
-    }
   }
 
   const restInquiries = await firestoreAdminRestListCollection("inquiries", adminToken);
@@ -2048,22 +2303,6 @@ app.get("/api/app-registrations", authAttemptsRateLimiter, async (req, res) => {
         addRecordSafely(data, "inquiries (linked)");
       }
     });
-  } else {
-    try {
-      const inqSnap = await getDocs(collection(db, "inquiries"));
-      inqSnap.forEach((d) => {
-        const data = d.data() as any;
-        if (
-          data?.source === "mobile_app_download_page" ||
-          String(data?.service || "").toLowerCase().includes("mobile app") ||
-          String(d.id).startsWith("appreg_")
-        ) {
-          addRecordSafely({ id: d.id, ...data }, "inquiries (linked)");
-        }
-      });
-    } catch {
-      // Fallback
-    }
   }
 
   inquiries.forEach((inq: any) => {
@@ -2550,7 +2789,15 @@ app.post("/api/crm/leads", contactFormRateLimiter, async (req, res) => {
   const cleanService = sanitizeInput(service || "General Software Inquiry", 200);
   const cleanRequirements = sanitizeInput(requirements || "", 1500);
   const cleanFollowUpTask = sanitizeInput(followUpTask || `Schedule demo walkthrough for ${cleanService}`, 500);
-  const cleanStatus = sanitizeInput(status || "New Lead", 80);
+  const rawStatus = sanitizeInput(status || "New Lead", 80);
+  const ALLOWED_PUBLIC_INQUIRY_STATUSES = new Set([
+    "New",
+    "New Lead",
+    "Pending Callback",
+    "registered",
+    "Forwarded to cvidyasolutions@gmail.com",
+  ]);
+  const cleanStatus = ALLOWED_PUBLIC_INQUIRY_STATUSES.has(rawStatus) ? rawStatus : "New Lead";
 
   if (!cleanName || cleanName.length < 2) {
     return res.status(400).json({ error: "Please enter a valid contact name." });
@@ -2597,7 +2844,7 @@ app.post("/api/crm/leads", contactFormRateLimiter, async (req, res) => {
   inquiries.push(crmLeadRecord);
 
   try {
-    await setDoc(doc(db, "inquiries", leadId), crmLeadRecord);
+    await firestoreRestCreateDocument("inquiries", leadId, crmLeadRecord);
   } catch (err) {
     console.warn("Firestore CRM lead save fallback note:", err);
   }
@@ -2644,14 +2891,7 @@ app.patch("/api/crm/leads/:id", authAttemptsRateLimiter, async (req, res) => {
     ...(cleanTask !== undefined ? { followUpTask: cleanTask } : {}),
   };
 
-  const patchedViaRest = await firestoreAdminRestPatchDocument("inquiries", leadId, updates, adminToken);
-  if (!patchedViaRest) {
-    try {
-      await setDoc(doc(db, "inquiries", leadId), updates, { merge: true });
-    } catch {
-      // Fallback
-    }
-  }
+  await firestoreAdminRestPatchDocument("inquiries", leadId, updates, adminToken);
 
   return res.json({
     success: true,
@@ -2676,17 +2916,6 @@ app.get("/api/crm/report", authAttemptsRateLimiter, async (req, res) => {
         allLeads.push(item);
       }
     });
-  } else {
-    try {
-      const q = query(collection(db, "inquiries"), orderBy("timestamp", "desc"));
-      const snap = await getDocs(q);
-      snap.forEach((d) => {
-        const item = { id: d.id, ...d.data() };
-        if (!allLeads.some((x) => x.id === item.id)) {
-          allLeads.push(item);
-        }
-      });
-    } catch (_) {}
   }
 
   const byProduct: Record<string, number> = {};
@@ -2741,19 +2970,6 @@ app.get("/api/calling/history", authAttemptsRateLimiter, async (req, res) => {
         mergedCalls.push({ ...data, id: idKey, callId: idKey });
       }
     });
-  } else {
-    try {
-      const callSnap = await getDocs(collection(db, "call_logs"));
-      callSnap.forEach((d) => {
-        const data = d.data();
-        const idKey = data.id || data.callId || d.id;
-        if (!mergedCalls.some((c) => (c.id || c.callId) === idKey)) {
-          mergedCalls.push({ ...data, id: idKey, callId: idKey });
-        }
-      });
-    } catch {
-      // Firestore read fallback when server SDK is unauthenticated
-    }
   }
 
   const restDemos = await firestoreAdminRestListCollection("demo_bookings", adminToken);
@@ -2764,19 +2980,6 @@ app.get("/api/calling/history", authAttemptsRateLimiter, async (req, res) => {
         mergedDemos.push({ ...data, id: idKey, bookingId: idKey });
       }
     });
-  } else {
-    try {
-      const demoSnap = await getDocs(collection(db, "demo_bookings"));
-      demoSnap.forEach((d) => {
-        const data = d.data();
-        const idKey = data.id || data.bookingId || d.id;
-        if (!mergedDemos.some((b) => (b.id || b.bookingId) === idKey)) {
-          mergedDemos.push({ ...data, id: idKey, bookingId: idKey });
-        }
-      });
-    } catch {
-      // Firestore read fallback
-    }
   }
 
   const restHandoffs = await firestoreAdminRestListCollection("handoff_tickets", adminToken);
@@ -2787,19 +2990,6 @@ app.get("/api/calling/history", authAttemptsRateLimiter, async (req, res) => {
         mergedHandoffs.push({ ...data, id: idKey, ticketId: idKey });
       }
     });
-  } else {
-    try {
-      const handoffSnap = await getDocs(collection(db, "handoff_tickets"));
-      handoffSnap.forEach((d) => {
-        const data = d.data();
-        const idKey = data.id || data.ticketId || d.id;
-        if (!mergedHandoffs.some((h) => (h.id || h.ticketId) === idKey)) {
-          mergedHandoffs.push({ ...data, id: idKey, ticketId: idKey });
-        }
-      });
-    } catch {
-      // Firestore read fallback
-    }
   }
 
   return res.json({
@@ -2893,14 +3083,7 @@ app.post("/api/calling/outbound", contactFormRateLimiter, async (req, res) => {
   aiCallHistoryStore.unshift(callRecord);
 
   // Persist to `call_logs` collection in Firestore via authenticated REST bridge
-  const patchedCall = await firestoreAdminRestPatchDocument("call_logs", callId, callRecord, adminToken);
-  if (!patchedCall) {
-    try {
-      await setDoc(doc(db, "call_logs", callId), callRecord, { merge: true });
-    } catch {
-      // Safe fallback when server SDK is unauthenticated
-    }
-  }
+  await firestoreAdminRestPatchDocument("call_logs", callId, callRecord, adminToken);
 
   // Sync status & follow-up task back to `inquiries` collection if leadId exists
   if (leadId) {
@@ -2909,14 +3092,7 @@ app.post("/api/calling/outbound", contactFormRateLimiter, async (req, res) => {
       status: "Contacted",
       followUpTask: `AI Outbound Call (${cleanLang.toUpperCase()}/${cleanGender}) completed — Follow-up scheduled`,
     };
-    const patchedLead = await firestoreAdminRestPatchDocument("inquiries", cleanTargetLeadId, inquiryUpdates, adminToken);
-    if (!patchedLead) {
-      try {
-        await setDoc(doc(db, "inquiries", cleanTargetLeadId), inquiryUpdates, { merge: true });
-      } catch {
-        // Safe fallback
-      }
-    }
+    await firestoreAdminRestPatchDocument("inquiries", cleanTargetLeadId, inquiryUpdates, adminToken);
   }
 
   return res.json({ success: true, call: callRecord });
@@ -2993,14 +3169,7 @@ app.post("/api/calling/demo-booking", contactFormRateLimiter, async (req, res) =
   demoBookingStore.unshift(bookingRecord);
 
   // Persist to `demo_bookings` collection in Firestore via authenticated REST bridge
-  const patchedBooking = await firestoreAdminRestPatchDocument("demo_bookings", bookingId, bookingRecord, adminToken);
-  if (!patchedBooking) {
-    try {
-      await setDoc(doc(db, "demo_bookings", bookingId), bookingRecord);
-    } catch {
-      // Safe fallback
-    }
-  }
+  await firestoreAdminRestPatchDocument("demo_bookings", bookingId, bookingRecord, adminToken);
 
   // Persist to `inquiries` collection in Firestore with Demo Scheduled status
   const targetDocId = leadId ? sanitizeInput(String(leadId), 80) : bookingId;
@@ -3018,14 +3187,7 @@ app.post("/api/calling/demo-booking", contactFormRateLimiter, async (req, res) =
     timestamp: createdAt,
     source: "C Vidya AI Demo Booking Scheduler",
   };
-  const patchedInquiry = await firestoreAdminRestPatchDocument("inquiries", targetDocId, inquiryDemoDoc, adminToken);
-  if (!patchedInquiry) {
-    try {
-      await setDoc(doc(db, "inquiries", targetDocId), inquiryDemoDoc, { merge: true });
-    } catch {
-      // Safe fallback
-    }
-  }
+  await firestoreAdminRestPatchDocument("inquiries", targetDocId, inquiryDemoDoc, adminToken);
 
   sendLeadNotificationEmail({
     name: `${cleanName} (${cleanCompany})`,
@@ -3111,14 +3273,7 @@ app.post("/api/calling/handoff", contactFormRateLimiter, async (req, res) => {
   humanHandoffStore.unshift(ticket);
 
   // Persist to `handoff_tickets` collection in Firestore via authenticated REST bridge
-  const patchedTicket = await firestoreAdminRestPatchDocument("handoff_tickets", ticketId, ticket, adminToken);
-  if (!patchedTicket) {
-    try {
-      await setDoc(doc(db, "handoff_tickets", ticketId), ticket);
-    } catch {
-      // Safe fallback
-    }
-  }
+  await firestoreAdminRestPatchDocument("handoff_tickets", ticketId, ticket, adminToken);
 
   if (leadId) {
     const cleanLeadId = sanitizeInput(String(leadId), 80);
@@ -3126,14 +3281,7 @@ app.post("/api/calling/handoff", contactFormRateLimiter, async (req, res) => {
       status: "Qualified",
       followUpTask: `HUMAN HANDOFF [${cleanUrgency}]: ${cleanReason}`,
     };
-    const patchedLead = await firestoreAdminRestPatchDocument("inquiries", cleanLeadId, handoffLeadUpdates, adminToken);
-    if (!patchedLead) {
-      try {
-        await setDoc(doc(db, "inquiries", cleanLeadId), handoffLeadUpdates, { merge: true });
-      } catch {
-        // Safe fallback
-      }
-    }
+    await firestoreAdminRestPatchDocument("inquiries", cleanLeadId, handoffLeadUpdates, adminToken);
   }
 
   sendLeadNotificationEmail({

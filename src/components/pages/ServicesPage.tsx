@@ -119,7 +119,7 @@ export default function ServicesPage({ onSelectProduct, onOpenSoftware, onOpenCo
           service: `Consultation: ${interest}`,
           message: message.trim(),
           timestamp: new Date().toISOString(),
-          status: "pending_review"
+          status: "Pending Callback"
         });
       } catch (fbErr) {
         console.warn("Direct Firestore error, falling back to API:", fbErr);

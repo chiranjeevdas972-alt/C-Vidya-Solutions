@@ -12,11 +12,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn()
         && request.auth.token.email_verified == true
-        && (
-          request.auth.token.email == "chiranjeevdas972@gmail.com" ||
-          request.auth.token.email == "cvidyasolutions@gmail.com" ||
-          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        );
+        && request.auth.token.email == "chiranjeevdas972@gmail.com";
     }
 
     function isValidInquiry(data) {
@@ -50,11 +46,12 @@ service cloud.firestore {
 
     function isValidAdminVaultRecord(data, adminId) {
       return data != null
+        && data.keys().hasAll(['uid', 'email', 'passwordHash', 'updatedAt'])
         && data.keys().hasOnly(['uid', 'email', 'passwordHash', 'updatedAt'])
-        && 'uid' in data && data.uid is string && data.uid == adminId
-        && 'email' in data && data.email is string && (data.email == "chiranjeevdas972@gmail.com" || data.email == "cvidyasolutions@gmail.com")
-        && 'passwordHash' in data && data.passwordHash is string && data.passwordHash.size() == 64 && data.passwordHash.matches('^[a-f0-9]{64}$')
-        && 'updatedAt' in data && data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 64;
+        && data.uid is string && data.uid == adminId && data.uid == request.auth.uid
+        && data.email is string && data.email == "chiranjeevdas972@gmail.com"
+        && data.passwordHash is string && data.passwordHash.size() == 64 && data.passwordHash.matches('^[a-f0-9]{64}$')
+        && data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 64;
     }
 
     function isValidCallLog(data) {
@@ -132,8 +129,8 @@ service cloud.firestore {
     }
 
     match /admins/{adminId} {
-      allow read: if isAdmin() && request.auth.uid == adminId;
-      allow create, update: if isAdmin() && request.auth.uid == adminId && isValidAdminVaultRecord(request.resource.data, adminId);
+      allow read: if isAdmin() && isValidId(adminId) && request.auth.uid == adminId;
+      allow create, update: if isAdmin() && isValidId(adminId) && request.auth.uid == adminId && isValidAdminVaultRecord(request.resource.data, adminId);
       allow delete: if false;
     }
 

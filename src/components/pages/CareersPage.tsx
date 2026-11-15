@@ -81,11 +81,11 @@ export default function CareersPage({ onNavigate }: CareersPageProps) {
           jobTitle: selectedJob?.title || "General Application",
           name: applicantName.trim(),
           email: applicantEmail.trim(),
-          phone: applicantPhone.trim(),
+          phone: applicantPhone.trim().length >= 5 ? applicantPhone.trim() : "Not Provided",
           resumeUrl: applicantResume.trim(),
           note: applicantNote.trim(),
           timestamp: new Date().toISOString(),
-          status: "received"
+          status: "New"
         });
       } catch (fbErr) {
         console.warn("Direct Firestore app submission fallback:", fbErr);

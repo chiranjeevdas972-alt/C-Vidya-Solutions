@@ -84,8 +84,8 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
         localStorage.setItem("cvidya_local_leads", JSON.stringify(localLeads.slice(0, 50)));
       } catch (_) {}
 
-      // 2. Concurrently dispatch Firestore & Server API without UI blocking
-      Promise.allSettled([
+      // 2. Concurrently dispatch Firestore & Server API cleanly
+      await Promise.allSettled([
         addDoc(collection(db, "inquiries"), {
           name: submittedName,
           email: submittedEmail,
@@ -93,7 +93,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
           service: submittedService,
           message: submittedReqs || "Online Callback / Demo Requisition",
           timestamp: new Date().toISOString(),
-          status: "pending_review",
+          status: "Pending Callback",
           source: isDemoMode ? "demo_mode_form" : "contact_page_form",
           referenceId: refId
         }).catch((fbErr) => {
@@ -163,7 +163,7 @@ export default function ContactPage({ onOpenLeadsModal, mode = "full", onNavigat
           <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-900">Requisition Transmitted Successfully</h3>
           <p className="text-xs sm:text-sm text-slate-600">
-            Your inquiry is assigned to our director desk. We will call you at <strong>{phone}</strong> shortly.
+            Your inquiry is assigned to our director desk. We will call you at <strong>{congratulationsData?.phone || phone}</strong> shortly.
           </p>
           <button
             onClick={() => setSubmitted(false)}

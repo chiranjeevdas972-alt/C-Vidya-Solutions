@@ -1,9 +1,17 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
-import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
+import {
+  getFirestore,
+  initializeFirestore,
+  doc,
+  getDocFromServer,
+  type Firestore,
+} from "firebase/firestore";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   type User,
@@ -15,14 +23,27 @@ import firebaseConfig from "../firebase-applet-config.json" with { type: "json" 
 // Initialize Firebase (safely singleton pattern)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+function createFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(
+      app,
+      { experimentalAutoDetectLongPolling: true },
+      firebaseConfig.firestoreDatabaseId
+    );
+  } catch {
+    return getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  }
+}
+
+export const db: Firestore = createFirestoreInstance();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
+export const PRIMARY_ADMIN_EMAIL = "chiranjeevdas972@gmail.com" as const;
+
 export const AUTHORIZED_ADMIN_EMAILS = [
-  "cvidyasolutions@gmail.com",
-  "chiranjeevdas972@gmail.com",
+  PRIMARY_ADMIN_EMAIL,
 ] as const;
 
 const ADMIN_SESSION_TOKEN_KEY = "cvidya_admin_session_token_v1";
@@ -39,10 +60,32 @@ export function isAuthorizedAdminUser(user: User | null | undefined): boolean {
   return isAuthorizedAdminEmail(user.email);
 }
 
+function isValidStoredFirebaseJwt(token: string): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3 || !parts[2] || parts[2] === "fakesignature") return false;
+    const header = JSON.parse(atob(parts[0].replace(/-/g, "+").replace(/_/g, "/")));
+    if (header?.alg !== "RS256" || header?.kid === "cvidya-owner-vault-v1") return false;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!payload?.exp || payload.exp <= nowSec) return false;
+    if (payload?.email_verified !== true) return false;
+    return isAuthorizedAdminEmail(payload?.email);
+  } catch {
+    return false;
+  }
+}
+
 export function getStoredAdminToken(): string {
   if (typeof window === "undefined") return "";
   try {
-    return window.sessionStorage.getItem(ADMIN_SESSION_TOKEN_KEY) || "";
+    const token = window.sessionStorage.getItem(ADMIN_SESSION_TOKEN_KEY) || "";
+    if (!token) return "";
+    if (!isValidStoredFirebaseJwt(token)) {
+      window.sessionStorage.removeItem(ADMIN_SESSION_TOKEN_KEY);
+      return "";
+    }
+    return token;
   } catch {
     return "";
   }
@@ -51,7 +94,7 @@ export function getStoredAdminToken(): string {
 export function setStoredAdminToken(token: string): void {
   if (typeof window === "undefined") return;
   try {
-    if (token) {
+    if (token && isValidStoredFirebaseJwt(token)) {
       window.sessionStorage.setItem(ADMIN_SESSION_TOKEN_KEY, token);
     } else {
       window.sessionStorage.removeItem(ADMIN_SESSION_TOKEN_KEY);
@@ -62,15 +105,24 @@ export function setStoredAdminToken(token: string): void {
 }
 
 export function clearStoredAdminToken(): void {
-  setStoredAdminToken("");
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(ADMIN_SESSION_TOKEN_KEY);
+  } catch {
+    // ignore storage errors
+  }
 }
 
-export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
+export async function getAdminAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
   try {
     const currentUser = auth.currentUser;
-    if (currentUser && isAuthorizedAdminUser(currentUser)) {
-      const idToken = await currentUser.getIdToken();
+    if (currentUser) {
+      if (!isAuthorizedAdminUser(currentUser)) {
+        clearStoredAdminToken();
+        return headers;
+      }
+      const idToken = await currentUser.getIdToken(forceRefresh);
       if (idToken) {
         setStoredAdminToken(idToken);
         headers["Authorization"] = `Bearer ${idToken}`;
@@ -78,7 +130,7 @@ export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
       }
     }
   } catch {
-    // Fall back to stored session token below
+    // Fall back to verified stored Firebase RS256 token below if auth is still hydrating
   }
   const storedToken = getStoredAdminToken();
   if (storedToken) {
@@ -87,47 +139,13 @@ export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
-function toBase64UrlClient(input: string): string {
-  if (typeof btoa === "function") {
-    return btoa(unescape(encodeURIComponent(input)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "");
-  }
-  return "";
-}
-
-export function createOwnerVaultClientToken(email: string, vaultDigest: string): string {
-  const cleanEmail = String(email || "").trim().toLowerCase();
-  if (!isAuthorizedAdminEmail(cleanEmail)) return "";
-  const nowSec = Math.floor(Date.now() / 1000);
-  const headerJson = JSON.stringify({
-    alg: "HS256",
-    typ: "JWT",
-    kid: "cvidya-owner-vault-v1",
-  });
-  const payloadJson = JSON.stringify({
-    iss: `https://securetoken.google.com/${firebaseConfig.projectId || "c-vidya-solutions"}`,
-    aud: firebaseConfig.projectId || "c-vidya-solutions",
-    sub: `owner_vault_${cleanEmail.replace(/[^a-z0-9]/g, "_")}`,
-    email: cleanEmail,
-    email_verified: true,
-    iat: nowSec,
-    exp: nowSec + 12 * 3600,
-    vault_bound: true,
-  });
-  const sig = String(vaultDigest || "").trim().toLowerCase();
-  if (!/^[a-f0-9]{64}$/.test(sig)) return "";
-  return `${toBase64UrlClient(headerJson)}.${toBase64UrlClient(payloadJson)}.${sig}`;
-}
-
 export async function verifyAdminPasscodeWithServer(
   _passcode: string
 ): Promise<{ authorized: boolean; message?: string }> {
   return {
     authorized: false,
     message:
-      "Passcode authentication is disabled. Please sign in using an authorized Google administrator account.",
+      "Passcode authentication is disabled. Please sign in using the authorized owner Google account (chiranjeevdas972@gmail.com).",
   };
 }
 
@@ -160,8 +178,66 @@ export async function computeOwnerVaultDigest(email: string, password: string): 
   return computeSha256Hex(`cvidya_owner_vault_v1::${cleanEmail}::${cleanPassword}`);
 }
 
+export async function validateAuthorizedGoogleUser(user: User | null | undefined): Promise<{
+  authorized: boolean;
+  user?: User;
+  unauthorizedEmail?: string;
+  message?: string;
+}> {
+  if (!user) {
+    return { authorized: false, message: "Google Sign-In did not return a user session." };
+  }
+  if (!user.emailVerified) {
+    const unverifiedEmail = user.email || "unknown";
+    await signOut(auth).catch(() => {});
+    clearStoredAdminToken();
+    return {
+      authorized: false,
+      unauthorizedEmail: unverifiedEmail,
+      message: `Google account (${unverifiedEmail}) does not have a verified email address.`,
+    };
+  }
+  if (!isAuthorizedAdminUser(user)) {
+    const rejectedEmail = user.email || "unknown";
+    await signOut(auth).catch(() => {});
+    clearStoredAdminToken();
+    return {
+      authorized: false,
+      unauthorizedEmail: rejectedEmail,
+      message: `Access denied for ${rejectedEmail}. Only ${PRIMARY_ADMIN_EMAIL} is permitted.`,
+    };
+  }
+  const idToken = await user.getIdToken(true);
+  setStoredAdminToken(idToken);
+  return { authorized: true, user };
+}
+
+export async function completeAdminRedirectSignIn(): Promise<{
+  hasResult: boolean;
+  authorized: boolean;
+  user?: User;
+  unauthorizedEmail?: string;
+  message?: string;
+}> {
+  try {
+    const result = await getRedirectResult(auth);
+    if (!result || !result.user) {
+      return { hasResult: false, authorized: false };
+    }
+    const validation = await validateAuthorizedGoogleUser(result.user);
+    return { hasResult: true, ...validation };
+  } catch (err: any) {
+    return {
+      hasResult: true,
+      authorized: false,
+      message: err instanceof Error ? err.message : "Redirect Google Sign-In failed.",
+    };
+  }
+}
+
 export async function signInAdminWithGoogle(expectedEmail?: string): Promise<{
   authorized: boolean;
+  redirectStarted?: boolean;
   user?: User;
   unauthorizedEmail?: string;
   errorCode?: string;
@@ -178,46 +254,47 @@ export async function signInAdminWithGoogle(expectedEmail?: string): Promise<{
       return {
         authorized: false,
         unauthorizedEmail: normalizedExpected,
-        message: "Access denied. This email ID is not authorized to access the C Vidya Admin Portal.",
+        message: `Access denied. Only ${PRIMARY_ADMIN_EMAIL} is authorized to access the C Vidya Admin Portal.`,
       };
     }
 
-    if (normalizedExpected) {
-      googleProvider.setCustomParameters({
-        prompt: "select_account",
-        login_hint: normalizedExpected,
-      });
-    } else {
-      googleProvider.setCustomParameters({ prompt: "select_account" });
-    }
+    googleProvider.setCustomParameters({
+      prompt: "select_account",
+      login_hint: normalizedExpected || PRIMARY_ADMIN_EMAIL,
+    });
 
     const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    if (!user.emailVerified) {
-      const unverifiedEmail = user.email || "unknown";
-      await signOut(auth);
-      clearStoredAdminToken();
-      return {
-        authorized: false,
-        unauthorizedEmail: unverifiedEmail,
-        message: `Google account (${unverifiedEmail}) does not have a verified email address.`,
-      };
-    }
-    if (!isAuthorizedAdminUser(user)) {
-      const rejectedEmail = user.email || "unknown";
-      await signOut(auth);
-      clearStoredAdminToken();
-      return {
-        authorized: false,
-        unauthorizedEmail: rejectedEmail,
-        message: `Access denied for ${rejectedEmail}. Only the authorized owner Google account is permitted.`,
-      };
-    }
-    const idToken = await user.getIdToken();
-    setStoredAdminToken(idToken);
-    return { authorized: true, user };
+    return await validateAuthorizedGoogleUser(result.user);
   } catch (err: any) {
     const code = String(err?.code || "");
+    const inIframe = typeof window !== "undefined" && window.self !== window.top;
+
+    // On standalone mobile/tablet/desktop browsers (outside iframes), automatically fall back to signInWithRedirect if popup is blocked
+    if (
+      !inIframe &&
+      (code === "auth/popup-blocked" ||
+        code === "auth/operation-not-supported-in-this-environment")
+    ) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return {
+          authorized: false,
+          redirectStarted: true,
+          errorCode: code,
+          message: "Opening full-page Google Sign-In...",
+        };
+      } catch (redirectErr: any) {
+        return {
+          authorized: false,
+          errorCode: String(redirectErr?.code || code),
+          message:
+            redirectErr instanceof Error
+              ? redirectErr.message
+              : "Mobile Google Sign-In redirect failed.",
+        };
+      }
+    }
+
     if (code === "auth/popup-closed-by-user") {
       return {
         authorized: false,
@@ -225,6 +302,15 @@ export async function signInAdminWithGoogle(expectedEmail?: string): Promise<{
         message: "Google Sign-In popup was closed before completing authentication.",
       };
     }
+
+    if (code === "auth/unauthorized-domain" && typeof window !== "undefined") {
+      return {
+        authorized: false,
+        errorCode: code,
+        message: `Domain '${window.location.hostname}' must be listed under Firebase Console -> Authentication -> Settings -> Authorized domains to allow Google Sign-In.`,
+      };
+    }
+
     return {
       authorized: false,
       errorCode: code,
@@ -308,8 +394,8 @@ if (typeof window !== "undefined") {
     console.warn("Analytics initialization failed:", err);
   }
 
-  // Validate Firestore connectivity on boot
-  getDocFromServer(doc(db, "_connection_check", "ping")).catch((err) => {
+  // Validate Firestore connectivity on boot against publicly readable registry collection
+  getDocFromServer(doc(db, "cvidya_deployment_registry", "cvidya-library-management")).catch((err) => {
     if (err instanceof Error && err.message.includes("the client is offline")) {
       console.error("Please check your Firebase configuration. Firestore client reports offline.");
     }

@@ -191,7 +191,7 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
       }
     } catch (err) {
       console.error("Error fetching data:", err);
-      setIsAuthorized(true);
+      setIsAuthorized(false);
     }
   };
 
@@ -234,8 +234,8 @@ export default function InquiryForm({ onInquirySubmitted, isModal = false }: Inq
       phone: formData.phone.trim(),
       service: formData.service || "General Inquiry",
       message: formData.message?.trim() || "No additional instructions provided.",
-      status: "Active / Requisition Received",
-      timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" })
+      status: "New",
+      timestamp: new Date().toISOString()
     };
 
     let writeSucceeded = false;

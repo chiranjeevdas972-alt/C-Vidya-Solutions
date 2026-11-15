@@ -12,7 +12,6 @@ const FIRESTORE_DATABASE_ID = "ai-studio-cvidyasolutions-89b15118-e096-42ad-9641
 const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/${FIRESTORE_DATABASE_ID}/documents`;
 
 const AUTHORIZED_OWNER_EMAILS = [
-  "cvidyasolutions@gmail.com",
   "chiranjeevdas972@gmail.com",
 ];
 
@@ -111,37 +110,123 @@ function extractBearerToken(request) {
   return "";
 }
 
-function verifyEdgeAdminToken(request) {
+let cachedEdgeGoogleJwks = {
+  keys: [],
+  expiresAtMs: 0,
+};
+
+function base64UrlToUint8Array(segment) {
+  const base64 = segment.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "===".slice((base64.length + 3) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function fetchEdgeGoogleJwks(forceRefresh = false) {
+  if (!forceRefresh && cachedEdgeGoogleJwks.keys.length > 0 && cachedEdgeGoogleJwks.expiresAtMs > Date.now()) {
+    return cachedEdgeGoogleJwks.keys;
+  }
+  try {
+    const resp = await fetch(
+      "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+      { method: "GET", headers: { Accept: "application/json" } }
+    );
+    if (!resp.ok) return cachedEdgeGoogleJwks.keys;
+    const cacheControl = resp.headers.get("cache-control") || "";
+    const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+    const maxAgeSec = maxAgeMatch ? Math.max(60, parseInt(maxAgeMatch[1], 10)) : 3600;
+    const data = await resp.json();
+    const keys = Array.isArray(data?.keys) ? data.keys : [];
+    if (keys.length > 0) {
+      cachedEdgeGoogleJwks = {
+        keys,
+        expiresAtMs: Date.now() + maxAgeSec * 1000,
+      };
+    }
+    return cachedEdgeGoogleJwks.keys;
+  } catch {
+    return cachedEdgeGoogleJwks.keys;
+  }
+}
+
+async function verifyEdgeAdminToken(request, env = {}) {
   const token = extractBearerToken(request);
   if (!token) return { ok: false, token: "" };
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false, token: "" };
-  const header = decodeBase64UrlJson(parts[0]);
-  const payload = decodeBase64UrlJson(parts[1]);
-  const sig = parts[2];
-  if (!header || !payload || !sig || sig === "fakesignature") {
+  const [headerSeg, payloadSeg, sigSeg] = parts;
+  const header = decodeBase64UrlJson(headerSeg);
+  const payload = decodeBase64UrlJson(payloadSeg);
+  if (!header || !payload || !sigSeg || sigSeg === "fakesignature") {
+    return { ok: false, token: "" };
+  }
+  if (
+    header.alg !== "RS256" ||
+    header.kid === "cvidya-owner-vault-v1" ||
+    typeof header.kid !== "string" ||
+    !header.kid.trim()
+  ) {
     return { ok: false, token: "" };
   }
   const nowSec = Math.floor(Date.now() / 1000);
-  if (!payload.exp || payload.exp < nowSec) {
+  if (!payload.exp || typeof payload.exp !== "number" || payload.exp <= nowSec) {
+    return { ok: false, token: "" };
+  }
+  if (typeof payload.iat === "number" && payload.iat > nowSec + 300) {
+    return { ok: false, token: "" };
+  }
+  if (typeof payload.auth_time === "number" && payload.auth_time > nowSec + 300) {
     return { ok: false, token: "" };
   }
   if (payload.email_verified !== true) {
     return { ok: false, token: "" };
   }
+  if (typeof payload.sub !== "string" || !payload.sub.trim() || payload.sub.length > 128) {
+    return { ok: false, token: "" };
+  }
   const email = String(payload.email || "").trim().toLowerCase();
-  if (!AUTHORIZED_OWNER_EMAILS.includes(email)) {
+  if (!email || !AUTHORIZED_OWNER_EMAILS.includes(email)) {
     return { ok: false, token: "" };
   }
-  if (payload.aud && payload.aud !== FIREBASE_PROJECT_ID) {
+  const projectId = String((env && env.FIREBASE_PROJECT_ID) || FIREBASE_PROJECT_ID).trim();
+  if (payload.aud !== projectId || payload.iss !== `https://securetoken.google.com/${projectId}`) {
     return { ok: false, token: "" };
   }
+
+  try {
+    let keys = await fetchEdgeGoogleJwks(false);
+    let matchedKey = keys.find((k) => k.kid === header.kid);
+    if (!matchedKey) {
+      keys = await fetchEdgeGoogleJwks(true);
+      matchedKey = keys.find((k) => k.kid === header.kid);
+    }
+    if (!matchedKey) return { ok: false, token: "" };
+
+    const cryptoKey = await crypto.subtle.importKey(
+      "jwk",
+      matchedKey,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const sigBytes = base64UrlToUint8Array(sigSeg);
+    const signedBytes = new TextEncoder().encode(`${headerSeg}.${payloadSeg}`);
+    const valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, sigBytes, signedBytes);
+    if (!valid) return { ok: false, token: "" };
+  } catch {
+    return { ok: false, token: "" };
+  }
+
   return {
     ok: true,
     token,
     email,
-    uid: String(payload.sub || payload.user_id || `owner_${email.replace(/[^a-z0-9]/g, "_")}`),
-    isFirebaseJwt: header.alg === "RS256",
+    uid: payload.sub.trim(),
+    isFirebaseJwt: true,
   };
 }
 
@@ -187,34 +272,72 @@ function toFirestoreValue(val) {
   return { stringValue: String(val) };
 }
 
-async function firestoreEdgeList(collectionName, bearerToken) {
+async function firestoreEdgeList(collectionName, bearerToken, maxPages = 3) {
+  try {
+    const headers = { Accept: "application/json" };
+    if (bearerToken) {
+      headers.Authorization = `Bearer ${bearerToken}`;
+    }
+    const allDocs = [];
+    let pageToken = "";
+    let pageCount = 0;
+
+    while (pageCount < maxPages) {
+      pageCount++;
+      const tokenQuery = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "";
+      const resp = await fetch(
+        `${FIRESTORE_BASE_URL}/${encodeURIComponent(collectionName)}?pageSize=300${tokenQuery}`,
+        { method: "GET", headers }
+      );
+      if (!resp.ok) return pageCount === 1 ? null : allDocs;
+      const data = await resp.json();
+      const docs = Array.isArray(data?.documents) ? data.documents : [];
+      for (const d of docs) {
+        const id = String(d?.name || "").split("/").pop() || "";
+        const fields = d?.fields || {};
+        const parsed = { id };
+        for (const [k, v] of Object.entries(fields)) {
+          parsed[k] = fromFirestoreValue(v);
+        }
+        allDocs.push(parsed);
+      }
+      if (typeof data?.nextPageToken === "string" && data.nextPageToken.trim()) {
+        pageToken = data.nextPageToken.trim();
+      } else {
+        break;
+      }
+    }
+    return allDocs;
+  } catch {
+    return null;
+  }
+}
+
+async function firestoreEdgeGetDoc(collectionName, docId, bearerToken) {
   try {
     const headers = { Accept: "application/json" };
     if (bearerToken) {
       headers.Authorization = `Bearer ${bearerToken}`;
     }
     const resp = await fetch(
-      `${FIRESTORE_BASE_URL}/${encodeURIComponent(collectionName)}?pageSize=250`,
+      `${FIRESTORE_BASE_URL}/${encodeURIComponent(collectionName)}/${encodeURIComponent(docId)}`,
       { method: "GET", headers }
     );
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    const docs = Array.isArray(data?.documents) ? data.documents : [];
-    return docs.map((d) => {
-      const id = String(d?.name || "").split("/").pop() || "";
-      const fields = d?.fields || {};
-      const parsed = { id };
-      for (const [k, v] of Object.entries(fields)) {
-        parsed[k] = fromFirestoreValue(v);
-      }
-      return parsed;
-    });
+    if (resp.status === 404) return { status: "not_found" };
+    if (!resp.ok) return { status: "error" };
+    const docData = await resp.json();
+    const fields = docData?.fields || {};
+    const parsed = { id: docId };
+    for (const [k, v] of Object.entries(fields)) {
+      parsed[k] = fromFirestoreValue(v);
+    }
+    return { status: "found", data: parsed };
   } catch {
-    return null;
+    return { status: "error" };
   }
 }
 
-async function firestoreEdgeCreate(collectionName, docData, bearerToken) {
+async function firestoreEdgeCreate(collectionName, docData, bearerToken, env = {}) {
   try {
     const fields = {};
     for (const [k, v] of Object.entries(docData)) {
@@ -226,8 +349,10 @@ async function firestoreEdgeCreate(collectionName, docData, bearerToken) {
     if (bearerToken) {
       headers.Authorization = `Bearer ${bearerToken}`;
     }
+    const apiKey = String((env && env.FIREBASE_WEB_API_KEY) || "").trim();
+    const keyQuery = apiKey ? `?key=${encodeURIComponent(apiKey)}` : "";
     const resp = await fetch(
-      `${FIRESTORE_BASE_URL}/${encodeURIComponent(collectionName)}`,
+      `${FIRESTORE_BASE_URL}/${encodeURIComponent(collectionName)}${keyQuery}`,
       {
         method: "POST",
         headers,
@@ -466,51 +591,173 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
 
   // 3. Admin Authentication & Owner Vault endpoints
   if (path === "/api/admin/verify" && method === "POST") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ success: false, error: "Unauthorized access." }, 401);
     }
     return jsonResponse({
       success: true,
       email: authCheck.email,
+      uid: authCheck.uid,
       verifiedAt: new Date().toISOString(),
     });
   }
 
-  if (
-    (path === "/api/admin/vault/verify" ||
-      path === "/api/admin/vault/session" ||
-      path === "/api/admin/vault/update") &&
-    method === "POST"
-  ) {
-    const authCheck = verifyEdgeAdminToken(request);
+  if (path === "/api/admin/vault/session" && method === "POST") {
+    return jsonResponse(
+      {
+        success: false,
+        error: "Direct vault session bypass is disabled. Verified Google Sign-In and Owner Security Password are required.",
+      },
+      403
+    );
+  }
+
+  if (path === "/api/admin/vault/verify" && method === "POST") {
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse(
-        { success: false, error: "Unauthorized access. Verified owner session required." },
+        { success: false, error: "Unauthorized access. Verified owner Google session required." },
         401
       );
     }
-    const uid = String(body.uid || authCheck.uid).trim();
-    const hash = String(body.newPasswordHash || body.passwordHash || "").trim().toLowerCase();
-    if (uid && /^[a-f0-9]{64}$/.test(hash)) {
-      edgeState.vaultHashes.set(uid, hash);
+    const cleanHash = String(body.passwordHash || "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(cleanHash)) {
+      return jsonResponse({ success: false, error: "Invalid cryptographic vault verification payload." }, 400);
     }
+
+    const existing = await firestoreEdgeGetDoc("admins", authCheck.uid, authCheck.token);
+    if (existing.status === "found") {
+      const storedEmail = String(existing.data?.email || "").trim().toLowerCase();
+      const storedHash = String(existing.data?.passwordHash || "").trim().toLowerCase();
+      if (storedEmail !== authCheck.email || !/^[a-f0-9]{64}$/.test(storedHash) || !edgeTimingSafeEqual(cleanHash, storedHash)) {
+        return jsonResponse(
+          { success: false, error: "Incorrect Owner Security Password. Access strictly denied." },
+          403
+        );
+      }
+      edgeState.vaultHashes.set(authCheck.uid, storedHash);
+      return jsonResponse({
+        success: true,
+        uid: authCheck.uid,
+        email: authCheck.email,
+        verifiedAt: new Date().toISOString(),
+      });
+    }
+
+    if (existing.status === "error") {
+      const cached = edgeState.vaultHashes.get(authCheck.uid);
+      if (cached && edgeTimingSafeEqual(cleanHash, cached)) {
+        return jsonResponse({
+          success: true,
+          uid: authCheck.uid,
+          email: authCheck.email,
+          verifiedAt: new Date().toISOString(),
+        });
+      }
+      return jsonResponse(
+        { success: false, error: "Unable to verify Owner Security Vault against Firestore. Access denied." },
+        503
+      );
+    }
+
+    const envRequiredHash = String((env && env.ADMIN_VAULT_PASSWORD_HASH) || "").trim().toLowerCase();
+    if (/^[a-f0-9]{64}$/.test(envRequiredHash) && !edgeTimingSafeEqual(cleanHash, envRequiredHash)) {
+      return jsonResponse(
+        { success: false, error: "Incorrect Owner Security Password. Access strictly denied." },
+        403
+      );
+    }
+
+    const saved = await firestoreEdgePatch(
+      "admins",
+      authCheck.uid,
+      {
+        uid: authCheck.uid,
+        email: authCheck.email,
+        passwordHash: cleanHash,
+        updatedAt: new Date().toISOString(),
+      },
+      authCheck.token
+    );
+    if (!saved) {
+      return jsonResponse(
+        { success: false, error: "Failed to initialize Owner Security Vault in Cloud Firestore." },
+        503
+      );
+    }
+    edgeState.vaultHashes.set(authCheck.uid, cleanHash);
     return jsonResponse({
       success: true,
-      uid,
+      initialized: true,
+      uid: authCheck.uid,
       email: authCheck.email,
       verifiedAt: new Date().toISOString(),
+    });
+  }
+
+  if (path === "/api/admin/vault/update" && method === "POST") {
+    const authCheck = await verifyEdgeAdminToken(request, env);
+    if (!authCheck.ok) {
+      return jsonResponse(
+        { success: false, error: "Unauthorized access. Verified owner Google session required." },
+        401
+      );
+    }
+    const cleanCurrentHash = String(body.currentPasswordHash || "").trim().toLowerCase();
+    const cleanNewHash = String(body.newPasswordHash || "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(cleanCurrentHash) || !/^[a-f0-9]{64}$/.test(cleanNewHash)) {
+      return jsonResponse(
+        { success: false, error: "Valid current and new SHA-256 password hashes are required." },
+        400
+      );
+    }
+    const existing = await firestoreEdgeGetDoc("admins", authCheck.uid, authCheck.token);
+    const storedHash =
+      existing.status === "found"
+        ? String(existing.data?.passwordHash || "").trim().toLowerCase()
+        : edgeState.vaultHashes.get(authCheck.uid) || "";
+    if (!storedHash || !edgeTimingSafeEqual(cleanCurrentHash, storedHash)) {
+      return jsonResponse(
+        { success: false, error: "Current Owner Security Password is incorrect. Password update denied." },
+        403
+      );
+    }
+    const updated = await firestoreEdgePatch(
+      "admins",
+      authCheck.uid,
+      {
+        uid: authCheck.uid,
+        email: authCheck.email,
+        passwordHash: cleanNewHash,
+        updatedAt: new Date().toISOString(),
+      },
+      authCheck.token
+    );
+    if (!updated) {
+      return jsonResponse(
+        { success: false, error: "Failed to persist updated Owner Security Password to Cloud Firestore." },
+        503
+      );
+    }
+    edgeState.vaultHashes.set(authCheck.uid, cleanNewHash);
+    return jsonResponse({
+      success: true,
+      uid: authCheck.uid,
+      email: authCheck.email,
+      updatedAt: new Date().toISOString(),
     });
   }
 
   // 4. Public & Admin Inquiries / Leads endpoints
   if ((path === "/api/inquiry" || path === "/api/inquiries" || path === "/api/crm/leads") && method === "POST") {
     const nowIso = new Date().toISOString();
+    const rawPhone = String(body.phone || "").trim();
     const newLead = {
       id: `inq_${Date.now()}`,
       name: String(body.name || "Valued Client").trim(),
       email: String(body.email || "info@cvidyasolutions.com").trim(),
-      phone: String(body.phone || "+91").trim(),
+      phone: rawPhone.length >= 5 ? rawPhone : "Not Provided",
       service: String(body.service || body.product || "General Inquiry").trim(),
       message: String(body.message || body.requirements || "").trim(),
       company: String(body.company || "").trim(),
@@ -520,7 +767,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       status: "New",
       timestamp: nowIso,
     };
-    const fsId = await firestoreEdgeCreate("inquiries", newLead, "");
+    const fsId = await firestoreEdgeCreate("inquiries", newLead, "", env);
     if (fsId) newLead.id = fsId;
     edgeState.inquiries.unshift(newLead);
     return jsonResponse({
@@ -532,14 +779,14 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if ((path === "/api/inquiries" || path === "/api/crm/leads") && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
     const fsDocs = authCheck.isFirebaseJwt
       ? await firestoreEdgeList("inquiries", authCheck.token)
       : null;
-    const merged = Array.isArray(fsDocs) && fsDocs.length > 0 ? fsDocs : edgeState.inquiries;
+    const merged = Array.isArray(fsDocs) ? fsDocs : edgeState.inquiries;
     if (path === "/api/crm/leads") {
       return jsonResponse({ success: true, leads: merged });
     }
@@ -547,7 +794,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if ((path.startsWith("/api/inquiries/") || path.startsWith("/api/crm/leads/")) && (method === "PATCH" || method === "PUT")) {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -563,7 +810,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path.startsWith("/api/inquiries/") && method === "DELETE") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -580,11 +827,12 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
     method === "POST"
   ) {
     const nowIso = new Date().toISOString();
+    const rawAppPhone = String(body.phone || "").trim();
     const record = {
       id: `app_${Date.now()}`,
       name: String(body.name || "Applicant").trim(),
       email: String(body.email || "").trim(),
-      phone: String(body.phone || "").trim(),
+      phone: rawAppPhone.length >= 5 ? rawAppPhone : "Not Provided",
       jobId: String(body.jobId || "").trim(),
       jobTitle: String(body.jobTitle || body.role || "Software Engineer").trim(),
       jobCategory: String(body.jobCategory || "Engineering").trim(),
@@ -597,7 +845,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       status: "New",
       timestamp: nowIso,
     };
-    const fsId = await firestoreEdgeCreate("job_applications", record, "");
+    const fsId = await firestoreEdgeCreate("job_applications", record, "", env);
     if (fsId) record.id = fsId;
     edgeState.applications.unshift(record);
     return jsonResponse({
@@ -608,14 +856,14 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if ((path === "/api/applications" || path === "/api/job-applications") && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
     const fsDocs = authCheck.isFirebaseJwt
       ? await firestoreEdgeList("job_applications", authCheck.token)
       : null;
-    const merged = Array.isArray(fsDocs) && fsDocs.length > 0 ? fsDocs : edgeState.applications;
+    const merged = Array.isArray(fsDocs) ? fsDocs : edgeState.applications;
     return jsonResponse({ success: true, applications: merged });
   }
 
@@ -623,7 +871,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
     (path.startsWith("/api/applications/") || path.startsWith("/api/job-applications/")) &&
     (method === "PATCH" || method === "PUT")
   ) {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -642,11 +890,12 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   // 6. Mobile App Registrations endpoints
   if (path === "/api/app-registrations" && method === "POST") {
     const nowIso = new Date().toISOString();
+    const rawRegPhone = String(body.phone || "").trim();
     const reg = {
       id: `reg_${Date.now()}`,
       name: String(body.name || "").trim(),
       email: String(body.email || "").trim(),
-      phone: String(body.phone || "").trim(),
+      phone: rawRegPhone.length >= 5 ? rawRegPhone : "Not Provided",
       platform: String(body.platform || "android").trim().toLowerCase(),
       service: "Mobile App Early Access",
       source: "mobile_app_registration",
@@ -656,27 +905,27 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       timestamp: nowIso,
       status: "registered",
     };
-    const fsId = await firestoreEdgeCreate("app_download_registrations", reg, "");
+    const fsId = await firestoreEdgeCreate("app_download_registrations", reg, "", env);
     if (fsId) reg.id = fsId;
     edgeState.appRegistrations.unshift(reg);
     return jsonResponse({ success: true, id: reg.id, registration: reg });
   }
 
   if (path === "/api/app-registrations" && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
     const fsDocs = authCheck.isFirebaseJwt
       ? await firestoreEdgeList("app_download_registrations", authCheck.token)
       : null;
-    const merged = Array.isArray(fsDocs) && fsDocs.length > 0 ? fsDocs : edgeState.appRegistrations;
+    const merged = Array.isArray(fsDocs) ? fsDocs : edgeState.appRegistrations;
     return jsonResponse({ success: true, registrations: merged });
   }
 
   // 7. CRM Report & HR/Sales Overview & AI Calling endpoints
   if (path === "/api/crm/report" && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -693,7 +942,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path === "/api/hr-sales/overview" && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -705,7 +954,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path === "/api/calling/history" && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -728,7 +977,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path === "/api/calling/outbound" && method === "POST") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -761,7 +1010,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       createdAt: new Date().toISOString(),
     };
     if (authCheck.isFirebaseJwt) {
-      await firestoreEdgeCreate("call_logs", callRecord, authCheck.token);
+      await firestoreEdgeCreate("call_logs", callRecord, authCheck.token, env);
     }
     edgeState.callLogs.unshift(callRecord);
     return jsonResponse({ success: true, call: callRecord });
@@ -784,9 +1033,9 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       status: "Confirmed",
       createdAt: new Date().toISOString(),
     };
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (authCheck.ok && authCheck.isFirebaseJwt) {
-      await firestoreEdgeCreate("demo_bookings", booking, authCheck.token);
+      await firestoreEdgeCreate("demo_bookings", booking, authCheck.token, env);
     }
     edgeState.demoBookings.unshift(booking);
     return jsonResponse({ success: true, booking });
@@ -807,9 +1056,9 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
       status: "Assigned",
       createdAt: new Date().toISOString(),
     };
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (authCheck.ok && authCheck.isFirebaseJwt) {
-      await firestoreEdgeCreate("handoff_tickets", ticket, authCheck.token);
+      await firestoreEdgeCreate("handoff_tickets", ticket, authCheck.token, env);
     }
     edgeState.handoffTickets.unshift(ticket);
     return jsonResponse({ success: true, ticket });
@@ -977,7 +1226,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path === "/api/admin/deployments" && method === "GET") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -999,7 +1248,7 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path.startsWith("/api/admin/deployments/") && method === "PATCH") {
-    const authCheck = verifyEdgeAdminToken(request);
+    const authCheck = await verifyEdgeAdminToken(request, env);
     if (!authCheck.ok) {
       return jsonResponse({ error: "Unauthorized admin access." }, 401);
     }
@@ -1125,7 +1374,12 @@ export default {
             upstreamHeaders.set("X-Forwarded-Proto", url.protocol.replace(":", ""));
             const upstreamRes = await fetch(upstreamUrl.toString(), buildFetchOptions(upstreamHeaders));
             const contentType = (upstreamRes.headers.get("content-type") || "").toLowerCase();
-            if (upstreamRes.status >= 200 && upstreamRes.status < 300 && contentType.includes("application/json")) {
+            if (
+              ((upstreamRes.status >= 200 && upstreamRes.status < 300) ||
+                upstreamRes.status === 401 ||
+                upstreamRes.status === 403) &&
+              contentType.includes("application/json")
+            ) {
               const resHeaders = new Headers(upstreamRes.headers);
               resHeaders.set("X-Proxy-By", "Cloudflare-CVidya-Gateway");
               resHeaders.set("Permissions-Policy", "camera=(), microphone=*, geolocation=(), payment=(), usb=()");
