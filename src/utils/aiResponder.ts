@@ -48,6 +48,8 @@ export const CUSTOMER_INTENT_PATTERNS: Record<string, string[]> = {
   ],
   software_info: [
     "all software", "all products", "what software", "software products", "products", "solutions", "services",
+    "how many software", "total software", "how many products", "total products", "kitne software", "kul software",
+    "कितने सॉफ्टवेयर", "कुल सॉफ्टवेयर", "टोटल सॉफ्टवेयर", "कितने प्रोडक्ट",
     "आपके पास कौन-कौन से सॉफ्टवेयर हैं", "आपके पास कौन कौन से सॉफ्टवेयर हैं",
     "क्या सॉफ्टवेयर बनाते हैं", "कौन सा सॉफ्टवेयर है", "सभी सॉफ्टवेयर", "सॉफ्टवेयर चाहिए", "मुझे सॉफ्टवेयर चाहिए"
   ],
@@ -1199,13 +1201,20 @@ function getSmartAssistantResponseCore(
     return "Certainly! I can help connect you with our team. Please share your contact number.\n\nIf you would like to reach our executive desk directly:\n📞 **Helpline**: +91 92885 17027 / 8987766981\n📧 **Official Emails**: info@cvidyasolutions.com, contact@cvidyasolutions.com\n👔 **Founder Desk (Chiranjeev Das)**: chiranjeev0058@gmail.com\n📍 **Headquarters**: Surunga, Baliapur, Dhanbad, Jharkhand - 828115\n\nPlease share your **Name**, **Mobile Number**, and **Product of Interest**, and our executive team will contact you right away!";
   }
 
-  // 4. All Software / Products Overview ("all software", "what software", "what's your software", "list of software", "all products", "services", "kya kya software", "सॉफ्टवेयर")
+  // 4. All Software / Products Overview ("all software", "how many software", "total software", "kitne software", "सभी सॉफ्टवेयर")
   if (
     !asksPricing &&
     !asksDemo &&
     (userText.includes("all software") ||
       userText.includes("all products") ||
       userText.includes("all product") ||
+      userText.includes("how many software") ||
+      userText.includes("how many products") ||
+      userText.includes("total software") ||
+      userText.includes("total products") ||
+      userText.includes("kitne software") ||
+      userText.includes("kul software") ||
+      userText.includes("total kitne") ||
       userText.includes("what software") ||
       userText.includes("what's your software") ||
       userText.includes("whats your software") ||
@@ -1223,6 +1232,11 @@ function getSmartAssistantResponseCore(
       userText.includes("product list") ||
       userText.includes("services list") ||
       userText.includes("software list") ||
+      userText.includes("कितने सॉफ्टवेयर") ||
+      userText.includes("कुल सॉफ्टवेयर") ||
+      userText.includes("टोटल सॉफ्टवेयर") ||
+      userText.includes("कितने प्रोडक्ट") ||
+      userText.includes("टोटल कितने") ||
       userText.includes("सभी सॉफ्टवेयर") ||
       userText.includes("सॉफ्टवेयर की जानकारी") ||
       userText.includes("कौन-कौन से सॉफ्टवेयर") ||
@@ -1230,12 +1244,12 @@ function getSmartAssistantResponseCore(
       userText.includes("क्या सॉफ्टवेयर बनाते"))
   ) {
     if (langMode === "hi") {
-      return "**C Vidya Solutions का संपूर्ण सॉफ्टवेयर पोर्टफोलियो**:\n\n📦 **प्रमुख बिजनेस सॉफ्टवेयर (Core Software Suites)**:\n1. **Library Management Software**: स्टडी हॉल सीट आवंटन, स्टूडेंट मैनेजमेंट, बारकोड स्कैनर, फीस रिकॉर्ड व WhatsApp अलर्ट।\n2. **Institute Management Software**: स्कूल/कॉलेज ERP, एडमिशन CRM, फीस कैशबुक, उपस्थिति, परीक्षा व रिपोर्ट कार्ड।\n3. **Coaching Management Software**: बैच शेड्यूलिंग, स्टूडेंट एनरोलमेंट, फीस ट्रैकिंग, OMR मॉक टेस्ट स्कैनर व AIR रैंक।\n4. **Gym & Fitness Management Software (CV Fitness Zone)**: जिम मेंबरशिप प्लान, बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, रिन्यूअल अलर्ट व डाइट चार्ट।\n5. **CRM Software (C Vidya Enterprises CRM)**: लीड कैप्चर, फॉलो-अप ट्रैकिंग, सेल्स पाइपलाइन और कोटेशन PDF बिल्डर।\n6. **Farm Fresh Hub (AgriFusion)**: कृषि उत्पाद, पोल्ट्री, मछली पालन, इन्वेंटरी और ऑर्डर/POS बिलिंग।\n7. **Delivery Management Software**: ऑर्डर मैनेजमेंट, डिलीवरी बॉय असाइनमेंट, डिस्पैच ट्रैकिंग और डिलीवरी कन्फर्मेशन।\n8. **Jewelers Management, Petrol Pump Cloud & Care Plus Healthcare ERP**\n\n🤖 **AI चैटबॉट और 4 ऑटोनॉमस AI एजेंट्स**:\n1. **AI Chatbot & Customer Support Agent** (वेबसाइट व WhatsApp 24/7 चैटबॉट)\n2. **Business Sales Flow AI Agent** | 3. **Social Media Agent** | 4. **AI Marketing for B2B SaaS**\n\nआप किस सॉफ्टवेयर के फीचर्स या फ्री लाइव डेमो देखना चाहते हैं?";
+      return "**C Vidya Solutions के पास कुल 14 सॉफ्टवेयर और AI समाधान हैं** (10 क्लाउड बिजनेस सॉफ्टवेयर सूट्स + 4 ऑटोनॉमस AI एजेंट्स):\n\n📦 **10 क्लाउड बिजनेस सॉफ्टवेयर सूट्स (Cloud SaaS Suites)**:\n1. **Library Management Software**: स्टडी हॉल सीट आवंटन, बारकोड स्कैनर, फीस रिकॉर्ड व WhatsApp अलर्ट।\n2. **Fitness Zone (Gym Management Software)**: जिम मेंबरशिप, बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, रिन्यूअल अलर्ट व डाइट चार्ट।\n3. **Institute Management Software**: स्कूल/कॉलेज ERP, एडमिशन CRM, फीस कैशबुक, परीक्षा व बस GPS ट्रैकिंग।\n4. **Coaching Management Software**: बैच शेड्यूलिंग, फीस ट्रैकिंग, OMR मॉक टेस्ट स्कैनर व AIR रैंक।\n5. **AgriFusion (Farm Fresh Hub)**: कृषि उत्पाद, पोल्ट्री, मछली पालन व POS बिलिंग।\n6. **Delivery Management Software**: ऑर्डर मैनेजमेंट, डिलीवरी बॉय असाइनमेंट और डिस्पैच ट्रैकिंग।\n7. **Jewelers Management Software**: 24K/22K लाइव गोल्ड रेट सिंक, कारीगर कास्टिंग और GST बिलिंग।\n8. **Enterprises CRM Software**: लीड कैप्चर, फॉलो-अप ट्रैकिंग, सेल्स पाइपलाइन और कोटेशन PDF।\n9. **Petrol Pump Cloud Software**: नोजल मीटर रीडिंग, टैंक डिप ऑडिट और क्रेडिट खाता बिलिंग।\n10. **Care Plus Healthcare System & PDF Media Tools**: अस्पताल OPD/IPD ERP और डॉक्यूमेंट/PDF टूल्स।\n\n🤖 **4 ऑटोनॉमस AI एजेंट्स (24/7 AI Agents)**:\n1. **AI Chatbot & Customer Support Agent** | 2. **Business Sales Flow AI Agent** | 3. **Social Media Agent** | 4. **AI Marketing for B2B SaaS**\n\nआप किस सॉफ्टवेयर के फीचर्स या फ्री लाइव डेमो देखना चाहते हैं?";
     }
     if (hinglish) {
-      return "**C Vidya Solutions Complete Software Portfolio**:\n\n📦 **Core SaaS Products**:\n1. **C Vidya Library Management**: Study halls, reading room seat allocator, barcode scanner, overdue fine WhatsApp alerts.\n   🔗 [Live: v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone (Gym)**: Gym members biometric turnstile gate access, plan renewals, workout & diet plans.\n   🔗 [Live: fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institutes Management**: Schools/Colleges ERP, admission CRM, fee cashbooks, GPS bus tracking, gradebooks.\n4. **C Vidya Coaching Management**: Dynamic batch rosters, absent student SMS to parents, offline OMR mock test scanner & AIR ranks.\n   🔗 [Live: coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (FarmFresh Hub)**: Poultry flock FCR, fish pond telemetry, goat herd breeding, POS retail billing.\n   🔗 [Live: fresh.cvidyasolutions.workers.dev]\n6. **Delivery Management Software**: Order dispatch tracking, delivery boy assignment, customer confirmation & status updates.\n7. **C Vidya Jewelers Management**: Live 24K/22K gold rate sync, karigar metal casting logs, GST barcode billing.\n   🔗 [Live: jewelry.cvidyasolutions.workers.dev]\n8. **C Vidya Enterprises CRM**: Drag-and-drop Kanban deals, automated follow-ups, VoIP call logs, quote PDF generator.\n   🔗 [Live: crm.cvidyasolutions.workers.dev]\n\n🤖 **AI Chatbot & 4 Autonomous AI Agents**:\n1. **C Vidya Social Media Agent** | 2. **C Vidya AI Customer Support & Website/WhatsApp Chatbot** | 3. **C Vidya Business Sales Flow AI Agent** | 4. **C Vidya AI Marketing for B2B SaaS**\n\n⚡ **Specialized Platforms**:\n1. **Petrol Pump Cloud Software** | 2. **Care Plus Healthcare System** | 3. **C Vidya PDF and Media Tools SaaS**\n\nAapko kis software ka live demo test karna hai?";
+      return "**C Vidya Solutions ke paas total 14 Software & AI Solutions hain** (10 Cloud Business SaaS Suites + 4 Autonomous AI Agents):\n\n📦 **10 Cloud Business Software Suites**:\n1. **C Vidya Library Management** | 2. **C Vidya Fitness Zone (Gym)** | 3. **C Vidya Institutes Management** | 4. **C Vidya Coaching Management** | 5. **AgriFusion (FarmFresh Hub)** | 6. **Delivery Management Software** | 7. **C Vidya Jewelers Management** | 8. **C Vidya Enterprises CRM** | 9. **Petrol Pump Cloud Software** | 10. **Care Plus Healthcare System & PDF Tools SaaS**\n\n🤖 **4 Autonomous AI Agents**:\n1. **C Vidya Social Media Agent** | 2. **C Vidya AI Customer Support & Website/WhatsApp Chatbot** | 3. **C Vidya Business Sales Flow AI Agent** | 4. **C Vidya AI Marketing for B2B SaaS**\n\nAapko kis software ka live demo test karna hai?";
     }
-    return "**C Vidya Solutions Software & AI Portfolio**:\n\n📦 **Core Business SaaS Products**:\n1. **C Vidya Library Management Software**: Student/member registration, reading room seat allocation, ISBN barcode scanning, fee tracking, and WhatsApp alerts. [v.cvidyasolutions.workers.dev]\n2. **C Vidya Fitness Zone (Gym Management Software)**: Biometric turnstile access control, membership plans, renewal alerts, and workout/diet planners. [fitzone.cvidyasolutions.workers.dev]\n3. **C Vidya Institute Management Software**: Complete School/College ERP for admissions, fee management, attendance, exams, and GPS bus tracking.\n4. **C Vidya Coaching Management Software**: Batch scheduling, student enrollment, fee tracking, parent SMS alerts, and OMR mock test grading. [coaching.cvidyasolutions.workers.dev]\n5. **AgriFusion (Farm Fresh Hub)**: Farm product catalog, poultry/fishery telemetry, inventory management, and retail/wholesale POS billing. [fresh.cvidyasolutions.workers.dev]\n6. **C Vidya Delivery Management Software**: Order management, delivery boy assignment, live dispatch tracking, delivery status updates, and customer confirmation.\n7. **C Vidya Jewelers Management**: 24K/22K live gold/silver rate sync, Karigar casting logs, and GST barcode billing. [jewelry.cvidyasolutions.workers.dev]\n8. **C Vidya Enterprises CRM**: Lead capture, customer follow-up tracking, Kanban deal pipeline, and quotation PDF builder. [crm.cvidyasolutions.workers.dev]\n\n🤖 **AI Chatbot & 4 Autonomous AI Agents**:\n1. **C Vidya AI Chatbot & Customer Support Agent**: 24/7 website & WhatsApp chatbot, lead capture, voice & text support.\n2. **C Vidya Social Media Agent**: Viral trend research and automated multi-channel posting.\n3. **C Vidya Business Sales Flow AI Agent**: Automated B2B prospect discovery and demo booking.\n4. **C Vidya AI Marketing for B2B SaaS Companies**: SEO content clusters and LinkedIn thought leadership.\n\n⚡ **Specialized Industry Platforms**:\n1. **Petrol Pump Cloud Software** | 2. **Care Plus Healthcare System** | 3. **C Vidya PDF and Media Tools SaaS**\n\nWhich software or AI solution would you like to explore or test in a live demo?";
+    return "**C Vidya Solutions offers a total of 14 Software & AI Solutions** (10 Cloud Business Software Suites + 4 Autonomous AI Agents):\n\n📦 **10 Core & Industry Business SaaS Products**:\n1. **C Vidya Library Management Software**: Student registration, reading room seat allocation, ISBN barcode scanning, fee tracking, and WhatsApp alerts.\n2. **C Vidya Fitness Zone (Gym Management Software)**: Biometric turnstile access control, membership plans, renewal alerts, and workout/diet planners.\n3. **C Vidya Institute Management Software**: Complete School/College ERP for admissions, fee management, attendance, exams, and GPS bus tracking.\n4. **C Vidya Coaching Management Software**: Batch scheduling, student enrollment, fee tracking, parent SMS alerts, and OMR mock test grading.\n5. **AgriFusion (Farm Fresh Hub)**: Farm catalog, poultry/fishery telemetry, inventory management, and retail/wholesale POS billing.\n6. **C Vidya Delivery Management Software**: Order management, delivery boy assignment, live dispatch tracking, and customer confirmation.\n7. **C Vidya Jewelers Management**: 24K/22K live gold/silver rate sync, Karigar casting logs, and GST barcode billing.\n8. **C Vidya Enterprises CRM**: Lead capture, customer follow-up tracking, Kanban deal pipeline, and quotation PDF builder.\n9. **Petrol Pump Cloud Software**: Shift nozzle meters, tank dip audits, and fleet credit khata billing.\n10. **Care Plus Healthcare System & C Vidya PDF Tools SaaS**: Hospital OPD/IPD ERP, pharmacy/lab, and high-speed PDF conversion tools.\n\n🤖 **4 Autonomous AI Agents**:\n1. **C Vidya AI Chatbot & Customer Support Agent**\n2. **C Vidya Social Media Agent**\n3. **C Vidya Business Sales Flow AI Agent**\n4. **C Vidya AI Marketing for B2B SaaS Companies**\n\nWhich software or AI solution would you like to explore or test in a live demo?";
   }
 
   // 5. Demo, Trial, or Sandbox Access (Context-Aware for Product + Demo requests like "Mujhe coaching software ka demo chahiye")
@@ -2013,50 +2027,25 @@ function getSmartAssistantResponseCore(
     return "**Priority Human Escalation Desk** 🚨:\n\nBecause your request involves a complex, contractual, or sensitive matter, human confirmation is required. Please escalate or connect directly with our executive leadership desk:\n\n• **Founder & Director Desk**: Chiranjeev Das (`chiranjeev0058@gmail.com`)\n• **Official Support & Escalation Inbox**: `cvidyasolutions@gmail.com` / `contact@cvidyasolutions.com`\n• **Direct Priority Helpline**: +91 92885 17027 / +91 8987766981 (Mon–Sat, 10:00 AM – 07:00 PM IST)\n\nShare your **Name**, **Phone Number**, and **Request Summary** here, and we will flag it immediately for human executive review.";
   }
 
-  // 10.9 Direct Conversational & Instant Meta-Question Handler (<1ms zero-delay response)
+  // 10.9 Direct Conversational & Instant Meta-Question Handler (Strictly meta-questions only so custom questions go to Gemini)
   if (
-    userText.includes("पूछता") ||
-    userText.includes("पूछती") ||
-    userText.includes("पूछना") ||
-    userText.includes("पूछूँ") ||
-    userText.includes("पूछो") ||
     userText.includes("जो भी आपसे") ||
-    userText.includes("तुरंत") ||
-    userText.includes("जल्दी") ||
-    userText.includes("जवाब") ||
-    userText.includes("उत्तर") ||
-    userText.includes("सवाल") ||
-    userText.includes("जानकारी") ||
-    userText.includes("मदद") ||
-    userText.includes("सहायता") ||
-    userText.includes("बताओ") ||
-    userText.includes("बताइए") ||
+    userText.includes("जो भी पूछ") ||
     userText.includes("आप कौन") ||
     userText.includes("तुम कौन") ||
     userText.includes("क्या कर सकते") ||
-    userText.includes("कैसे काम") ||
-    userText.includes("बिजनेस") ||
-    userText.includes("दुकान") ||
-    userText.includes("puchta") ||
-    userText.includes("puchna") ||
-    userText.includes("pooch") ||
-    userText.includes("jawab") ||
-    userText.includes("turant") ||
-    userText.includes("jaldi") ||
-    userText.includes("madad") ||
-    userText.includes("batao") ||
-    userText.includes("bataiye") ||
-    userText.includes("jankari") ||
-    userText.includes("sawal") ||
+    userText.includes("आप क्या कर") ||
+    userText.includes("jo bhi puch") ||
+    userText.includes("jo bhi pooch") ||
+    userText.includes("kya kar sakte") ||
+    userText.includes("aap kaun") ||
+    userText.includes("tum kaun") ||
     userText.includes("what can you do") ||
     userText.includes("who are you") ||
     userText.includes("instant reply") ||
     userText.includes("fast reply") ||
     userText.includes("quick reply") ||
-    userText.includes("whatever i ask") ||
-    userText.includes("ask you") ||
-    userText.includes("help me") ||
-    userText.includes("tell me about")
+    userText.includes("whatever i ask")
   ) {
     if (langMode === "hi") {
       return "जी बिल्कुल! आप मुझसे जो भी पूछेंगे, मैं बिना किसी देरी के तुरंत हिंदी या इंग्लिश में उसका सटीक जवाब दूँगा। 😊\n\nआप मुझसे C Vidya Solutions के सभी 10 क्लाउड सॉफ्टवेयर (लाइब्रेरी, जिम फिटनेस ज़ोन, स्कूल ERP, कोचिंग, एग्रीफ्यूज़न, ज्वेलर्स, CRM, पेट्रोल पंप, केयर प्लस हॉस्पिटल, PDF टूल्स), 4 AI एजेंट्स, प्राइसिंग, फ्री लाइव डेमो या अपने बिज़नेस के लिए कस्टम सॉफ्टवेयर और मोबाइल ऐप के बारे में कुछ भी सीधे पूछ सकते हैं—बताइए, मैं अभी आपकी क्या मदद कर सकता हूँ?";

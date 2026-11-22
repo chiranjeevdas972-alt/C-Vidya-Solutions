@@ -233,7 +233,8 @@ function selectBestHumanVoice(
 function transliterateDevanagariToPhonetic(text: string): string {
   const map: Record<string, string> = {
     "अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo", "ऋ": "ri",
-    "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "अं": "an", "अः": "ah",
+    "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "ऑ": "o", "ऍ": "e", "अं": "an", "अः": "ah",
+    "क्ष": "ksha", "त्र": "tra", "ज्ञ": "gya", "श्र": "shra",
     "क": "ka", "ख": "kha", "ग": "ga", "घ": "gha", "ङ": "na",
     "च": "cha", "छ": "chha", "ज": "ja", "झ": "jha", "ञ": "nya",
     "ट": "ta", "ठ": "tha", "ड": "da", "ढ": "dha", "ण": "na",
@@ -241,8 +242,9 @@ function transliterateDevanagariToPhonetic(text: string): string {
     "प": "pa", "फ": "pha", "ब": "ba", "भ": "bha", "म": "ma",
     "य": "ya", "र": "ra", "ल": "la", "व": "va", "श": "sha", "ष": "sha", "स": "sa", "ह": "ha",
     "ड़": "da", "ढ़": "dha", "क़": "qa", "ख़": "kha", "ग़": "ga", "ज़": "za", "फ़": "fa",
+    "क़": "k", "ख़": "kh", "ग़": "g", "ज़": "z", "ड़": "d", "ढ़": "dh", "फ़": "f", "य़": "y", "ऩ": "n",
     "ा": "aa", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo", "ृ": "ri",
-    "े": "e", "ै": "ai", "ो": "o", "ौ": "au", "ं": "n", "ँ": "n", "ः": "h",
+    "े": "e", "ै": "ai", "ो": "o", "ौ": "au", "ॉ": "o", "ॅ": "e", "ं": "n", "ँ": "n", "ः": "h",
     "्": "", "।": ".", "०": "0", "१": "1", "२": "2", "३": "3", "४": "4",
     "५": "5", "६": "6", "७": "7", "८": "8", "९": "9"
   };
@@ -251,6 +253,12 @@ function transliterateDevanagariToPhonetic(text: string): string {
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     const next = text[i + 1] || "";
+    const threeChar = text.slice(i, i + 3);
+    if (map[threeChar] !== undefined) {
+      out += map[threeChar];
+      i += 2;
+      continue;
+    }
     const twoChar = ch + next;
     if (map[twoChar] !== undefined) {
       out += map[twoChar];
@@ -260,7 +268,7 @@ function transliterateDevanagariToPhonetic(text: string): string {
     if (map[ch] !== undefined) {
       const val = map[ch];
       const isConsonant = val.length > 1 && val.endsWith("a") && ch >= "क" && ch <= "ह";
-      const nextIsMatraOrVirama = next >= "ा" && next <= "्";
+      const nextIsMatraOrVirama = (next >= "ा" && next <= "्") || next === "ॉ" || next === "ॅ";
       const nextIsSpaceOrPunct = !next || /[\s.,?!।-]/.test(next);
       if (isConsonant && (nextIsMatraOrVirama || nextIsSpaceOrPunct)) {
         out += val.slice(0, -1);
@@ -271,7 +279,7 @@ function transliterateDevanagariToPhonetic(text: string): string {
       out += ch;
     }
   }
-  return out.replace(/\s+/g, " ").trim();
+  return out.replace(/[\u0900-\u097F]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -329,7 +337,7 @@ function prepareConversationalSpeechScript(rawText: string, targetLang: "en-IN" 
   }
 
   const cleaned = sanitizeTextForSpeech(text);
-  const maxLen = targetLang === "hi-IN" ? 240 : 280;
+  const maxLen = targetLang === "hi-IN" ? 210 : 250;
   if (cleaned.length <= maxLen) return cleaned;
 
   const sliced = cleaned.slice(0, maxLen);
@@ -340,8 +348,12 @@ function prepareConversationalSpeechScript(rawText: string, targetLang: "en-IN" 
     sliced.lastIndexOf("? "),
     sliced.lastIndexOf("! ")
   );
-  if (lastPeriod > 65) {
+  if (lastPeriod > 55) {
     return sliced.slice(0, lastPeriod + 1).trim();
+  }
+  const lastSpace = sliced.lastIndexOf(" ");
+  if (lastSpace > 45) {
+    return sliced.slice(0, lastSpace).trim();
   }
   return sliced.trim();
 }
@@ -488,13 +500,13 @@ class HumanHybridTtsProvider implements ITtsProvider {
    * Plays base64 WAV audio using the unlocked Web Audio API (AudioContext.decodeAudioData)
    * with automatic fallback to HTMLAudioElement.
    */
-  private playBase64Audio(
+  private async playBase64Audio(
     base64Data: string,
     mimeType: string,
     currentSession: number,
     callbacks?: TtsCallbacks,
     onPlaybackFailed?: () => void
-  ): void {
+  ): Promise<void> {
     if (currentSession !== this.speechSessionId) return;
 
     const w = typeof window !== "undefined" ? (window as any) : null;
@@ -507,41 +519,39 @@ class HumanHybridTtsProvider implements ITtsProvider {
         }
         const ctx = this.audioCtx!;
         if (ctx.state === "suspended") {
-          ctx.resume().catch(() => {});
+          await Promise.race([
+            ctx.resume().catch(() => {}),
+            new Promise((resolve) => setTimeout(resolve, 250)),
+          ]);
         }
+        if (currentSession !== this.speechSessionId) return;
         const arrayBuffer = base64ToArrayBuffer(base64Data);
-        ctx.decodeAudioData(
-          arrayBuffer,
-          (decodedBuffer) => {
-            if (currentSession !== this.speechSessionId) return;
-            try {
-              const source = ctx.createBufferSource();
-              source.buffer = decodedBuffer;
-              source.playbackRate.value = 1.01;
-              source.connect(ctx.destination);
-              this.activeAudioSource = source;
-              this.speaking = true;
-              callbacks?.onStart?.();
-
-              source.onended = () => {
-                if (currentSession !== this.speechSessionId) return;
-                this.speaking = false;
-                this.activeAudioSource = null;
-                callbacks?.onEnd?.();
-              };
-              source.start(0);
-            } catch (_) {
-              if (onPlaybackFailed) onPlaybackFailed();
-              else {
-                this.speaking = false;
-                callbacks?.onEnd?.();
-              }
+        const decodedBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+          try {
+            const p = ctx.decodeAudioData(arrayBuffer, resolve, reject);
+            if (p && typeof (p as Promise<AudioBuffer>).then === "function") {
+              (p as Promise<AudioBuffer>).then(resolve).catch(reject);
             }
-          },
-          () => {
-            this.playHtmlAudioElement(base64Data, mimeType, currentSession, callbacks, onPlaybackFailed);
+          } catch (err) {
+            reject(err);
           }
-        );
+        });
+        if (currentSession !== this.speechSessionId) return;
+        const source = ctx.createBufferSource();
+        source.buffer = decodedBuffer;
+        source.playbackRate.value = 1.0;
+        source.connect(ctx.destination);
+        this.activeAudioSource = source;
+        this.speaking = true;
+        callbacks?.onStart?.();
+
+        source.onended = () => {
+          if (currentSession !== this.speechSessionId) return;
+          this.speaking = false;
+          this.activeAudioSource = null;
+          callbacks?.onEnd?.();
+        };
+        source.start(0);
         return;
       } catch (_) {
         // Fall through to HTMLAudioElement
@@ -570,7 +580,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
     try {
       const dataUrl = `data:${mimeType || "audio/wav"};base64,${base64Data}`;
       const audio = new Audio(dataUrl);
-      audio.playbackRate = 1.01;
+      audio.playbackRate = 1.0;
       this.activeAudio = audio;
       this.speaking = true;
 
@@ -614,7 +624,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
 
   /**
    * Last-resort offline phonetic Hindi fallback using the browser's English voice
-   * when the device has no native Hindi TTS voice and /api/tts is offline.
+   * when the device has no native Hindi TTS voice and /api/tts is unavailable.
    */
   private speakPhoneticHindiFallback(
     cleanSpeech: string,
@@ -681,7 +691,8 @@ class HumanHybridTtsProvider implements ITtsProvider {
   }
 
   /**
-   * Speaks via server-side Gemini TTS (/api/tts: Kore for Female, Puck for Male).
+   * Speaks via server-side Gemini Neural TTS (/api/tts: Kore for Female, Puck for Male).
+   * Calls `onUnavailable` immediately if /api/tts is unavailable, returns useBrowserTts, or fails.
    */
   private speakWithServerTts(
     cleanSpeech: string,
@@ -689,39 +700,44 @@ class HumanHybridTtsProvider implements ITtsProvider {
     gender: VoiceGender,
     currentSession: number,
     callbacks?: TtsCallbacks,
-    allowPhoneticFallback = true
+    onUnavailable?: () => void
   ): void {
     if (currentSession !== this.speechSessionId) return;
 
-    const cacheKey = `${gender}:${strictLang}:${cleanSpeech.slice(0, 240)}`;
-    if (this.audioCache.has(cacheKey)) {
-      const cached = this.audioCache.get(cacheKey)!;
-      const [mimePart, base64Part] = cached.split("|");
-      this.playBase64Audio(
-        base64Part,
-        mimePart || "audio/wav",
-        currentSession,
-        callbacks,
-        allowPhoneticFallback && strictLang === "hi-IN"
-          ? () => this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks)
-          : undefined
-      );
-      return;
-    }
-
-    if (typeof fetch !== "function") {
-      if (allowPhoneticFallback && strictLang === "hi-IN") {
+    const handleFailure = () => {
+      if (currentSession !== this.speechSessionId) return;
+      if (onUnavailable) {
+        onUnavailable();
+      } else if (strictLang === "hi-IN") {
         this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks);
       } else {
         this.speaking = false;
         callbacks?.onEnd?.();
       }
+    };
+
+    const cacheKey = `${gender}:${strictLang}:${cleanSpeech.slice(0, 240)}`;
+    if (this.audioCache.has(cacheKey)) {
+      const cached = this.audioCache.get(cacheKey)!;
+      const [mimePart, base64Part] = cached.split("|");
+      void this.playBase64Audio(
+        base64Part,
+        mimePart || "audio/wav",
+        currentSession,
+        callbacks,
+        handleFailure
+      );
+      return;
+    }
+
+    if (typeof fetch !== "function") {
+      handleFailure();
       return;
     }
 
     const controller = new AbortController();
     this.activeAbortController = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 3200);
+    const timeoutId = setTimeout(() => controller.abort(), 9500);
 
     this.speaking = true;
     callbacks?.onStart?.();
@@ -741,41 +757,34 @@ class HumanHybridTtsProvider implements ITtsProvider {
         if (currentSession !== this.speechSessionId) return;
         if (!res.ok) throw new Error("TTS HTTP error");
         const data = await res.json();
-        if (data?.audioBase64) {
-          const mime = data.mimeType || "audio/wav";
-          this.audioCache.set(cacheKey, `${mime}|${data.audioBase64}`);
-          if (this.activeAbortController === controller) {
-            this.activeAbortController = null;
-          }
-          this.playBase64Audio(
-            data.audioBase64,
-            mime,
-            currentSession,
-            callbacks,
-            allowPhoneticFallback && strictLang === "hi-IN"
-              ? () => this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks)
-              : undefined
-          );
-        } else {
-          throw new Error("Empty audio payload");
+        if (data?.useBrowserTts || !data?.audioBase64) {
+          throw new Error("Use browser TTS fallback");
         }
+        const mime = data.mimeType || "audio/wav";
+        this.audioCache.set(cacheKey, `${mime}|${data.audioBase64}`);
+        if (this.activeAbortController === controller) {
+          this.activeAbortController = null;
+        }
+        void this.playBase64Audio(
+          data.audioBase64,
+          mime,
+          currentSession,
+          callbacks,
+          handleFailure
+        );
       })
       .catch(() => {
         clearTimeout(timeoutId);
-        if (currentSession !== this.speechSessionId) return;
-        if (allowPhoneticFallback && strictLang === "hi-IN") {
-          this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks);
-        } else {
-          this.speaking = false;
-          callbacks?.onEnd?.();
+        if (this.activeAbortController === controller) {
+          this.activeAbortController = null;
         }
+        handleFailure();
       });
   }
 
   /**
-   * Speaks sequentially chunk-by-chunk using Browser SpeechSynthesis, with automatic
-   * fallback to Server Gemini TTS (/api/tts) if the browser lacks a voice for the language
-   * or if SpeechSynthesis fails / silently skips characters.
+   * Speaks sequentially chunk-by-chunk using Browser SpeechSynthesis as fallback
+   * when Server Gemini TTS is unavailable or offline.
    */
   private speakWithBrowserHumanVoice(
     cleanSpeech: string,
@@ -783,9 +792,14 @@ class HumanHybridTtsProvider implements ITtsProvider {
     gender: VoiceGender,
     currentSession: number,
     wasBusyBeforeStop: boolean,
-    callbacks?: TtsCallbacks
+    callbacks?: TtsCallbacks,
+    allowServerRetry = false
   ): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+      if (strictLang === "hi-IN") {
+        this.speaking = false;
+        callbacks?.onEnd?.();
+      }
       return false;
     }
 
@@ -793,7 +807,8 @@ class HumanHybridTtsProvider implements ITtsProvider {
       const voices = window.speechSynthesis.getVoices?.() || [];
       const { voice: matchedVoice, matchedGender } = selectBestHumanVoice(voices, strictLang, gender);
 
-      if (strictLang === "hi-IN" && voices.length > 0 && !matchedVoice) {
+      // Never feed Devanagari text to an English/default OS voice when no Hindi voice exists
+      if (strictLang === "hi-IN" && !matchedVoice) {
         return false;
       }
 
@@ -808,8 +823,9 @@ class HumanHybridTtsProvider implements ITtsProvider {
       this.activeUtterances = [];
       let hasStarted = false;
       let hasFallenBack = false;
+      let retriedDefaultVoice = false;
 
-      const triggerServerFallback = () => {
+      const triggerFallback = () => {
         if (hasFallenBack || currentSession !== this.speechSessionId) return;
         hasFallenBack = true;
         this.clearTimers();
@@ -819,10 +835,17 @@ class HumanHybridTtsProvider implements ITtsProvider {
             window.speechSynthesis.cancel();
           }
         } catch (_) {}
-        this.speakWithServerTts(cleanSpeech, strictLang, gender, currentSession, callbacks, true);
+        if (allowServerRetry) {
+          this.speakWithServerTts(cleanSpeech, strictLang, gender, currentSession, callbacks);
+        } else if (strictLang === "hi-IN") {
+          this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks);
+        } else {
+          this.speaking = false;
+          callbacks?.onEnd?.();
+        }
       };
 
-      const speakChunkAtIndex = (idx: number) => {
+      const speakChunkAtIndex = (idx: number, forceDefaultVoice = false) => {
         if (currentSession !== this.speechSessionId || hasFallenBack) return;
         if (idx >= chunks.length) {
           this.clearTimers();
@@ -839,45 +862,39 @@ class HumanHybridTtsProvider implements ITtsProvider {
         utterance.lang = strictLang;
         utterance.volume = 1.0;
 
-        const latestVoices = window.speechSynthesis.getVoices?.() || voices;
-        const { voice: currentMatchedVoice, matchedGender: currentMatchedGender } =
-          matchedVoice
-            ? { voice: matchedVoice, matchedGender }
-            : selectBestHumanVoice(latestVoices, strictLang, gender);
+        if (!forceDefaultVoice) {
+          const latestVoices = window.speechSynthesis.getVoices?.() || voices;
+          const { voice: currentMatchedVoice, matchedGender: currentMatchedGender } =
+            matchedVoice
+              ? { voice: matchedVoice, matchedGender }
+              : selectBestHumanVoice(latestVoices, strictLang, gender);
 
-        if (strictLang === "hi-IN" && latestVoices.length > 0 && !currentMatchedVoice) {
-          triggerServerFallback();
-          return;
-        }
-
-        if (currentMatchedVoice) {
-          utterance.voice = currentMatchedVoice;
-          const vLang = (currentMatchedVoice.lang || "").toLowerCase();
-          if (strictLang === "hi-IN" && vLang.startsWith("hi")) {
-            utterance.lang = currentMatchedVoice.lang;
-          } else if (strictLang === "en-IN" && vLang.startsWith("en")) {
-            utterance.lang = currentMatchedVoice.lang;
+          if (strictLang === "hi-IN" && !currentMatchedVoice) {
+            triggerFallback();
+            return;
           }
-        }
 
-        // Ultra-natural human conversational cadence for Hindi and English (Male & Female)
-        if (strictLang === "hi-IN") {
-          if (gender === "female") {
-            utterance.rate = 1.02;
-            utterance.pitch = currentMatchedGender ? 1.03 : 1.12;
+          if (currentMatchedVoice) {
+            utterance.voice = currentMatchedVoice;
+            const vLang = (currentMatchedVoice.lang || "").toLowerCase();
+            if (strictLang === "hi-IN" && vLang.startsWith("hi")) {
+              utterance.lang = currentMatchedVoice.lang;
+            } else if (strictLang === "en-IN" && vLang.startsWith("en")) {
+              utterance.lang = currentMatchedVoice.lang;
+            }
+          }
+
+          if (strictLang === "hi-IN") {
+            utterance.rate = gender === "female" ? 1.02 : 1.0;
+            utterance.pitch = gender === "female" ? (currentMatchedGender ? 1.03 : 1.12) : (currentMatchedGender ? 0.94 : 0.84);
           } else {
-            utterance.rate = 1.0;
-            utterance.pitch = currentMatchedGender ? 0.94 : 0.84;
+            utterance.rate = gender === "female" ? 1.0 : 0.98;
+            utterance.pitch = gender === "female" ? (currentMatchedGender ? 1.0 : 1.1) : (currentMatchedGender ? 0.97 : 0.85);
           }
         } else {
-          // For English: preserve natural neural voice formant when gender matches
-          if (gender === "female") {
-            utterance.rate = 1.0;
-            utterance.pitch = currentMatchedGender ? 1.0 : 1.10;
-          } else {
-            utterance.rate = 0.98;
-            utterance.pitch = currentMatchedGender ? 0.97 : 0.85;
-          }
+          utterance.lang = strictLang === "hi-IN" ? "hi-IN" : "en-US";
+          utterance.rate = 1.0;
+          utterance.pitch = gender === "female" ? 1.06 : 0.9;
         }
 
         const chunkDispatchTime = Date.now();
@@ -899,10 +916,15 @@ class HumanHybridTtsProvider implements ITtsProvider {
           if (currentSession !== this.speechSessionId || hasFallenBack) return;
           const elapsedMs = Date.now() - chunkDispatchTime;
           if (idx === 0 && chunkText.length >= 10 && elapsedMs < 140) {
-            triggerServerFallback();
+            if (!retriedDefaultVoice && matchedVoice && strictLang !== "hi-IN") {
+              retriedDefaultVoice = true;
+              speakChunkAtIndex(0, true);
+              return;
+            }
+            triggerFallback();
             return;
           }
-          speakChunkAtIndex(idx + 1);
+          speakChunkAtIndex(idx + 1, forceDefaultVoice);
         };
 
         utterance.onerror = (ev: any) => {
@@ -911,19 +933,24 @@ class HumanHybridTtsProvider implements ITtsProvider {
           if (errCode === "canceled" || errCode === "interrupted") {
             return;
           }
+          if (idx === 0 && !retriedDefaultVoice && matchedVoice && strictLang !== "hi-IN") {
+            retriedDefaultVoice = true;
+            speakChunkAtIndex(0, true);
+            return;
+          }
           if (idx === 0) {
-            triggerServerFallback();
+            triggerFallback();
           } else {
-            speakChunkAtIndex(idx + 1);
+            speakChunkAtIndex(idx + 1, forceDefaultVoice);
           }
         };
 
         if (idx === 0) {
           this.watchdogTimerId = setTimeout(() => {
             if (currentSession === this.speechSessionId && !hasFallenBack && !window.speechSynthesis.speaking) {
-              triggerServerFallback();
+              triggerFallback();
             }
-          }, 950);
+          }, 1200);
         }
 
         window.speechSynthesis.resume?.();
@@ -935,7 +962,7 @@ class HumanHybridTtsProvider implements ITtsProvider {
       if (wasBusyBeforeStop) {
         this.startTimerId = setTimeout(() => {
           speakChunkAtIndex(0);
-        }, 45);
+        }, 95);
       } else {
         speakChunkAtIndex(0);
       }
@@ -975,11 +1002,28 @@ class HumanHybridTtsProvider implements ITtsProvider {
       return;
     }
 
-    if (this.speakWithBrowserHumanVoice(cleanSpeech, strictLang, gender, currentSession, wasBusy, callbacks)) {
-      return;
-    }
-
-    this.speakWithServerTts(cleanSpeech, strictLang, gender, currentSession, callbacks, true);
+    // Use ultra-realistic Server Gemini Neural TTS (Kore/Puck via unlocked AudioContext) as primary
+    // so both Hindi and English Female/Male voices sound human across every desktop and mobile device,
+    // automatically falling back to browser SpeechSynthesis + phonetic Hindi if /api/tts is unavailable.
+    this.speakWithServerTts(cleanSpeech, strictLang, gender, currentSession, callbacks, () => {
+      const browserOk = this.speakWithBrowserHumanVoice(
+        cleanSpeech,
+        strictLang,
+        gender,
+        currentSession,
+        wasBusy,
+        callbacks,
+        false
+      );
+      if (!browserOk) {
+        if (strictLang === "hi-IN") {
+          this.speakPhoneticHindiFallback(cleanSpeech, gender, currentSession, callbacks);
+        } else {
+          this.speaking = false;
+          callbacks?.onEnd?.();
+        }
+      }
+    });
   }
 
   public stop(): void {

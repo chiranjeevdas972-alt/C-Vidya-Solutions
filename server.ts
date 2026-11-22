@@ -2355,9 +2355,9 @@ const chatbotAnalyticsSummary = {
   humanHandoffRequests: 0,
 };
 
-// Configurable AI Provider & Model Layer (defaults to gemini-3.8-flash for fast, accurate responses)
+// Configurable AI Provider & Model Layer (defaults to gemini-4-hydrogen per @google/genai SDK guidelines)
 const CONFIGURED_AI_PROVIDER = process.env.AI_PROVIDER || "gemini";
-const CONFIGURED_AI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const CONFIGURED_AI_MODEL = process.env.GEMINI_MODEL || "gemini-4-hydrogen";
 
 // Prevent untrusted user messages from overriding system instructions
 function sanitizeAgainstPromptInjection(input: string): string {
@@ -2367,26 +2367,37 @@ function sanitizeAgainstPromptInjection(input: string): string {
     .replace(/you\s+are\s+now\s+a\s+different\s+ai/gi, "[filtered-directive]");
 }
 
-// Call Gemini API with ThinkingLevel.LOW and reliable production timeout
+// Call Gemini API with ThinkingLevel.LOW and automatic failover to gemini-3.1-flash-lite on transient 503/429 spikes
 async function callGeminiWithTimeout(
   client: GoogleGenAI,
   formattedContents: any[],
   dynamicSystemInstruction: string,
-  timeoutMs = 5500
+  timeoutMs = 10000
 ): Promise<any> {
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("Gemini response timeout exceeded")), timeoutMs)
-  );
-  const apiPromise = client.models.generateContent({
-    model: CONFIGURED_AI_MODEL,
-    contents: formattedContents,
-    config: {
-      systemInstruction: dynamicSystemInstruction,
-      maxOutputTokens: 420,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-    },
-  });
-  return Promise.race([apiPromise, timeoutPromise]);
+  const tryModel = async (modelName: string, level: ThinkingLevel, perAttemptTimeoutMs: number) => {
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${modelName} timeout exceeded`)), perAttemptTimeoutMs)
+    );
+    const apiPromise = client.models.generateContent({
+      model: modelName,
+      contents: formattedContents,
+      config: {
+        systemInstruction: dynamicSystemInstruction,
+        thinkingConfig: { thinkingLevel: level },
+      },
+    });
+    const res = (await Promise.race([apiPromise, timeoutPromise])) as any;
+    return { response: res, modelUsed: modelName };
+  };
+
+  try {
+    return await tryModel(CONFIGURED_AI_MODEL, ThinkingLevel.LOW, Math.min(timeoutMs, 6500));
+  } catch (primaryErr: any) {
+    const fallbackModel = CONFIGURED_AI_MODEL === "gemini-3.1-flash-lite" ? "gemini-4-hydrogen" : "gemini-3.1-flash-lite";
+    const fallbackLevel = fallbackModel === "gemini-3.1-flash-lite" ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW;
+    console.warn(`Primary AI model (${CONFIGURED_AI_MODEL}) transient failure (${primaryErr?.message || primaryErr}); failing over to ${fallbackModel}`);
+    return await tryModel(fallbackModel, fallbackLevel, timeoutMs);
+  }
 }
 
 // API: AI Chat Assistant Status & Health Check
@@ -2548,27 +2559,27 @@ app.post("/api/chat", chatRateLimiter, async (req, res) => {
       };
     });
 
-    const fastSystemInstruction = `You are C Vidya AI, the official warm, lifelike human advisor for C Vidya Solutions (founded by Chiranjeev Das, HQ in Dhanbad, Jharkhand, India; phones: +91 92885 17027 / +91 8987766981; email: cvidyasolutions@gmail.com).
-We offer 10 cloud SaaS suites (C Vidya Library ₹699/mo, Fitness Zone ₹999/mo, Institutes ERP ₹2,499/mo, Coaching ₹1,299/mo, AgriFusion ₹1,499/mo, Jewelers ₹1,999/mo, Enterprises CRM ₹1,499/mo, Petrol Pump Cloud ₹2,499/mo, Care Plus Healthcare ₹2,999/mo, PDF Tools ₹299/mo) and 4 AI Automation Agents (Customer Support ₹1,999/mo, Sales & Lead Gen ₹2,499/mo, Admin & Backoffice ₹2,999/mo, Custom Workflow ₹4,999/mo), plus custom web/mobile app development.
+    const fastSystemInstruction = `You are C Vidya AI, the official warm, lifelike human advisor for C Vidya Solutions (founded by Chiranjeev Das, incubated at STPI Sindri, BIT Sindri Campus, HQ in Dhanbad, Jharkhand, India; phones: +91 92885 17027 / +91 8987766981; email: info@cvidyasolutions.com / cvidyasolutions@gmail.com).
+We offer a total of 14 Software & AI Solutions: 10 cloud business software suites (1. C Vidya Library Management, 2. Fitness Zone Gym Software, 3. Institutes School/College ERP, 4. Coaching Management & OMR Grader, 5. AgriFusion / Farm Fresh Hub, 6. Delivery Management Software, 7. Jewelers Management Software, 8. Enterprises CRM, 9. Petrol Pump Cloud Software, 10. Care Plus Healthcare ERP & PDF Media Tools SaaS) and 4 Autonomous AI Agents (AI Chatbot & Customer Support Agent, Business Sales Flow AI Agent, Social Media Agent, AI Marketing for B2B SaaS), plus custom web/mobile app development.
 1. SPEAKER GENDER: Speak as a warm, empathetic ${
       activeGender === "male"
         ? "MALE advisor (use masculine Hindi verb forms like 'मैं आपकी मदद कर सकता हूँ', 'बताता हूँ' when speaking Hindi)"
         : "FEMALE advisor (use feminine Hindi verb forms like 'मैं आपकी मदद कर सकती हूँ', 'बताती हूँ' when speaking Hindi)"
     }.
-2. LANGUAGE (STRICTLY HINDI OR ENGLISH ONLY — NO HINGLISH, NO OTHER LANGUAGES):
+2. LANGUAGE (STRICTLY HINDI OR ENGLISH ONLY — NO ROMAN HINGLISH, NO OTHER LANGUAGES):
    - Reply strictly in ${
       effectiveLang === "hi"
         ? "natural, warm conversational Hindi in Devanagari script (हिंदी)"
         : "natural, warm conversational English"
     }.
    - NEVER use Roman-script Hinglish or any language other than Hindi or English.
-3. SPEED & STYLE: Reply in 2 to 3 natural spoken sentences with no markdown asterisks.`;
+3. ANSWER ACCURACY & BREVITY: Directly answer the user's exact question in 2 to 4 crisp, natural spoken sentences with no markdown asterisks, backticks, or hashes.`;
 
-    const response = await callGeminiWithTimeout(
+    const { response, modelUsed } = await callGeminiWithTimeout(
       client,
       formattedContents,
       fastSystemInstruction,
-      1100
+      10000
     );
     const aiResponseText =
       response?.text?.trim() || verifiedSoftwareReply;
@@ -2577,7 +2588,7 @@ We offer 10 cloud SaaS suites (C Vidya Library ₹699/mo, Fitness Zone ₹999/mo
       text: aiResponseText, 
       grounded: !!response?.candidates?.[0]?.groundingMetadata,
       provider: CONFIGURED_AI_PROVIDER,
-      model: CONFIGURED_AI_MODEL,
+      model: modelUsed || CONFIGURED_AI_MODEL,
       detectedLanguage: effectiveLang,
       leadCaptured: hasContactInfo,
       crmLead: hasContactInfo ? extractedLead : undefined,
@@ -2585,6 +2596,7 @@ We offer 10 cloud SaaS suites (C Vidya Library ₹699/mo, Fitness Zone ₹999/mo
     });
 
   } catch (error: any) {
+    console.warn("Chat Gemini fallback warning:", error?.message || error);
     // Case B: API call timed out or failed -> Instant verified C Vidya knowledge base response
     return res.json({ 
       text: verifiedSoftwareReply, 
@@ -2670,11 +2682,12 @@ app.post("/api/tts", chatRateLimiter, async (req, res) => {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-    return res.status(503).json({ error: "Server TTS unavailable; use client neural voice." });
+    return res.status(503).json({ error: "Server TTS unavailable; use client neural voice.", useBrowserTts: true });
   }
 
-  const isHindi = lang === "hi-IN" || /[\u0900-\u097F]/.test(text);
-  const cleanText = text
+  const hasDevanagari = /[\u0900-\u097F]/.test(text);
+  const isHindi = hasDevanagari || lang === "hi-IN";
+  const normalizedRaw = text
     .replace(/🔗[^\n]*/g, "")
     .replace(/\[Live:[^\]]*\]/gi, "")
     .replace(/https?:\/\/(?:www\.)?cvidyasolutions\.com[^\s)]*/gi, isHindi ? "सी विद्या सॉल्यूशंस डॉट कॉम" : "C Vidya Solutions dot com")
@@ -2685,8 +2698,24 @@ app.post("/api/tts", chatRateLimiter, async (req, res) => {
     .replace(/[•▪▸►]/g, ". ")
     .replace(/[📦🤖⚡📞📧📍🏢👔🧾🚀👋🙏🇮🇳🎯💼🌐⏱️🚨📅📊👥🔒💡✅😊💳🚪📈🔗🛠️🏆📱💻]/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 420);
+    .trim();
+
+  // Slice cleanly at sentence/word boundary so audio is crisp and never clips mid-word
+  let cleanText = normalizedRaw;
+  if (cleanText.length > 260) {
+    const sliced = cleanText.slice(0, 260);
+    const boundary = Math.max(sliced.lastIndexOf("।"), sliced.lastIndexOf("."), sliced.lastIndexOf("?"), sliced.lastIndexOf("!"));
+    if (boundary > 60) {
+      cleanText = sliced.slice(0, boundary + 1).trim();
+    } else {
+      const lastSpace = sliced.lastIndexOf(" ");
+      cleanText = (lastSpace > 40 ? sliced.slice(0, lastSpace) : sliced).trim();
+    }
+  }
+
+  if (!cleanText) {
+    return res.status(400).json({ error: "No speakable text provided.", useBrowserTts: true });
+  }
 
   const selectedGender: "female" | "male" = gender === "male" ? "male" : "female";
   // 'Kore' is an ultra-realistic, warm, expressive Female voice; 'Puck' is an ultra-realistic, warm, confident Male voice
@@ -2734,14 +2763,14 @@ app.post("/api/tts", chatRateLimiter, async (req, res) => {
   };
 
   try {
-    const response = await synthesizeWithModel("gemini-3.8-flash-lite-tts", 2800);
+    const response = await synthesizeWithModel("gemini-3.8-flash-lite-tts", 8500);
 
     const inlineData = response?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
     const base64Audio = inlineData?.data;
     const mimeType = inlineData?.mimeType || "audio/wav";
 
     if (!base64Audio) {
-      return res.status(502).json({ error: "No audio returned from TTS model." });
+      return res.status(502).json({ error: "No audio returned from TTS model.", useBrowserTts: true });
     }
 
     return res.json({
@@ -2751,7 +2780,8 @@ app.post("/api/tts", chatRateLimiter, async (req, res) => {
       gender: selectedGender,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: err?.message || "TTS generation failed" });
+    console.warn("Server /api/tts warning:", err?.message || err);
+    return res.status(502).json({ error: err?.message || "TTS generation failed", useBrowserTts: true });
   }
 });
 

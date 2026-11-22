@@ -14,6 +14,7 @@ import {
   identifyCustomerRequirement,
   classifyLeadIntent,
   generateCustomerResponse,
+  isGenericCatchAllReply,
 } from "../../src/utils/aiResponder.ts";
 import { sanitizeTextForSpeech, ttsService } from "../../src/services/ttsService.ts";
 
@@ -406,6 +407,30 @@ describe("AI Assistant & Trilingual Business Knowledge Base Regression Suite", (
         { role: "user", content: "आपका सॉफ्टवेयर महंगा तो नहीं है?" },
       ]);
       expect(objectionReply).toContain("बजट और जरूरत के अनुसार");
+    });
+
+    it("should answer total software count in Hindi & English and route open-ended 'बताओ' queries via isGenericCatchAllReply", () => {
+      const hiCountReply = generateCustomerResponse([
+        { role: "user", content: "तुम्हारे पास कितने सॉफ्टवेयर है टोटल मुझे बताओ" },
+      ]);
+      expect(isHindiDevanagari(hiCountReply)).toBe(true);
+      expect(hiCountReply).toContain("14");
+      expect(hiCountReply).toContain("10");
+      expect(hiCountReply).toContain("4 ऑटोनॉमस AI");
+      expect(isGenericCatchAllReply(hiCountReply)).toBe(false);
+
+      const enCountReply = generateCustomerResponse([
+        { role: "user", content: "how many software do you have in total" },
+      ]);
+      expect(enCountReply).toContain("14");
+      expect(enCountReply).toContain("10");
+      expect(enCountReply).toContain("4");
+      expect(isGenericCatchAllReply(enCountReply)).toBe(false);
+
+      const openEndedHi = generateCustomerResponse([
+        { role: "user", content: "मुझे बताओ आज मौसम कैसा है?" },
+      ]);
+      expect(isGenericCatchAllReply(openEndedHi)).toBe(true);
     });
   });
 });

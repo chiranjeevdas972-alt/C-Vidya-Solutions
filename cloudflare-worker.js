@@ -1057,21 +1057,190 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
     return jsonResponse({ success: true, ticket });
   }
 
+  // 8. C Vidya AI Chatbot / Voice endpoints
   if (path === "/api/chat" && method === "POST") {
-    const rawMsg = String(body.message || "").trim();
-    const lang = String(body.language || "en").toLowerCase();
-    const reply =
-      lang === "hi"
-        ? `नमस्ते! C Vidya Solutions में आपका स्वागत है। हमारे पास 10 प्रमुख SaaS सॉफ्टवेयर (Library Management, Gym Fitness Zone, School/Institute ERP, Coaching Management, AgriFusion ERP, Jewelers ERP, Enterprise CRM, Petrol Pump Suite, Care Plus Hospital ERP, और All-in-One PDF Tools) और 4 AI Agents उपलब्ध हैं। किसी भी सॉफ्टवेयर के लाइव डेमो या जानकारी के लिए आप +91 92885 17027 पर संपर्क कर सकते हैं या मुझसे पूछ सकते हैं!`
-        : `Hello! Welcome to C Vidya Solutions. We provide 10 flagship multi-tenant SaaS software suites (Library Management, Gym Fitness Zone, School/Institute ERP, Coaching Management, AgriFusion ERP, Jewelers ERP, Enterprise CRM, Petrol Pump Suite, Care Plus Hospital ERP, and All-in-One PDF Tools) along with 4 autonomous 24/7 AI Agents. You can explore any live demo right here on cvidyasolutions.com or reach our Director Desk at +91 92885 17027 (${rawMsg ? "Query: " + rawMsg.slice(0, 80) : "Ready to assist"}).`;
+    const incomingMessages = Array.isArray(body.messages) ? body.messages : [];
+    const lastUserObj = [...incomingMessages].reverse().find((m) => m && m.role === "user");
+    const rawMsg = String(
+      (lastUserObj && (lastUserObj.content || lastUserObj.text)) || body.message || ""
+    ).trim();
+    const lowerMsg = rawMsg.toLowerCase();
+    const activeGender = body.voiceGender === "male" ? "male" : "female";
+    const prefLang = String(body.preferredLanguage || body.language || "").toLowerCase();
+    const hasDevanagari = /[\u0900-\u097F]/.test(rawMsg);
+    const hasHinglish = /\b(kya|kitne|kul|batao|bataiye|kaise|chahiye|mujhe|tumhare|aapke|software|kaam|karta|hai|hain|hota)\b/i.test(lowerMsg);
+    const effectiveLang = hasDevanagari || prefLang === "hi" || (hasHinglish && prefLang !== "en") ? "hi" : "en";
+
+    const buildEdgeReply = () => {
+      if (/\b(how many|total|count|kitne|kul|टोटल|कितने|कुल|लिस्ट|list|portfolio|all software|sabhi software)\b/i.test(rawMsg) && /\b(software|product|products|app|apps|solution|solutions|agent|agents|सॉफ्टवेयर|प्रोडक्ट|एजेंट)\b/i.test(rawMsg)) {
+        return effectiveLang === "hi"
+          ? `C Vidya Solutions के पास कुल 14 डिजिटल और AI सॉल्यूशंस उपलब्ध हैं — जिनमें 10 क्लाउड बिजनेस सॉफ्टवेयर (1. Library Management, 2. Gym Fitness Zone, 3. School/Institute ERP, 4. Coaching & OMR Grader, 5. AgriFusion / Farm Fresh Hub, 6. Delivery Management Software, 7. Jewelers ERP, 8. Enterprises CRM, 9. Petrol Pump Suite, 10. Care Plus Hospital ERP और All-in-One PDF Tools) तथा 4 Autonomous AI Agents शामिल हैं। क्या आप इनमें से किसी का लाइव डेमो देखना चाहते हैं?`
+          : `C Vidya Solutions offers a total of 14 Digital & AI Solutions: 10 Cloud Business Software Suites (Library Management, Gym Fitness Zone, School/Institute ERP, Coaching Management, AgriFusion / Farm Fresh Hub, Delivery Management Software, Jewelers ERP, Enterprises CRM, Petrol Pump Suite, and Care Plus Hospital ERP with All-in-One PDF Tools) plus 4 Autonomous 24/7 AI Agents. Would you like a free live demo or pricing for any of them?`;
+      }
+      if (/library|लाइब्रेरी/i.test(rawMsg)) {
+        return effectiveLang === "hi"
+          ? `C Vidya Library Management Software के साथ आप स्टूडेंट्स एडमिशन, ऑटो सीट अलॉटमेंट, शिफ्ट मैनेजमेंट, फीस और रसीद, SMS/WhatsApp रिमाइंडर तथा पूरा हिसाब-किताब आसानी से संभाल सकते हैं। लाइव डेमो के लिए आप वेबसाइट पर क्लिक कर सकते हैं या +91 92885 17027 पर संपर्क कर सकते हैं।`
+          : `C Vidya Library Management Software automates student admissions, seat allocation, shift tracking, fee collection, receipts, SMS/WhatsApp reminders, and financial reports. You can try the live demo right on cvidyasolutions.com or call +91 92885 17027.`;
+      }
+      if (/gym|fitness|जिम|फिटनेस/i.test(rawMsg)) {
+        return effectiveLang === "hi"
+          ? `CV Fitness Zone जिम और फिटनेस सेंटर्स के लिए कम्प्लीट सॉफ्टवेयर है, जिसमें बायोमेट्रिक टर्नस्टाइल गेट एक्सेस, मेंबरशिप प्लान्स, रिन्यूअल अलर्ट्स, ट्रेनर अटेंडेंस और GST बिलिंग शामिल हैं।`
+          : `CV Fitness Zone is our complete Gym & Fitness Management Software featuring biometric turnstile gate access, membership & renewal alerts, trainer tracking, and GST billing.`;
+      }
+      if (/demo|डेमो|trial|ट्रायल/i.test(rawMsg)) {
+        return effectiveLang === "hi"
+          ? `बिल्कुल! आप वेबसाइट पर किसी भी सॉफ्टवेयर कार्ड से तुरंत फ्री लाइव डेमो लॉन्च कर सकते हैं या "Book Free Demo" फॉर्म भरकर 1-on-1 गाइडेड डेमो शेड्यूल कर सकते हैं। सीधे सहायता के लिए +91 92885 17027 पर कॉल करें।`
+          : `Certainly! You can launch an instant free live demo from any product card on cvidyasolutions.com or click "Book Free Demo" for a guided 1-on-1 walkthrough. For direct assistance, call +91 92885 17027.`;
+      }
+      if (/price|pricing|cost|plan|fee|fees|कीमत|प्राइस|कितना|पैसा|खर्च/i.test(rawMsg)) {
+        return effectiveLang === "hi"
+          ? `हमारे सॉफ्टवेयर प्लान्स Starter, Growth Pro और Enterprise Custom टियर में बेहद किफायती रेट्स पर उपलब्ध हैं। सटीक कोटेशन के लिए कृपया बताएं कि आपको कौन-सा सॉफ्टवेयर चाहिए या +91 92885 17027 पर संपर्क करें।`
+          : `Our SaaS plans are available across affordable Starter, Growth Pro, and Enterprise Custom tiers. Please share which software suite fits your business so we can share exact pricing, or reach us at +91 92885 17027.`;
+      }
+      return "";
+    };
+
+    let reply = buildEdgeReply();
+    let provider = "cvidya-edge-intelligence";
+
+    const apiKey = env && typeof env.GEMINI_API_KEY === "string" ? env.GEMINI_API_KEY.trim() : "";
+    if (!reply && apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+      try {
+        const recentTurns = incomingMessages
+          .slice(-6)
+          .map((m) => ({
+            role: m && (m.role === "model" || m.role === "assistant") ? "model" : "user",
+            parts: [{ text: String((m && (m.content || m.text)) || "").slice(0, 2000) }],
+          }))
+          .filter((m) => m.parts[0].text);
+        if (recentTurns.length === 0 && rawMsg) {
+          recentTurns.push({ role: "user", parts: [{ text: rawMsg }] });
+        }
+        if (recentTurns.length > 0 && recentTurns[0].role !== "user") {
+          recentTurns.shift();
+        }
+
+        const sysPrompt = `You are C Vidya AI, warm human advisor for C Vidya Solutions (STPI Sindri, Dhanbad HQ; +91 92885 17027). Total solutions: 14 (10 Cloud Business Software Suites: Library, Gym Fitness Zone, School/Institute ERP, Coaching & OMR, AgriFusion/Farm Fresh Hub, Delivery Software, Jewelers ERP, Enterprises CRM, Petrol Pump Suite, Care Plus Hospital ERP & PDF Tools + 4 Autonomous AI Agents). Speak as a ${activeGender === "male" ? "MALE" : "FEMALE"} advisor strictly in ${effectiveLang === "hi" ? "natural Hindi (Devanagari हिंदी)" : "natural English"} with 2-4 crisp spoken sentences and no markdown formatting.`;
+        for (const edgeModel of ["gemini-4-hydrogen", "gemini-3.1-flash-lite"]) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6500);
+          try {
+            const geminiRes = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${edgeModel}:generateContent?key=${encodeURIComponent(apiKey)}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "User-Agent": "aistudio-build",
+                },
+                body: JSON.stringify({
+                  systemInstruction: { parts: [{ text: sysPrompt }] },
+                  contents: recentTurns,
+                }),
+                signal: controller.signal,
+              }
+            );
+            clearTimeout(timeoutId);
+            if (geminiRes.ok) {
+              const gData = await geminiRes.json();
+              const candidateText = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (typeof candidateText === "string" && candidateText.trim()) {
+                reply = candidateText.trim();
+                provider = `gemini-edge:${edgeModel}`;
+                break;
+              }
+            }
+          } catch (_) {
+            clearTimeout(timeoutId);
+          }
+        }
+      } catch (_) {
+        // Fall through to verified edge fallback
+      }
+    }
+
+    if (!reply) {
+      reply =
+        effectiveLang === "hi"
+          ? `नमस्ते! मैं C Vidya Solutions की ओर से आपकी सहायता के लिए तैयार हूँ। हमारे पास कुल 14 सॉल्यूशंस हैं — 10 क्लाउड सॉफ्टवेयर (Library, Gym, School/Institute ERP, Coaching, AgriFusion, Delivery, Jewelers, CRM, Petrol Pump, Care Plus Hospital और PDF Tools) व 4 AI Agents। आप किस सॉफ्टवेयर या विषय के बारे में जानना चाहते हैं?`
+          : `Hello! Welcome to C Vidya Solutions. We offer 14 digital solutions total — 10 cloud software suites (Library, Gym Fitness Zone, School/Institute ERP, Coaching, AgriFusion, Delivery, Jewelers, CRM, Petrol Pump, Care Plus Hospital, and PDF Tools) plus 4 Autonomous 24/7 AI Agents. How can I assist you today?`;
+    }
+
     return jsonResponse({
+      text: reply,
       reply,
       response: reply,
-      source: "cvidya-edge-intelligence",
+      detectedLanguage: effectiveLang,
+      source: provider,
+      provider,
     });
   }
 
   if (path === "/api/tts" && method === "POST") {
+    const rawText = String(body.text || "").trim();
+    if (!rawText) {
+      return jsonResponse({ error: "Text is required.", useBrowserTts: true }, 400);
+    }
+
+    const apiKey = env && typeof env.GEMINI_API_KEY === "string" ? env.GEMINI_API_KEY.trim() : "";
+    if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+      try {
+        const isHindi = /[\u0900-\u097F]/.test(rawText) || String(body.lang || "") === "hi-IN";
+        let cleanText = rawText
+          .replace(/https?:\/\/[^\s)]+/g, "")
+          .replace(/[`*_~#>]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (cleanText.length > 260) {
+          const sliced = cleanText.slice(0, 260);
+          const boundary = Math.max(sliced.lastIndexOf("।"), sliced.lastIndexOf("."), sliced.lastIndexOf("?"), sliced.lastIndexOf("!"));
+          cleanText = (boundary > 60 ? sliced.slice(0, boundary + 1) : sliced).trim();
+        }
+        const selectedGender = body.gender === "male" ? "male" : "female";
+        const voiceName = selectedGender === "male" ? "Puck" : "Kore";
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8500);
+        const ttsRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-lite-tts:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "User-Agent": "aistudio-build",
+            },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: cleanText }] }],
+              generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName },
+                  },
+                },
+              },
+            }),
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeoutId);
+        if (ttsRes.ok) {
+          const tData = await ttsRes.json();
+          const inlineData = tData?.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+          if (inlineData && inlineData.data) {
+            return jsonResponse({
+              audioBase64: inlineData.data,
+              mimeType: inlineData.mimeType || "audio/wav",
+              voiceName,
+              gender: selectedGender,
+              lang: isHindi ? "hi-IN" : "en-IN",
+            });
+          }
+        }
+      } catch (_) {
+        // Fall through to browser TTS fallback
+      }
+    }
+
     return jsonResponse({
       useBrowserTts: true,
       status: "browser_tts_fallback",
@@ -1079,8 +1248,54 @@ async function handleEdgeApiRequest(request, url, bodyBuffer, env = {}) {
   }
 
   if (path === "/api/transcribe" && method === "POST") {
+    const audioBase64 = typeof body.audioBase64 === "string" ? body.audioBase64 : "";
+    const mimeType = typeof body.mimeType === "string" && body.mimeType.startsWith("audio/") ? body.mimeType.split(";")[0].trim() : "audio/webm";
+    const effectiveLocale = body.lang || body.locale || "en-IN";
+    const apiKey = env && typeof env.GEMINI_API_KEY === "string" ? env.GEMINI_API_KEY.trim() : "";
+
+    if (audioBase64.length >= 16 && audioBase64.length <= 8_000_000 && apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        const targetLang = effectiveLocale === "hi-IN" ? "Hindi (Devanagari script हिंदी)" : "English";
+        const sttRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-transcribe:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "User-Agent": "aistudio-build",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { inlineData: { mimeType, data: audioBase64 } },
+                    { text: `Transcribe the spoken audio accurately in ${targetLang}. If the speaker says "See Vidya" or "Sea Vidya", write "C Vidya Solutions". Output ONLY the transcript.` },
+                  ],
+                },
+              ],
+            }),
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeoutId);
+        if (sttRes.ok) {
+          const sData = await sttRes.json();
+          const transcript = String(sData?.candidates?.[0]?.content?.parts?.[0]?.text || "").replace(/^["'`]+|["'`]+$/g, "").trim();
+          if (transcript) {
+            return jsonResponse({ transcript, text: transcript, lang: effectiveLocale });
+          }
+        }
+      } catch (_) {
+        // Fall through
+      }
+    }
+
     return jsonResponse({
       transcript: "",
+      text: "",
       useBrowserSpeechRecognition: true,
     });
   }

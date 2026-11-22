@@ -70,6 +70,18 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
   const isListeningRef = useRef<boolean>(false);
   const sessionIdRef = useRef<string>(`chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
   const submittedLeadsRef = useRef<Set<string>>(new Set());
+  const voiceGenderRef = useRef<VoiceGender>(voiceGender);
+  const languageChoiceRef = useRef<ChatLanguageChoice>(languageChoice);
+  const ttsMutedRef = useRef<boolean>(ttsMuted);
+  const manualLangOverrideRef = useRef<boolean>(manualLangOverride);
+  const handleSendMessageRef = useRef<(textToSend: string, triggeredByVoice?: boolean) => Promise<void>>(async () => {});
+
+  useEffect(() => {
+    voiceGenderRef.current = voiceGender;
+    languageChoiceRef.current = languageChoice;
+    ttsMutedRef.current = ttsMuted;
+    manualLangOverrideRef.current = manualLangOverride;
+  }, [voiceGender, languageChoice, ttsMuted, manualLangOverride]);
 
   const clearComposerInput = () => {
     setInput("");
@@ -106,6 +118,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  // Keyboard Escape handler & drawer open/close lifecycle
   useEffect(() => {
     if (isOpen) {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -121,7 +134,6 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       };
       window.addEventListener("keydown", handleKeyDown);
       setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
         // Only auto-focus text input on desktop/laptop screens so mobile/tablet virtual keyboards don't cover the chat or block the mic
         if (typeof window !== "undefined" && window.innerWidth >= 768 && !("ontouchstart" in window)) {
           inputRef.current?.focus();
@@ -137,19 +149,30 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       setVoiceStatus("idle");
       clearComposerInput();
     }
-  }, [isOpen, messages, isTyping, onClose]);
+  }, [isOpen, onClose]);
+
+  // Smooth auto-scroll on new messages or typing
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 60);
+    }
+  }, [isOpen, messages, isTyping]);
 
   const speakAssistantReply = (text: string, genderOverride?: VoiceGender, forceSpeak = false) => {
-    if ((!forceSpeak && ttsMuted) || !ttsSupported) {
+    const currentlyMuted = ttsMutedRef.current;
+    if ((!forceSpeak && currentlyMuted) || !ttsSupported) {
       setVoiceStatus("idle");
       return;
     }
-    if (forceSpeak && ttsMuted) {
+    if (forceSpeak && currentlyMuted) {
+      ttsMutedRef.current = false;
       setTtsMuted(false);
       ttsService.setMuted(false);
     }
     const langMode = detectLanguageMode(text);
-    const preferredLang: "hi-IN" | "en-IN" = langMode === "hi" || voiceLocale === "hi-IN" ? "hi-IN" : "en-IN";
+    const preferredLang: "hi-IN" | "en-IN" = langMode === "hi" ? "hi-IN" : "en-IN";
     ttsService.speak(
       text,
       preferredLang,
@@ -168,43 +191,46 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
           }
         }
       },
-      genderOverride || voiceGender
+      genderOverride || voiceGenderRef.current
     );
   };
 
   const handleSelectVoiceGender = (nextGender: VoiceGender) => {
     ttsService.unlockAudio();
+    voiceGenderRef.current = nextGender;
     setVoiceGender(nextGender);
     ttsService.setVoiceGender(nextGender);
     setShowGenderPopup(false);
     // If there is a message on screen or currently speaking, speak it in the selected Male/Female human voice
     const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
-    if (lastModelMsg && (voiceStatus === "speaking" || !ttsMuted)) {
+    if (lastModelMsg && (voiceStatus === "speaking" || !ttsMutedRef.current)) {
       speakAssistantReply(lastModelMsg.content, nextGender);
     }
   };
 
   const handleSelectLanguage = (nextLang: ChatLanguageChoice) => {
     ttsService.unlockAudio();
+    languageChoiceRef.current = nextLang;
+    manualLangOverrideRef.current = true;
     setLanguageChoice(nextLang);
     setManualLangOverride(true);
     setShowLangPopup(false);
   };
 
   const handleToggleListening = () => {
+    ttsService.unlockAudio();
     setVoiceError("");
     setShowGenderPopup(false);
     setShowLangPopup(false);
 
     if (voiceStatus === "listening" || speechInputService.getIsListening() || isListeningRef.current) {
-      ttsService.unlockAudio();
       const pendingText = normalizeSpokenCvidyaText(input).trim();
       if (pendingText) {
         isListeningRef.current = false;
         speechInputService.stopListening();
         setVoiceStatus("idle");
         clearComposerInput();
-        handleSendMessage(pendingText, true);
+        handleSendMessageRef.current(pendingText, true);
       } else {
         // Let active mobile MediaRecorder or SpeechRecognition finalize & transcribe captured audio
         speechInputService.finishListening();
@@ -230,7 +256,8 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     isListeningRef.current = true;
     clearComposerInput();
 
-    speechInputService.startListening(voiceLocale, {
+    const activeLocale: SupportedVoiceLocale = languageChoiceRef.current === "hi" ? "hi-IN" : "en-IN";
+    speechInputService.startListening(activeLocale, {
       onStateChange: (listening) => {
         isListeningRef.current = listening;
         setVoiceStatus(listening ? "listening" : "idle");
@@ -254,7 +281,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         const cleaned = normalizeSpokenCvidyaText(finalText).trim();
         if (cleaned) {
           setInput(cleaned);
-          handleSendMessage(cleaned, true);
+          handleSendMessageRef.current(cleaned, true);
         } else {
           clearComposerInput();
           setVoiceStatus("idle");
@@ -271,7 +298,8 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
 
   const handleToggleMute = () => {
     ttsService.unlockAudio();
-    const nextMuted = !ttsMuted;
+    const nextMuted = !ttsMutedRef.current;
+    ttsMutedRef.current = nextMuted;
     setTtsMuted(nextMuted);
     ttsService.setMuted(nextMuted);
     if (nextMuted && voiceStatus === "speaking") {
@@ -279,7 +307,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
     } else if (!nextMuted) {
       const lastModelMsg = [...messagesRef.current].reverse().find((m) => m.role === "model" || m.role === "assistant");
       if (lastModelMsg) {
-        speakAssistantReply(lastModelMsg.content, voiceGender, true);
+        speakAssistantReply(lastModelMsg.content, voiceGenderRef.current, true);
       }
     }
   };
@@ -325,23 +353,29 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       content: m.content
     }));
 
+    const currentGender = voiceGenderRef.current;
+    const currentLangChoice = languageChoiceRef.current;
+    const currentManualOverride = manualLangOverrideRef.current;
+    const currentMuted = ttsMutedRef.current;
+
     // Automatic Bilingual Detection: Hindi/Hinglish -> 'hi', English -> 'en'
     const autoDetectedLang = detectCustomerLanguage(normalizedInput, formattedHistory);
     const activeLang: ChatLanguageChoice =
       autoDetectedLang === "hi"
         ? "hi"
-        : manualLangOverride
-        ? languageChoice
+        : currentManualOverride
+        ? currentLangChoice
         : autoDetectedLang;
 
-    if (autoDetectedLang === "hi" && languageChoice !== "hi") {
+    if (autoDetectedLang === "hi" && currentLangChoice !== "hi") {
+      languageChoiceRef.current = "hi";
       setLanguageChoice("hi");
     }
 
     try {
       // 1. Check instant verified C Vidya Software & Business Knowledge Base (<1ms latency)
       const instantLocalReply = generateCustomerResponse(formattedHistory, {
-        gender: voiceGender,
+        gender: currentGender,
         preferredLanguage: activeLang,
         respondInHindiForHinglish: true
       });
@@ -366,7 +400,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
                 body: JSON.stringify({
                   sessionId: sessionIdRef.current,
                   messages: formattedHistory,
-                  voiceGender,
+                  voiceGender: currentGender,
                   preferredLanguage: activeLang,
                   leadDetails: customerDetails
                 })
@@ -400,10 +434,10 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
           }
         }
       } else {
-        // Open-ended general query: query Gemini endpoint with ultra-fast 1200ms timeout for instant reply
+        // Open-ended general query: query Gemini endpoint with reliable 13000ms timeout
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1200);
+          const timeoutId = setTimeout(() => controller.abort(), 13000);
 
           const response = await fetch("/api/chat", {
             method: "POST",
@@ -411,7 +445,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             body: JSON.stringify({
               sessionId: sessionIdRef.current,
               messages: formattedHistory,
-              voiceGender,
+              voiceGender: currentGender,
               preferredLanguage: activeLang
             }),
             signal: controller.signal
@@ -424,6 +458,8 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             const data = await response.json();
             if (data && typeof data.text === "string" && data.text.trim()) {
               assistantText = data.text.trim();
+            } else if (data && typeof data.reply === "string" && data.reply.trim()) {
+              assistantText = data.reply.trim();
             }
           }
         } catch (_) {
@@ -431,7 +467,7 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         }
 
         if (!assistantText) {
-          assistantText = adaptGenderGrammar(instantLocalReply, voiceGender);
+          assistantText = adaptGenderGrammar(instantLocalReply, currentGender);
         }
       }
       
@@ -450,15 +486,15 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
 
       clearComposerInput();
 
-      if (triggeredByVoice || !ttsMuted) {
-        speakAssistantReply(assistantText, voiceGender, triggeredByVoice);
+      if (triggeredByVoice || !currentMuted) {
+        speakAssistantReply(assistantText, currentGender, triggeredByVoice);
       } else {
         setVoiceStatus("idle");
       }
 
     } catch (error: any) {
       const fallbackText = generateCustomerResponse(formattedHistory, {
-        gender: voiceGender,
+        gender: currentGender,
         preferredLanguage: activeLang,
         respondInHindiForHinglish: true
       });
@@ -474,7 +510,11 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
         return updated;
       });
       clearComposerInput();
-      setVoiceStatus("idle");
+      if (triggeredByVoice || !currentMuted) {
+        speakAssistantReply(fallbackText, currentGender, triggeredByVoice);
+      } else {
+        setVoiceStatus("idle");
+      }
     } finally {
       setIsTyping(false);
       if (!isListeningRef.current) {
@@ -482,6 +522,8 @@ export default function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
       }
     }
   };
+
+  handleSendMessageRef.current = handleSendMessage;
 
   if (!isOpen) return null;
 
